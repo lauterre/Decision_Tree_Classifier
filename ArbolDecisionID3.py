@@ -1,47 +1,21 @@
-from typing import Generic, Optional, TypeVar, Callable, Any 
+from typing import Optional
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
-from copy import deepcopy  # Perdon mariano
-from abc import ABC, abstractmethod
+from copy import deepcopy
+from _superclases import Clasificador, ArbolDecision
 
-class Nodo(ABC):
-    def __init__(self, data: pd.DataFrame, target: pd.Series) -> None:
-        self.atributo: Optional[str] = None # se setea cuando se haga un split
-        self.categoria: Optional[str] = None # LA CATEGORIA RESULTANTE DEL SPLIT ANTERIOR
-        self.data: pd.DataFrame = data
-        self.target: pd.Series = target
-        self.clase: Optional[str] = self.target.value_counts().idxmax()
-        self.subs: list[ArbolDecision] = []
-
-    @abstractmethod
-    def _mejor_split(self) -> str: # mejor split id3
-        raise NotImplementedError
-
-    @abstractmethod
-    def _split(self, atributo: str) -> None:
-        raise NotImplementedError
-    
-    @abstractmethod
-    def entropia(self) -> float:
-        raise NotImplementedError
-    
-    @abstractmethod
-    def _information_gain(self, atributo: str) -> float:
-        raise NotImplementedError
-        
-    @abstractmethod
-    def es_raiz(self):
-        raise NotImplementedError
-    
-    @abstractmethod
-    def es_hoja(self):
-        raise NotImplementedError
-
-
-class NodoID3(Nodo):
-    def __init__(self, data: pd.DataFrame, target: pd.Series) -> None:
-        super().__init__(data, target)
+class ArbolDecisionID3(ArbolDecision, Clasificador):
+    def __init__(self, max_prof: int = -1, min_obs_nodo: int = -1) -> None:
+        super().__init__()
+        self.max_prof = max_prof
+        self.min_obs_nodo = min_obs_nodo        #TODO: Los hiperparametros deberian traerse con el super de Clasificador, no pude hacerlo andar.
+            
+    def __len__(self) -> int:
+        if self.es_hoja():
+            return 1
+        else:
+            return 1 + sum([len(subarbol) for subarbol in self.subs])
         
     def _mejor_split(self) -> str: 
         mejor_ig = -1
@@ -62,10 +36,11 @@ class NodoID3(Nodo):
             nueva_data = self.data[self.data[atributo] == categoria]
             nueva_data = nueva_data.drop(atributo, axis = 1) # la data del nuevo nodo sin el atributo por el cual ya se filtró
             nuevo_target = self.target[self.data[atributo] == categoria]
-            nuevo = NodoID3(nueva_data, nuevo_target)
-            nuevo.categoria = categoria
-            nuevo_arbol = ArbolDecision("ID3")
-            nuevo_arbol.raiz = nuevo
+            nuevo_arbol = ArbolDecisionID3()
+            nuevo_arbol.data = nueva_data
+            nuevo_arbol.target = nuevo_target
+            nuevo_arbol.categoria = categoria
+            nuevo_arbol.clase = nuevo_target.value_counts().idxmax()
             self.subs.append(nuevo_arbol)
     
     def entropia(self) -> float:
@@ -84,11 +59,11 @@ class NodoID3(Nodo):
         nuevo = deepcopy(self)
         nuevo._split(atributo)
 
-        entropias_subarboles = 0 # no son las entropias, son |D_v|/|D| * Entropia(D_v)
+        entropias_subarboles = 0 
 
         for subarbol in nuevo.subs:
-            entropia = subarbol.raiz.entropia()
-            len_subarbol = len(subarbol.raiz.data)
+            entropia = subarbol.entropia()
+            len_subarbol = len(subarbol.data)
             entropias_subarboles += ((len_subarbol/len_actual)*entropia)
 
         information_gain = entropia_actual - entropias_subarboles
@@ -100,53 +75,57 @@ class NodoID3(Nodo):
     def es_hoja(self):
         return self.subs == []
     
-class ArbolDecision:
-    def __init__(self, type: str) -> None:
-        self.raiz: Optional[Nodo] = None
-        self.target_categorias: Optional[list[str]] = None
-        self.type = type
-
-    def __len__(self) -> int:
-        if self.raiz.es_hoja():
-            return 1
-        else:
-            return 1 + sum([len(subarbol) for subarbol in self.raiz.subs])
 
     def _values(self):
-        recuento_values = self.raiz.target.value_counts()
+        recuento_values = self.target.value_counts()
         values = []
         for valor in self.target_categorias:
             value = recuento_values.get(valor, 0)
             values.append(value)
         return values
 
+    def _total_samples(self):
+        return len(self.data)
+
     def fit(self, X: pd.DataFrame, y: pd.Series):
-        self.raiz = NodoID3(X,y)
-        def _fit_id3(arbol):
+        '''
+        Condicion de split
+              - Unico valor para target (nodo puro)
+              - No hay mas atributos
+              - max_profundidaself.data = X
+        '''
+        self.target = y
+        self.data = X
+        
+        def _interna(arbol: ArbolDecisionID3, prof_acum: int = 0):
             arbol.target_categorias = y.unique()
-            if not (len(arbol.raiz.target.unique()) == 1 or len(arbol.raiz.data.columns) == 0):
-                mejor_atributo = arbol.raiz._mejor_split()
-                arbol.raiz._split(mejor_atributo)
-                for sub_arbol in arbol.raiz.subs:
-                    _fit_id3(sub_arbol)
-        if self.type == "ID3":
-            _fit_id3(self)
-        elif self.type == "C45":
-            pass
+            
+            if prof_acum == 0:
+                prof_acum = 1
+            
+            if not ( len(arbol.target.unique()) == 1 or len(arbol.data.columns) == 0 
+                    or (arbol.max_prof != -1 and arbol.max_prof <= prof_acum) 
+                    or (arbol.min_obs_nodo != -1 and arbol.min_obs_nodo > arbol._total_samples() ) ):
+                
+                mejor_atributo = arbol._mejor_split()
+                arbol._split(mejor_atributo)
+                for sub_arbol in arbol.subs:
+                    _interna(sub_arbol, prof_acum+1)
+
+        _interna(self)
     
     def predict(self, X: pd.DataFrame) -> list[str]:
         predicciones = []
 
         def _interna(arbol, X):
-            nodo = arbol.raiz
-            if nodo.es_hoja():
-                predicciones.append(nodo.clase)
+            if arbol.es_hoja():
+                predicciones.append(arbol.clase)
             else:
-                atributo = nodo.atributo
+                atributo = arbol.atributo
                 valor_atributo = X[atributo].iloc[0]
-                for i, subarbol in enumerate(nodo.subs):
-                    if valor_atributo == subarbol.raiz.categoria:
-                        _interna(arbol.raiz.subs[i], X)
+                for i, subarbol in enumerate(arbol.subs):
+                    if valor_atributo == subarbol.categoria:
+                        _interna(arbol.subs[i], X)
 
         for _, row in X.iterrows():
             _interna(self, pd.DataFrame([row]))
@@ -155,31 +134,30 @@ class ArbolDecision:
     
     def altura(self) -> int:
         altura_actual = 0
-        for subarbol in self.raiz.subs:
+        for subarbol in self.subs:
             altura_actual = max(altura_actual, subarbol.altura())
         return altura_actual + 1
     
     def imprimir(self, prefijo: str = '  ', es_ultimo: bool = True) -> None:
-        nodo = self.raiz
         simbolo_rama = '└─── ' if es_ultimo else '├─── '
-        split = "Split: " + str(nodo.atributo)
-        rta = "Valor: " + str(nodo.categoria)
-        entropia = f"Entropia: {round(self.raiz.entropia(), 2)}"
-        samples = f"Samples: {len(self.raiz.data)}"
+        split = "Split: " + str(self.atributo)
+        rta = "Valor: " + str(self.categoria)
+        entropia = f"Entropia: {round(self.entropia(), 2)}"
+        samples = f"Samples: {str (self._total_samples())}"
         values = f"Values: {str(self._values())}"
-        clase = 'Clase:' + str(nodo.clase)
-        if nodo.es_raiz():
+        clase = 'Clase:' + str(self.clase)
+        if self.es_raiz():
             print(entropia)
             print(samples)
             print(values)
             print(clase)
             print(split)
 
-            for i, sub_arbol in enumerate(nodo.subs):
-                ultimo: bool = i == len(nodo.subs) - 1
+            for i, sub_arbol in enumerate(self.subs):
+                ultimo: bool = i == len(self.subs) - 1
                 sub_arbol.imprimir(prefijo, ultimo)
 
-        elif not nodo.es_hoja():
+        elif not self.es_hoja():
             print(prefijo + "│")
             print(prefijo + simbolo_rama + rta)
             prefijo2 = prefijo + " " * (len(simbolo_rama)) if es_ultimo else prefijo +"│" + " " * (len(simbolo_rama) - 1)
@@ -190,8 +168,8 @@ class ArbolDecision:
             print(prefijo2 + split)
             
             prefijo += ' '*10 if es_ultimo else '│' + ' '*9
-            for i, sub_arbol in enumerate(nodo.subs):
-                ultimo: bool = i == len(nodo.subs) - 1
+            for i, sub_arbol in enumerate(self.subs):
+                ultimo: bool = i == len(self.subs) - 1
                 sub_arbol.imprimir(prefijo, ultimo)
         else:
             prefijo_hoja = prefijo + " "*len(simbolo_rama) if es_ultimo else prefijo + "│" + " "*(len(simbolo_rama) -1)
@@ -215,7 +193,7 @@ def probar(df, target:str):
     X = df.drop(target, axis=1)
     y = df[target]
     x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    arbol = ArbolDecision("ID3")
+    arbol = ArbolDecisionID3(min_obs_nodo=120)
     arbol.fit(x_train, y_train)
     arbol.imprimir()
     y_pred = arbol.predict(x_test)
@@ -226,13 +204,13 @@ def probar(df, target:str):
 
 if __name__ == "__main__":
     #https://www.kaggle.com/datasets/thedevastator/cancer-patients-and-air-pollution-a-new-link
-    patients = pd.read_csv("TP_Final_algo2/TP_Final/cancer_patients.csv", index_col=0)
+    patients = pd.read_csv("cancer_patients.csv", index_col=0)
     patients = patients.drop("Patient Id", axis = 1)
     bins = [0, 15, 20, 30, 40, 50, 60, 70, float('inf')]
     labels = ['0-15', '15-20', '20-30', '30-40', '40-50', '50-60', '60-70', '70+']
     patients['Age'] = pd.cut(patients['Age'], bins=bins, labels=labels, right=False)
 
-    tennis = pd.read_csv("TP_Final_algo2/TP_Final/PlayTennis.csv", index_col=0)
+    tennis = pd.read_csv("PlayTennis.csv", index_col=0)
 
     print("Pruebo con patients\n")
     probar(patients, "Level")
