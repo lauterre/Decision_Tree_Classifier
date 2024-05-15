@@ -114,24 +114,23 @@ class ArbolDecisionID3(ArbolDecision, Clasificador):
 
         _interna(self)
     
-    def predict(self, X: pd.DataFrame) -> list[str]:
+    def predict(self, X:pd.DataFrame) -> list[str]:
         predicciones = []
 
-        def _interna(arbol, X):
+        def _recorrer(arbol, fila: pd.Series) -> None:
             if arbol.es_hoja():
                 predicciones.append(arbol.clase)
             else:
-                atributo = arbol.atributo
-                valor_atributo = X[atributo].iloc[0]
-                for i, subarbol in enumerate(arbol.subs):
-                    if valor_atributo == subarbol.categoria:
-                        _interna(arbol.subs[i], X)
-
-        for _, row in X.iterrows():
-            _interna(self, pd.DataFrame([row]))
+                direccion = fila[arbol.atributo]
+                for subarbol in arbol.subs:
+                    if direccion == subarbol.categoria: #subarbol.valor
+                        _recorrer(subarbol, fila)
+        
+        for _, fila in X.iterrows():
+            _recorrer(self, fila)
         
         return predicciones
-    
+
     def altura(self) -> int:
         altura_actual = 0
         for subarbol in self.subs:
@@ -210,7 +209,7 @@ if __name__ == "__main__":
     labels = ['0-15', '15-20', '20-30', '30-40', '40-50', '50-60', '60-70', '70+']
     patients['Age'] = pd.cut(patients['Age'], bins=bins, labels=labels, right=False)
 
-    tennis = pd.read_csv("PlayTennis.csv", index_col=0)
+    tennis = pd.read_csv("PlayTennis.csv")
 
     print("Pruebo con patients\n")
     probar(patients, "Level")
