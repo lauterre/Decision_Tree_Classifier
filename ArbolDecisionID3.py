@@ -1,4 +1,3 @@
-from typing import Optional
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
@@ -11,6 +10,11 @@ class ArbolDecisionID3(ArbolDecision, Clasificador):
         self.max_prof = max_prof
         self.min_obs_nodo = min_obs_nodo        #TODO: Los hiperparametros deberian traerse con el super de Clasificador, no pude hacerlo andar.
             
+    def _traer_hiperparametros(self, arbol_previo):
+        self.max_prof = arbol_previo.max_prof
+        self.min_obs_nodo = arbol_previo.min_obs_nodo
+
+
     def __len__(self) -> int:
         if self.es_hoja():
             return 1
@@ -41,6 +45,7 @@ class ArbolDecisionID3(ArbolDecision, Clasificador):
             nuevo_arbol.target = nuevo_target
             nuevo_arbol.categoria = categoria
             nuevo_arbol.clase = nuevo_target.value_counts().idxmax()
+            nuevo_arbol._traer_hiperparametros(self) # hice un metodo porque van a ser muchos de hiperparametros
             self.subs.append(nuevo_arbol)
     
     def entropia(self) -> float:
@@ -96,6 +101,7 @@ class ArbolDecisionID3(ArbolDecision, Clasificador):
         '''
         self.target = y
         self.data = X
+        self.clase = self.target.value_counts().idxmax()
         
         def _interna(arbol: ArbolDecisionID3, prof_acum: int = 0):
             arbol.target_categorias = y.unique()
@@ -144,7 +150,7 @@ class ArbolDecisionID3(ArbolDecision, Clasificador):
         entropia = f"Entropia: {round(self.entropia(), 2)}"
         samples = f"Samples: {str (self._total_samples())}"
         values = f"Values: {str(self._values())}"
-        clase = 'Clase:' + str(self.clase)
+        clase = 'Clase: ' + str(self.clase)
         if self.es_raiz():
             print(entropia)
             print(samples)
@@ -196,7 +202,7 @@ def probar(df, target:str):
     arbol.fit(x_train, y_train)
     arbol.imprimir()
     y_pred = arbol.predict(x_test)
-    print(f"accuracy: {accuracy_score(y_test.tolist(), y_pred)}")
+    print(f"\naccuracy: {accuracy_score(y_test.tolist(), y_pred)}")
     print(f"cantidad de nodos: {len(arbol)}")
     print(f"altura: {arbol.altura()}\n")
 
