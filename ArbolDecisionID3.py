@@ -1,7 +1,6 @@
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
-from copy import deepcopy
 from _superclases import ClasificadorArbol, Arbol
 
 class ArbolDecisionID3(Arbol, ClasificadorArbol):
@@ -25,6 +24,17 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
                 mejor_atributo = atributo
         
         return mejor_atributo
+    
+    def copy(self):
+        nuevo = ArbolDecisionID3(self.max_prof, self.min_obs_nodo)
+        nuevo.data = self.data.copy()
+        nuevo.target = self.target.copy()
+        nuevo.atributo = self.atributo
+        nuevo.categoria = self.categoria
+        nuevo.target_categorias = self.target_categorias.copy() 
+        nuevo.clase = self.clase
+        nuevo.subs = [sub.copy() for sub in self.subs]
+        return nuevo
 
     def _split(self, atributo: str) -> None:
         self.atributo = atributo # guardo el atributo por el cual spliteo
@@ -53,7 +63,7 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
         entropia_actual = self.entropia()
         len_actual = len(self.data)
 
-        nuevo = deepcopy(self)
+        nuevo = self.copy()
         nuevo._split(atributo)
 
         entropias_subarboles = 0 
