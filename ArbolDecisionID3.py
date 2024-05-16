@@ -1,4 +1,3 @@
-from typing import Optional
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
@@ -9,6 +8,10 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
     def __init__(self, max_prof: int = -1, min_obs_nodo: int = -1) -> None:
         super().__init__()
         ClasificadorArbol.__init__(self, max_prof, min_obs_nodo)
+            
+    def _traer_hiperparametros(self, arbol_previo):
+        self.max_prof = arbol_previo.max_prof
+        self.min_obs_nodo = arbol_previo.min_obs_nodo
         
     def _mejor_split(self) -> str: 
         mejor_ig = -1
@@ -34,6 +37,7 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
             nuevo_arbol.target = nuevo_target
             nuevo_arbol.categoria = categoria
             nuevo_arbol.clase = nuevo_target.value_counts().idxmax()
+            nuevo_arbol._traer_hiperparametros(self) # hice un metodo porque van a ser muchos de hiperparametros
             self.subs.append(nuevo_arbol)
     
     def entropia(self) -> float:
@@ -82,6 +86,7 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
         '''
         self.target = y
         self.data = X
+        self.clase = self.target.value_counts().idxmax()
         
         def _interna(arbol: ArbolDecisionID3, prof_acum: int = 0):
             arbol.target_categorias = y.unique()
@@ -100,24 +105,23 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
 
         _interna(self)
     
-    def predict(self, X: pd.DataFrame) -> list[str]:
+    def predict(self, X:pd.DataFrame) -> list[str]:
         predicciones = []
 
-        def _interna(arbol, X):
+        def _recorrer(arbol, fila: pd.Series) -> None:
             if arbol.es_hoja():
                 predicciones.append(arbol.clase)
             else:
-                atributo = arbol.atributo
-                valor_atributo = X[atributo].iloc[0]
-                for i, subarbol in enumerate(arbol.subs):
-                    if valor_atributo == subarbol.categoria:
-                        _interna(arbol.subs[i], X)
-
-        for _, row in X.iterrows():
-            _interna(self, pd.DataFrame([row]))
+                direccion = fila[arbol.atributo]
+                for subarbol in arbol.subs:
+                    if direccion == subarbol.categoria: #subarbol.valor
+                        _recorrer(subarbol, fila)
+        
+        for _, fila in X.iterrows():
+            _recorrer(self, fila)
         
         return predicciones
-    
+
     def altura(self) -> int:
         altura_actual = 0
         for subarbol in self.subs:
@@ -131,7 +135,7 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
         entropia = f"Entropia: {round(self.entropia(), 2)}"
         samples = f"Samples: {str (self._total_samples())}"
         values = f"Values: {str(self._values())}"
-        clase = 'Clase:' + str(self.clase)
+        clase = 'Clase: ' + str(self.clase)
         if self.es_raiz():
             print(entropia)
             print(samples)
@@ -183,7 +187,7 @@ def probar(df, target:str):
     arbol.fit(x_train, y_train)
     arbol.imprimir()
     y_pred = arbol.predict(x_test)
-    print(f"accuracy: {accuracy_score(y_test.tolist(), y_pred)}")
+    print(f"\naccuracy: {accuracy_score(y_test.tolist(), y_pred)}")
     print(f"cantidad de nodos: {len(arbol)}")
     print(f"altura: {arbol.altura()}\n")
 
@@ -196,7 +200,7 @@ if __name__ == "__main__":
     labels = ['0-15', '15-20', '20-30', '30-40', '40-50', '50-60', '60-70', '70+']
     patients['Age'] = pd.cut(patients['Age'], bins=bins, labels=labels, right=False)
 
-    tennis = pd.read_csv("PlayTennis.csv", index_col=0)
+    tennis = pd.read_csv("PlayTennis.csv")
 
     print("Pruebo con patients\n")
     probar(patients, "Level")
