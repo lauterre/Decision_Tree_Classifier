@@ -56,6 +56,10 @@ class Arbol(ABC):
         return len(self.data)
     
     @abstractmethod
+    def copy(self):
+        raise NotImplementedError
+
+    @abstractmethod
     def _mejor_split(self):
         raise NotImplementedError
     
@@ -69,8 +73,7 @@ class Arbol(ABC):
     
     @abstractmethod
     def _information_gain(self, atributo: str) -> float:
-        raise NotImplementedError
-    
+        raise NotImplementedError    
     
     @abstractmethod
     def imprimir(self) -> None:
