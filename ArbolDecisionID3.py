@@ -13,6 +13,10 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
         self.max_prof = arbol_previo.max_prof
         self.min_obs_nodo = arbol_previo.min_obs_nodo
         
+    def _traer_hiperparametros(self, arbol_previo):
+        self.max_prof = arbol_previo.max_prof
+        self.min_obs_nodo = arbol_previo.min_obs_nodo
+    
     def _mejor_split(self) -> str: 
         mejor_ig = -1
         mejor_atributo = None
@@ -66,16 +70,6 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
         information_gain = entropia_actual - entropias_subarboles
         return information_gain       
 
-    def _values(self):
-        recuento_values = self.target.value_counts()
-        values = []
-        for valor in self.target_categorias:
-            value = recuento_values.get(valor, 0)
-            values.append(value)
-        return values
-
-    def _total_samples(self):
-        return len(self.data)
 
     def fit(self, X: pd.DataFrame, y: pd.Series):
         '''
@@ -121,12 +115,6 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
             _recorrer(self, fila)
         
         return predicciones
-
-    def altura(self) -> int:
-        altura_actual = 0
-        for subarbol in self.subs:
-            altura_actual = max(altura_actual, subarbol.altura())
-        return altura_actual + 1
     
     def imprimir(self, prefijo: str = '  ', es_ultimo: bool = True) -> None:
         simbolo_rama = '└─── ' if es_ultimo else '├─── '

@@ -37,6 +37,23 @@ class Arbol(ABC):
             return 1
         else:
             return 1 + sum([len(subarbol) for subarbol in self.subs])
+        
+    def _values(self):
+        recuento_values = self.target.value_counts()
+        values = []
+        for valor in self.target_categorias:
+            value = recuento_values.get(valor, 0)
+            values.append(value)
+        return values
+    
+    def altura(self) -> int:
+        altura_actual = 0
+        for subarbol in self.subs:
+            altura_actual = max(altura_actual, subarbol.altura())
+        return altura_actual + 1
+
+    def _total_samples(self):
+        return len(self.data)
     
     @abstractmethod
     def _mejor_split(self):
@@ -54,9 +71,6 @@ class Arbol(ABC):
     def _information_gain(self, atributo: str) -> float:
         raise NotImplementedError
     
-    @abstractmethod
-    def altura(self) -> int:
-        raise NotImplementedError
     
     @abstractmethod
     def imprimir(self) -> None:
