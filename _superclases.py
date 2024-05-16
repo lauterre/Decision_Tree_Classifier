@@ -3,10 +3,6 @@ from typing import Any, Optional
 import pandas as pd
 
 class Clasificador(ABC):
-    def __init__(self, max_prof: int = -1, min_obs_nodo: int = -1):
-        self.max_prof = max_prof
-        self.min_obs_nodo = min_obs_nodo
-
     @abstractmethod
     def fit(self, X, y):
         raise NotImplementedError
@@ -14,20 +10,50 @@ class Clasificador(ABC):
     @abstractmethod
     def predict(self, X):
         raise NotImplementedError
+
+class ClasificadorArbol(Clasificador, ABC):
+    def __init__(self, max_prof: int = -1, min_obs_nodo: int = -1):
+        self.max_prof = max_prof
+        self.min_obs_nodo = min_obs_nodo
     
-class ArbolDecision(ABC):
+class Arbol(ABC):
     def __init__(self) -> None:
-        self.data: Optional[pd.DataFrame] = None
-        self.target: Optional[pd.Series]= None
+        self.data: pd.DataFrame 
+        self.target: pd.Series
         self.atributo: Optional[str] = None
         self.categoria: Optional[str]= None
         self.target_categorias: Optional[list[str]]= None
         self.clase: Optional[str] = None
-        self.subs: list[ArbolDecision]= []
+        self.subs: list[Arbol]= []
+    
+    def es_raiz(self):
+        return self.categoria is None
+    
+    def es_hoja(self):
+        return self.subs == []
+    
+    def __len__(self) -> int:
+        if self.es_hoja():
+            return 1
+        else:
+            return 1 + sum([len(subarbol) for subarbol in self.subs])
+        
+    def _values(self):
+        recuento_values = self.target.value_counts()
+        values = []
+        for valor in self.target_categorias:
+            value = recuento_values.get(valor, 0)
+            values.append(value)
+        return values
+    
+    def altura(self) -> int:
+        altura_actual = 0
+        for subarbol in self.subs:
+            altura_actual = max(altura_actual, subarbol.altura())
+        return altura_actual + 1
 
-    @abstractmethod
-    def __len__(self):
-        raise NotImplementedError
+    def _total_samples(self):
+        return len(self.data)
     
     @abstractmethod
     def _mejor_split(self):
@@ -39,23 +65,12 @@ class ArbolDecision(ABC):
     
     @abstractmethod
     def entropia(self):
-        raise NotImplementedError
+        raise NotImplementedError       #Este método no se si va aca, creo que solo es ID3. C4.5 usa la Ganancia de Informacion normalizada
     
     @abstractmethod
     def _information_gain(self, atributo: str) -> float:
         raise NotImplementedError
     
-    @abstractmethod
-    def es_raiz(self):
-        raise NotImplementedError
-    
-    @abstractmethod
-    def es_hoja(self):
-        raise NotImplementedError
-    
-    @abstractmethod
-    def altura(self) -> int:
-        raise NotImplementedError
     
     @abstractmethod
     def imprimir(self) -> None:

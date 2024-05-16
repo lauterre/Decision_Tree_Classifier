@@ -2,25 +2,21 @@ from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
 from copy import deepcopy
-from _superclases import Clasificador, ArbolDecision
+from _superclases import ClasificadorArbol, Arbol
 
-class ArbolDecisionID3(ArbolDecision, Clasificador):
+class ArbolDecisionID3(Arbol, ClasificadorArbol):
     def __init__(self, max_prof: int = -1, min_obs_nodo: int = -1) -> None:
         super().__init__()
-        self.max_prof = max_prof
-        self.min_obs_nodo = min_obs_nodo        #TODO: Los hiperparametros deberian traerse con el super de Clasificador, no pude hacerlo andar.
+        ClasificadorArbol.__init__(self, max_prof, min_obs_nodo)
             
     def _traer_hiperparametros(self, arbol_previo):
         self.max_prof = arbol_previo.max_prof
         self.min_obs_nodo = arbol_previo.min_obs_nodo
-
-
-    def __len__(self) -> int:
-        if self.es_hoja():
-            return 1
-        else:
-            return 1 + sum([len(subarbol) for subarbol in self.subs])
         
+    def _traer_hiperparametros(self, arbol_previo):
+        self.max_prof = arbol_previo.max_prof
+        self.min_obs_nodo = arbol_previo.min_obs_nodo
+    
     def _mejor_split(self) -> str: 
         mejor_ig = -1
         mejor_atributo = None
@@ -72,25 +68,8 @@ class ArbolDecisionID3(ArbolDecision, Clasificador):
             entropias_subarboles += ((len_subarbol/len_actual)*entropia)
 
         information_gain = entropia_actual - entropias_subarboles
-        return information_gain
-    
-    def es_raiz(self):
-        return self.categoria is None
-    
-    def es_hoja(self):
-        return self.subs == []
-    
+        return information_gain       
 
-    def _values(self):
-        recuento_values = self.target.value_counts()
-        values = []
-        for valor in self.target_categorias:
-            value = recuento_values.get(valor, 0)
-            values.append(value)
-        return values
-
-    def _total_samples(self):
-        return len(self.data)
 
     def fit(self, X: pd.DataFrame, y: pd.Series):
         '''
@@ -136,12 +115,6 @@ class ArbolDecisionID3(ArbolDecision, Clasificador):
             _recorrer(self, fila)
         
         return predicciones
-
-    def altura(self) -> int:
-        altura_actual = 0
-        for subarbol in self.subs:
-            altura_actual = max(altura_actual, subarbol.altura())
-        return altura_actual + 1
     
     def imprimir(self, prefijo: str = '  ', es_ultimo: bool = True) -> None:
         simbolo_rama = '└─── ' if es_ultimo else '├─── '
@@ -198,7 +171,7 @@ def probar(df, target:str):
     X = df.drop(target, axis=1)
     y = df[target]
     x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    arbol = ArbolDecisionID3(min_obs_nodo=120)
+    arbol = ArbolDecisionID3(min_obs_nodo=1)
     arbol.fit(x_train, y_train)
     arbol.imprimir()
     y_pred = arbol.predict(x_test)
