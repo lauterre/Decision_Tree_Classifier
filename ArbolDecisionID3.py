@@ -8,10 +8,6 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
     def __init__(self, max_prof: int = -1, min_obs_nodo: int = -1) -> None:
         super().__init__()
         ClasificadorArbol.__init__(self, max_prof, min_obs_nodo)
-            
-    def _traer_hiperparametros(self, arbol_previo):
-        self.max_prof = arbol_previo.max_prof
-        self.min_obs_nodo = arbol_previo.min_obs_nodo
         
     def _traer_hiperparametros(self, arbol_previo):
         self.max_prof = arbol_previo.max_prof
