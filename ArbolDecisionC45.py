@@ -74,8 +74,8 @@ class ArbolDecisionC45(ArbolDecisionID3):
             if not ( len(arbol.target.unique()) == 1 or len(arbol.data.columns) == 0 
                     or (arbol.max_prof != -1 and arbol.max_prof <= prof_acum) 
                     or (arbol.min_obs_nodo != -1 and arbol.min_obs_nodo > arbol._total_samples() ) ):
-                mejor_atributo = arbol._mejor_split()
-                if isinstance(arbol.data[mejor_atributo].dtype, (float, int)):
+                mejor_atributo = arbol._mejor_atributo_split()
+                if pd.api.types.is_numeric_dtype(self.data[mejor_atributo]):
                     arbol._split_continuo(mejor_atributo)
                 else:
                     arbol._split(mejor_atributo)

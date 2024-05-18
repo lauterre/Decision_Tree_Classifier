@@ -56,6 +56,10 @@ class Arbol(ABC):
         return len(self.data)
     
     @abstractmethod
+    def agregar_subarbol(self, subarbol):
+        raise NotImplementedError
+    
+    @abstractmethod
     def copy(self):
         raise NotImplementedError
 
@@ -68,11 +72,11 @@ class Arbol(ABC):
         raise NotImplementedError
     
     @abstractmethod
-    def entropia(self):
+    def _entropia(self):
         raise NotImplementedError       #Este método no se si va aca, creo que solo es ID3. C4.5 usa la Ganancia de Informacion normalizada
     
     @abstractmethod
-    def _information_gain(self, atributo: str) -> float:
+    def _information_gain(self, atributo: str, valor:Any = None) -> float:
         raise NotImplementedError    
     
     @abstractmethod

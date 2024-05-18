@@ -8,11 +8,12 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
         super().__init__()
         ClasificadorArbol.__init__(self, max_prof, min_obs_nodo)
         
-    def _traer_hiperparametros(self, arbol_previo):
-        self.max_prof = arbol_previo.max_prof
-        self.min_obs_nodo = arbol_previo.min_obs_nodo
+    def agregar_subarbol(self, subarbol):
+        subarbol.max_prof = self.max_prof
+        subarbol.min_obs_nodo = self.min_obs_nodo
+        self.subs.append(subarbol)
     
-    def _mejor_atributo_split(self) -> str:  # mejor_atributo_split
+    def _mejor_atributo_split(self) -> str:
         mejor_ig = -1
         mejor_atributo = None
         atributos = self.data.columns
@@ -47,10 +48,9 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
             nuevo_arbol.target = nuevo_target
             nuevo_arbol.valor = categoria
             nuevo_arbol.clase = nuevo_target.value_counts().idxmax()
-            nuevo_arbol._traer_hiperparametros(self) # hice un metodo porque van a ser muchos de hiperparametros
-            self.subs.append(nuevo_arbol)
+            self.agregar_subarbol(nuevo_arbol)
     
-    def entropia(self) -> float:
+    def _entropia(self) -> float:
         entropia = 0
         proporciones = self.target.value_counts(normalize= True)
         target_categorias = self.target.unique()
@@ -59,8 +59,8 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
             entropia += proporcion * np.log2(proporcion)
         return -entropia if entropia != 0 else 0
     
-    def _information_gain(self, atributo: str) -> float:
-        entropia_actual = self.entropia()
+    def _information_gain(self, atributo: str, valor = None) -> float:
+        entropia_actual = self._entropia()
         len_actual = len(self.data)
 
         nuevo = self.copy()
@@ -69,7 +69,7 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
         entropias_subarboles = 0 
 
         for subarbol in nuevo.subs:
-            entropia = subarbol.entropia()
+            entropia = subarbol._entropia()
             len_subarbol = len(subarbol.data)
             entropias_subarboles += ((len_subarbol/len_actual)*entropia)
 
@@ -126,7 +126,7 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
         simbolo_rama = '└─── ' if es_ultimo else '├─── '
         split = "Split: " + str(self.atributo)
         rta = "Valor: " + str(self.valor)
-        entropia = f"Entropia: {round(self.entropia(), 2)}"
+        entropia = f"Entropia: {round(self._entropia(), 2)}"
         samples = f"Samples: {str (self._total_samples())}"
         values = f"Values: {str(self._values())}"
         clase = 'Clase: ' + str(self.clase)
