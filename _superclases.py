@@ -12,11 +12,11 @@ class Clasificador(ABC):
         raise NotImplementedError
 
 class ClasificadorArbol(Clasificador, ABC):
-    def __init__(self, max_prof: int = -1, min_obs_nodo: int = -1, min_infor_gain: float = -1):
+    def __init__(self, max_prof: int = -1, min_obs_nodo: int = -1, min_infor_gain: float = -1, min_obs_hoja: int = -1):
         self.max_prof = max_prof
         self.min_obs_nodo = min_obs_nodo
         self.min_infor_gain = min_infor_gain     
-        
+        self.min_obs_hoja = min_obs_hoja
 class Arbol(ABC):
     def __init__(self) -> None:
         self.data: pd.DataFrame 

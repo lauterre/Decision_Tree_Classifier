@@ -4,14 +4,15 @@ import numpy as np
 from _superclases import ClasificadorArbol, Arbol
 
 class ArbolDecisionID3(Arbol, ClasificadorArbol):
-    def __init__(self, max_prof: int = -1, min_obs_nodo: int = -1, min_infor_gain: int = -1) -> None:
+    def __init__(self, max_prof: int = -1, min_obs_nodo: int = -1, min_infor_gain: int = -1, min_obs_hoja: int = -1 ) -> None:
         super().__init__()
-        ClasificadorArbol.__init__(self, max_prof, min_obs_nodo, min_infor_gain)
+        ClasificadorArbol.__init__(self, max_prof, min_obs_nodo, min_infor_gain, min_obs_hoja)
         
     def _traer_hiperparametros(self, arbol_previo):
         self.max_prof = arbol_previo.max_prof
         self.min_obs_nodo = arbol_previo.min_obs_nodo
         self.min_infor_gain = arbol_previo.min_infor_gain
+        self.min_obs_hoja = arbol_previo.min_obs_hoja
     
     def _mejor_split(self) -> str: 
         mejor_ig = -1
@@ -39,18 +40,30 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
 
     def _split(self, atributo: str) -> None:
         
+        tmp_subs: list[Arbol]= []
         self.atributo = atributo # guardo el atributo por el cual spliteo
-        for categoria in self.data[atributo].unique():
+        
+        for categoria in self.data[atributo].unique(): #recorre el dominio de valores del atributo
             nueva_data = self.data[self.data[atributo] == categoria]
             nueva_data = nueva_data.drop(atributo, axis = 1) # la data del nuevo nodo sin el atributo por el cual ya se filtró
             nuevo_target = self.target[self.data[atributo] == categoria]
-            nuevo_arbol = ArbolDecisionID3()
-            nuevo_arbol.data = nueva_data
-            nuevo_arbol.target = nuevo_target
+            
+            nuevo_arbol = ArbolDecisionID3()    #Crea un nuevo arbol
+            nuevo_arbol.data = nueva_data       #Asigna nodo
+            nuevo_arbol.target = nuevo_target   #Asigna target
             nuevo_arbol.categoria = categoria
             nuevo_arbol.clase = nuevo_target.value_counts().idxmax()
             nuevo_arbol._traer_hiperparametros(self) # hice un metodo porque van a ser muchos de hiperparametros
-            self.subs.append(nuevo_arbol)
+        
+            tmp_subs.append (nuevo_arbol)   #Agrego el nuevo arbol en la lista temporal
+        
+        ok_min_obs_hoja = True
+        for sub_arbol in tmp_subs:
+            if (self.min_obs_hoja !=-1 and sub_arbol._total_samples() < self.min_obs_hoja):
+                ok_min_obs_hoja = False
+        
+        if ok_min_obs_hoja:
+            self.subs = tmp_subs
     
     def entropia(self) -> float:
         entropia = 0
@@ -179,7 +192,8 @@ def probar(df, target:str):
 
     x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     #arbol = ArbolDecisionID3(min_obs_nodo=1)
-    arbol = ArbolDecisionID3(min_infor_gain=0.85)
+    #arbol = ArbolDecisionID3(min_infor_gain=0.85)
+    arbol = ArbolDecisionID3(min_obs_hoja=8)
     arbol.fit(x_train, y_train)
     arbol.imprimir()
     y_pred = arbol.predict(x_test)
