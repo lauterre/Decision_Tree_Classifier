@@ -14,9 +14,9 @@ class ArbolDecisionC45(ArbolDecisionID3):
     def _split(self, atributo: str, valor: Any = None) -> None:
         self.atributo = atributo
         if valor:
-            nueva_data_si = self.data[self.data[atributo] <= valor]
+            nueva_data_si = self.data[self.data[atributo] < valor]
             nueva_data_sd = self.data[self.data[atributo] > valor]
-            nueva_target_si = self.target[self.data[atributo] <= valor]
+            nueva_target_si = self.target[self.data[atributo] < valor]
             nueva_target_sd = self.target[self.data[atributo] > valor]
             nuevo_si = ArbolDecisionC45()
             nuevo_sd = ArbolDecisionC45()
@@ -25,7 +25,7 @@ class ArbolDecisionC45(ArbolDecisionID3):
             nuevo_si.target = nueva_target_si
             nuevo_sd.target = nueva_target_sd
             nuevo_si.clase = nueva_target_si.value_counts().idxmax()
-            nuevo_sd.clase = nueva_target_sd.value_counts().idxmax() if len(nueva_target_sd) > 0 else None
+            nuevo_sd.clase = nueva_target_sd.value_counts().idxmax()# if len(nueva_target_sd) > 0 else None
             nuevo_si.valor = valor
             nuevo_sd.valor = valor
             self.agregar_subarbol(nuevo_si)
@@ -70,12 +70,17 @@ class ArbolDecisionC45(ArbolDecisionID3):
     def _mejor_umbral_split(self, atributo: str) -> float:
         # ordeno la data
         self.data = self.data.sort_values(by=atributo)
-        self.target = self.target.loc[self.data.index]
 
         mejor_ig = -1
         mejor_umbral = None
 
-        for umbral in self.data[atributo].values:
+        valores_unicos = self.data[atributo].unique()
+
+        for i, valor in enumerate(valores_unicos):
+            if i+1 == len(valores_unicos): # feo, pero sirve
+                break
+
+            umbral = (valor + valores_unicos[i+1]) / 2 # el umbral es el valor medio entre valor actual y el siguiente
             ig = self._information_gain(atributo, umbral) # uso information_gain, gain_ratio es para la seleccion de atributo
             if ig > mejor_ig:
                 mejor_ig = ig
@@ -83,12 +88,12 @@ class ArbolDecisionC45(ArbolDecisionID3):
 
         return float(mejor_umbral)
         
-    def _gain_ratio(self)
-        pass
+    # def _gain_ratio(self):
+    #     pass
 
     # sobreescribir para que use gain_ratio
-    def _mejor_atributo_split(self) -> str:
-        pass
+    # def _mejor_atributo_split(self) -> str:
+    #     pass
 
 
     def fit(self, X: pd.DataFrame, y: pd.Series):
@@ -122,7 +127,7 @@ class ArbolDecisionC45(ArbolDecisionID3):
     def imprimir(self, prefijo: str = '  ', es_ultimo: bool = True) -> None:
         simbolo_rama = '└─── ' if es_ultimo else '├─── '
         split = f"Split: {str(self.atributo)}"
-        rta = f"Valor: > {str(self.valor)}" if es_ultimo else f"Valor: <= {str(self.valor)}"
+        rta = f"Valor: > {str(self.valor)}" if es_ultimo else f"Valor: < {str(self.valor)}"
         entropia = f"Entropia: {round(self._entropia(), 2)}"
         samples = f"Samples: {str (self._total_samples())}"
         values = f"Values: {str(self._values())}"
