@@ -1,122 +1,202 @@
+from copy import deepcopy
 from ArbolDecisionID3 import ArbolDecisionID3
-from sklearn.model_selection import train_test_split
-from sklearn.datasets import load_iris
 import pandas as pd
 import numpy as np
 from _superclases import ClasificadorArbol, Arbol
 from typing import Any, Optional
-#------------------------------------------------------------------------------
-# * Se implementa el método _split_continuo para manejar la división de 
-# atributos continuos.
-# * Se implementa el cálculo del Gain Ratio en el método 
-# _information_gain_ratio_continuo.
-# * Se modificó el método fit para que divida los atributos continuos 
-# si es necesario.
-# Se agregaron los métodos podar y _weighted_data para el manejo 
-# de podado por reglas (a implementar)
-#-------------------------------------------------------------------------------
+
+
 class ArbolDecisionC45(ArbolDecisionID3):
     def __init__(self, max_prof: int = -1, min_obs_nodo: int = -1) -> None:
         super().__init__(max_prof, min_obs_nodo)
+
+
+    def _nuevo_subarbol(self, atributo: str, operacion: str, valor: Any = None):
+        nuevo = ArbolDecisionC45()
+        if operacion == "menor":
+            nuevo.data = self.data[self.data[atributo] < valor]
+            nuevo.target = self.target[self.data[atributo] < valor]
+        elif operacion == "mayor":
+            nuevo.data = self.data[self.data[atributo] > valor]
+            nuevo.target = self.target[self.data[atributo] > valor]
+        elif operacion == "igual":
+            nueva_data = self.data[self.data[atributo] == valor]
+            nueva_data = nueva_data.drop(atributo, axis = 1)
+            nuevo.data = nueva_data
+            nuevo.target = self.target[self.data[atributo] == valor]
+        nuevo.clase = nuevo.target.value_counts().idxmax()
+        nuevo.valor = valor
+        self.agregar_subarbol(nuevo)
+
     
-    # función que busca el mejor atributo para dividir el conjunto de datos,
-    def _split_continuo(self, atributo: str) -> None:
-        # Ordenar los valores únicos en orden ascendente
-        valores_ordenados = sorted(self.data[atributo].unique())
-        # Seleccionar puntos medios como posibles umbrales
-        umbrales = [(valores_ordenados[i] + valores_ordenados[i+1]) / 2 for i in range(len(valores_ordenados) - 1)]
-        # Calcular la ganancia de información para cada umbral
-        mejor_ig_ratio = -1
-        mejor_umbral = None
-        for umbral in umbrales:
-            ig_ratio = self._information_gain_ratio_continuo(atributo, umbral)
-            if ig_ratio > mejor_ig_ratio:
-                mejor_ig_ratio = ig_ratio
-                mejor_umbral = umbral
-        # Dividir el atributo en base al mejor umbral
-        self._split(atributo, mejor_umbral)
-
-    # Implementación del cálculo del Gain Ratio para atributos continuos 
-    def _information_gain_ratio_continuo(self, atributo: str, umbral: float) -> float:
-        # Divide el conjunto de datos en dos grupos basados en el umbral
-        grupo_izquierdo = self.data[self.data[atributo] <= umbral]
-        grupo_derecho = self.data[self.data[atributo] > umbral]
-        # Calcula la entropía de los grupos resultantes
-        entropia_grupo_izquierdo = self._entropy(grupo_izquierdo)
-        entropia_grupo_derecho = self._entropy(grupo_derecho)
-        # Calcula la entropía del conjunto de datos respecto al atributo
-        entropia_atributo = (len(grupo_izquierdo) / len(self.data)) * entropia_grupo_izquierdo \
-                            + (len(grupo_derecho) / len(self.data)) * entropia_grupo_derecho
-        # Calcula la entropía del conjunto de datos respecto a la distribución del atributo
-        entropia_distribucion_atributo = self._entropy(self.data[atributo])
-        # Calcula el split info
-        split_info = self._entropy(grupo_izquierdo[atributo]) + self._entropy(grupo_derecho[atributo])
-        # Calcula el gain ratio
-        if split_info != 0:
-            gain_ratio = (entropia_distribucion_atributo - entropia_atributo) / split_info
+    def _split(self, atributo: str, valor: Any = None) -> None:
+        self.atributo = atributo
+        if valor:
+            self._nuevo_subarbol(atributo, "menor", valor)
+            self._nuevo_subarbol(atributo, "mayor", valor)
         else:
-            gain_ratio = 0
-        return gain_ratio
+            for categoria in self.data[atributo].unique():
+                self._nuevo_subarbol(atributo, "igual", categoria)        
 
-    def _entropy(self, data: pd.Series) -> float:
-        proporciones = data.value_counts(normalize=True)
-        entropia = -(proporciones * np.log2(proporciones)).sum()
-        return entropia if not np.isnan(entropia) else 0
+    # No me gusta esto de pasar None y tampoco me gusta no sobreescribir los metodos (_information_gain_continuo y demás)
+    # preguntar a Mariano
+    def _information_gain(self, atributo: str, valor=None) -> float:
+        # si valor no es none estamos usando un atributo numerico
+        if valor:
+            entropia_actual = self._entropia()
+            len_actual = len(self.data)
+
+            information_gain = entropia_actual
+
+            nuevo = deepcopy(self)
+            nuevo._split(atributo, valor)
+
+            entropia_izq = nuevo.subs[0]._entropia()
+            len_izq = len(nuevo.subs[0].data)
+            entropia_der = nuevo.subs[1]._entropia()
+            len_der = len(nuevo.subs[1].data)
+
+            information_gain -= ((len_izq/len_actual)*entropia_izq + (len_der/len_actual)*entropia_der)
+
+        else: # si no es continuo
+            information_gain =  super()._information_gain(atributo)
+
+        return information_gain   
+    
+    def _split_info(self):
+        split_info = 0
+        len_actual = len(self.data)
+        for subarbol in self.subs:
+            len_subarbol = len(subarbol.data)
+            split_info += (len_subarbol/ len_actual) * np.log2(len_subarbol/ len_actual)
+        return -split_info
+    
+    
+    def _gain_ratio(self, atributo:str):
+        nuevo = deepcopy(self)
+
+        information_gain = nuevo._information_gain(atributo)
+
+        umbral = nuevo._mejor_umbral_split(atributo)
+        nuevo._split(atributo, umbral)
+
+        split_info = nuevo._split_info()
+
+        return information_gain / split_info
+    
+    def _mejor_atributo_split(self) -> str:
+        mejor_gain_ratio = -1
+        mejor_atributo = None
+        atributos = self.data.columns
+
+        for atributo in atributos:
+            gain_ratio = self._gain_ratio(atributo)
+            if gain_ratio > mejor_gain_ratio:
+                mejor_gain_ratio = gain_ratio
+                mejor_atributo = atributo
+        
+        return mejor_atributo
+    
+
+    def _mejor_umbral_split(self, atributo: str) -> float:
+        self.data = self.data.sort_values(by=atributo)
+
+        mejor_ig = -1
+        mejor_umbral = None
+
+        valores_unicos = self.data[atributo].unique()
+
+        i = 0
+        while i < len(valores_unicos) - 1:
+            umbral = (valores_unicos[i] + valores_unicos[i+1]) / 2
+            ig = self._information_gain(atributo, umbral) # uso information_gain, gain_ratio es para la seleccion de atributo
+            if ig > mejor_ig:
+                mejor_ig = ig
+                mejor_umbral = umbral
+            i += 1
+
+        return float(mejor_umbral)
 
     def fit(self, X: pd.DataFrame, y: pd.Series):
         self.target = y
         self.data = X
         self.clase = self.target.value_counts().idxmax()
+        
         def _interna(arbol: ArbolDecisionC45, prof_acum: int = 0):
             arbol.target_categorias = y.unique()
+            
             if prof_acum == 0:
                 prof_acum = 1
+            
             if not ( len(arbol.target.unique()) == 1 or len(arbol.data.columns) == 0 
                     or (arbol.max_prof != -1 and arbol.max_prof <= prof_acum) 
                     or (arbol.min_obs_nodo != -1 and arbol.min_obs_nodo > arbol._total_samples() ) ):
-                mejor_atributo = arbol._mejor_atributo_split()
-                if pd.api.types.is_numeric_dtype(self.data[mejor_atributo]):
-                    arbol._split_continuo(mejor_atributo)
+                
+                mejor_atributo = arbol._mejor_atributo_split() # este metodo usa information_gain y deberia usar gain_ratio, si entendi bien el gain_ratio es solo para eleccion de atributo
+
+                if pd.api.types.is_numeric_dtype(self.data[mejor_atributo]): # si es numerica
+                    mejor_umbral = arbol._mejor_umbral_split(mejor_atributo)
+                    arbol._split(mejor_atributo, mejor_umbral)
                 else:
                     arbol._split(mejor_atributo)
+
                 for sub_arbol in arbol.subs:
                     _interna(sub_arbol, prof_acum+1)
+
         _interna(self)
+    
+    def imprimir(self, prefijo: str = '  ', es_ultimo: bool = True) -> None:
+        simbolo_rama = '└─── ' if es_ultimo else '├─── '
+        split = f"Split: {str(self.atributo)}"
+        rta = f"Valor: > {str(self.valor)}" if es_ultimo else f"Valor: < {str(self.valor)}"
+        entropia = f"Entropia: {round(self._entropia(), 2)}"
+        samples = f"Samples: {str (self._total_samples())}"
+        values = f"Values: {str(self._values())}"
+        clase = 'Clase: ' + str(self.clase)
+        if self.es_raiz():
+            print(entropia)
+            print(samples)
+            print(values)
+            print(clase)
+            print(split)
 
-# A implemtar --------------------------------------------------   
-    # Implementa el proceso de podado por reglas
-    def podar(self):
-        pass
-    # Implementa el manejo de datos ponderados
-    def _weighted_data(self, X: pd.DataFrame, y: pd.Series):
-        pass
-#----------------------------------------------------------------------------  
-    def accuracy_score(self, y_true: pd.Series, y_pred: list[str]) -> float:
-        if len(y_true) != len(y_pred):
-            raise ValueError("Las longitudes de y_true y y_pred deben ser iguales.")
-        correctas = sum(1 for yt, yp in zip(y_true, y_pred) if yt == yp)
-        precision = correctas / len(y_true)
-        return precision
+            for i, sub_arbol in enumerate(self.subs):
+                ultimo: bool = i == len(self.subs) - 1
+                sub_arbol.imprimir(prefijo, ultimo)
 
-def probar_C45(df, target:str):
-        X = df.drop(target, axis=1)
-        y = df[target]
-        x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-        arbol = ArbolDecisionC45(min_obs_nodo=20)
-        arbol.fit(x_train, y_train)
-        arbol.imprimir()
-        y_pred = arbol.predict(x_test)
-        accuracy = arbol.accuracy_score(y_test, y_pred)
-        print(f"\naccuracy: {accuracy}")
-        print(f"cantidad de nodos: {len(arbol)}")
-        print(f"altura: {arbol.altura()}\n")    
-#----------------------------------------------------------------------------
-        
+        elif not self.es_hoja():
+            print(prefijo + "│")
+            print(prefijo + simbolo_rama + rta)
+            prefijo2 = prefijo + " " * (len(simbolo_rama)) if es_ultimo else prefijo +"│" + " " * (len(simbolo_rama) - 1)
+            print(prefijo2 + entropia)
+            print(prefijo2 + samples)
+            print(prefijo2 + values)
+            print(prefijo2 + clase)
+            print(prefijo2 + split)
+            
+            prefijo += ' '*10 if es_ultimo else '│' + ' '*9
+            for i, sub_arbol in enumerate(self.subs):
+                ultimo: bool = i == len(self.subs) - 1
+                sub_arbol.imprimir(prefijo, ultimo)
+        else:
+            prefijo_hoja = prefijo + " "*len(simbolo_rama) if es_ultimo else prefijo + "│" + " "*(len(simbolo_rama) -1)
+            print(prefijo + "│")
+            print(prefijo + simbolo_rama + rta)
+            print(prefijo_hoja + entropia)
+            print(prefijo_hoja + samples)
+            print(prefijo_hoja + values)
+            print(prefijo_hoja + clase)
+
+
 if __name__ == "__main__":
-    iris = load_iris()
-    iris_df = pd.DataFrame(data=iris.data, columns=iris.feature_names)
-    iris_df['target'] = iris.target
-    probar_C45(iris_df, "target")
+    import sklearn.datasets
+    iris = sklearn.datasets.load_iris()
+    df = pd.DataFrame(data=iris.data, columns=iris.feature_names)
+    df['target'] = iris.target
 
+    X = df.drop("target", axis = 1)
+    y = df["target"]
 
-  
+    arbol = ArbolDecisionC45(max_prof=5)
+    arbol.fit(X, y)
+    arbol.imprimir()
