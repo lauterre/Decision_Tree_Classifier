@@ -4,13 +4,15 @@ import numpy as np
 from _superclases import ClasificadorArbol, Arbol
 
 class ArbolDecisionID3(Arbol, ClasificadorArbol):
-    def __init__(self, max_prof: int = -1, min_obs_nodo: int = -1) -> None:
+    def __init__(self, max_prof: int = -1, min_obs_nodo: int = -1, min_infor_gain: int = -1, min_obs_hoja: int = -1 ) -> None:
         super().__init__()
-        ClasificadorArbol.__init__(self, max_prof, min_obs_nodo)
+        ClasificadorArbol.__init__(self, max_prof, min_obs_nodo, min_infor_gain, min_obs_hoja)
         
     def agregar_subarbol(self, subarbol):
         subarbol.max_prof = self.max_prof
         subarbol.min_obs_nodo = self.min_obs_nodo
+        subarbol.min_infor_gain = self.min_infor_gain
+        subarbol.min_obs_hoja = self.min_obs_hoja
         self.subs.append(subarbol)
     
     def _mejor_atributo_split(self) -> str:
@@ -27,7 +29,7 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
         return mejor_atributo
     
     def copy(self):
-        nuevo = ArbolDecisionID3(self.max_prof, self.min_obs_nodo)
+        nuevo = ArbolDecisionID3(self.max_prof, self.min_obs_nodo, self.min_infor_gain)
         nuevo.data = self.data.copy()
         nuevo.target = self.target.copy()
         nuevo.atributo = self.atributo
@@ -37,18 +39,32 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
         nuevo.subs = [sub.copy() for sub in self.subs]
         return nuevo
 
-    def _split(self, atributo: str, valor = None) -> None:
+    def _split(self, atributo: str, valor= None) -> None:
+        
+        tmp_subs: list[Arbol]= []
         self.atributo = atributo # guardo el atributo por el cual spliteo
-        for categoria in self.data[atributo].unique():
+        
+        for categoria in self.data[atributo].unique(): #recorre el dominio de valores del atributo
             nueva_data = self.data[self.data[atributo] == categoria]
             nueva_data = nueva_data.drop(atributo, axis = 1) # la data del nuevo nodo sin el atributo por el cual ya se filtró
             nuevo_target = self.target[self.data[atributo] == categoria]
-            nuevo_arbol = ArbolDecisionID3()
-            nuevo_arbol.data = nueva_data
-            nuevo_arbol.target = nuevo_target
+            
+            nuevo_arbol = ArbolDecisionID3()    #Crea un nuevo arbol
+            nuevo_arbol.data = nueva_data       #Asigna nodo
+            nuevo_arbol.target = nuevo_target   #Asigna target
             nuevo_arbol.valor = categoria
             nuevo_arbol.clase = nuevo_target.value_counts().idxmax()
-            self.agregar_subarbol(nuevo_arbol)
+            nuevo_arbol._traer_hiperparametros(self) # hice un metodo porque van a ser muchos de hiperparametros
+        
+            tmp_subs.append (nuevo_arbol)   #Agrego el nuevo arbol en la lista temporal
+        
+        ok_min_obs_hoja = True
+        for sub_arbol in tmp_subs:
+            if (self.min_obs_hoja !=-1 and sub_arbol._total_samples() < self.min_obs_hoja):
+                ok_min_obs_hoja = False
+        
+        if ok_min_obs_hoja:
+            self.subs = tmp_subs
     
     def _entropia(self) -> float:
         entropia = 0
@@ -78,12 +94,6 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
 
 
     def fit(self, X: pd.DataFrame, y: pd.Series):
-        '''
-        Condicion de split
-              - Unico valor para target (nodo puro)
-              - No hay mas atributos
-              - max_profundidaself.data = X
-        '''
         self.target = y
         self.data = X
         self.clase = self.target.value_counts().idxmax()
@@ -96,12 +106,17 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
             
             if not ( len(arbol.target.unique()) == 1 or len(arbol.data.columns) == 0 
                     or (arbol.max_prof != -1 and arbol.max_prof <= prof_acum) 
-                    or (arbol.min_obs_nodo != -1 and arbol.min_obs_nodo > arbol._total_samples() ) ):
+                    or (arbol.min_obs_nodo != -1 and arbol.min_obs_nodo > arbol._total_samples() ) 
+                    ):
                 
                 mejor_atributo = arbol._mejor_atributo_split()
-                arbol._split(mejor_atributo)
-                for sub_arbol in arbol.subs:
-                    _interna(sub_arbol, prof_acum+1)
+                mejor_ig = arbol._information_gain(mejor_atributo)
+    
+                if (arbol.min_infor_gain == -1 or mejor_ig >= arbol.min_infor_gain):
+                    arbol._split(mejor_atributo)
+       
+                    for sub_arbol in arbol.subs:
+                        _interna(sub_arbol, prof_acum+1)
 
         _interna(self)
     
@@ -176,8 +191,11 @@ def accuracy_score(y_true: list[str], y_pred: list[str]) -> float:
 def probar(df, target:str):
     X = df.drop(target, axis=1)
     y = df[target]
+
     x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    arbol = ArbolDecisionID3(min_obs_nodo=1)
+    #arbol = ArbolDecisionID3(min_obs_nodo=1)
+    #arbol = ArbolDecisionID3(min_infor_gain=0.85)
+    arbol = ArbolDecisionID3(min_obs_hoja=8)
     arbol.fit(x_train, y_train)
     arbol.imprimir()
     y_pred = arbol.predict(x_test)
