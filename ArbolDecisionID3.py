@@ -2,6 +2,7 @@ from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
 from _superclases import ClasificadorArbol, Arbol
+from Graficador import TreePlot
 
 class ArbolDecisionID3(Arbol, ClasificadorArbol):
     def __init__(self, max_prof: int = -1, min_obs_nodo: int = -1) -> None:
@@ -184,19 +185,23 @@ def probar(df, target:str):
     print(f"\naccuracy: {accuracy_score(y_test.tolist(), y_pred)}")
     print(f"cantidad de nodos: {len(arbol)}")
     print(f"altura: {arbol.altura()}\n")
-
+    plotter = TreePlot(arbol)
+    plotter.plot()
 
 if __name__ == "__main__":
     #https://www.kaggle.com/datasets/thedevastator/cancer-patients-and-air-pollution-a-new-link
-    patients = pd.read_csv("cancer_patients.csv", index_col=0)
+    patients = pd.read_csv("G:/algo2/TP_Final_algo2/TP_Final/cancer_patients.csv", index_col=0)
     patients = patients.drop("Patient Id", axis = 1)
     bins = [0, 15, 20, 30, 40, 50, 60, 70, float('inf')]
     labels = ['0-15', '15-20', '20-30', '30-40', '40-50', '50-60', '60-70', '70+']
     patients['Age'] = pd.cut(patients['Age'], bins=bins, labels=labels, right=False)
 
-    tennis = pd.read_csv("PlayTennis.csv")
+    tennis = pd.read_csv("G:/algo2/TP_Final_algo2/TP_Final/PlayTennis.csv")
 
     print("Pruebo con patients\n")
     probar(patients, "Level")
     print("Pruebo con Play Tennis\n")
     probar(tennis, "Play Tennis")
+
+
+
