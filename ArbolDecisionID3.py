@@ -8,13 +8,14 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
         super().__init__()
         ClasificadorArbol.__init__(self, max_prof, min_obs_nodo, min_infor_gain, min_obs_hoja)
         
-    def _traer_hiperparametros(self, arbol_previo):
-        self.max_prof = arbol_previo.max_prof
-        self.min_obs_nodo = arbol_previo.min_obs_nodo
-        self.min_infor_gain = arbol_previo.min_infor_gain
-        self.min_obs_hoja = arbol_previo.min_obs_hoja
+    def agregar_subarbol(self, subarbol):
+        subarbol.max_prof = self.max_prof
+        subarbol.min_obs_nodo = self.min_obs_nodo
+        subarbol.min_infor_gain = self.min_infor_gain
+        subarbol.min_obs_hoja = self.min_obs_hoja
+        self.subs.append(subarbol)
     
-    def _mejor_split(self) -> str: 
+    def _mejor_atributo_split(self) -> str:
         mejor_ig = -1
         mejor_atributo = None
         atributos = self.data.columns
@@ -32,13 +33,13 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
         nuevo.data = self.data.copy()
         nuevo.target = self.target.copy()
         nuevo.atributo = self.atributo
-        nuevo.categoria = self.categoria
+        nuevo.valor = self.valor
         nuevo.target_categorias = self.target_categorias.copy() 
         nuevo.clase = self.clase
         nuevo.subs = [sub.copy() for sub in self.subs]
         return nuevo
 
-    def _split(self, atributo: str) -> None:
+    def _split(self, atributo: str, valor= None) -> None:
         
         tmp_subs: list[Arbol]= []
         self.atributo = atributo # guardo el atributo por el cual spliteo
@@ -51,7 +52,7 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
             nuevo_arbol = ArbolDecisionID3()    #Crea un nuevo arbol
             nuevo_arbol.data = nueva_data       #Asigna nodo
             nuevo_arbol.target = nuevo_target   #Asigna target
-            nuevo_arbol.categoria = categoria
+            nuevo_arbol.valor = categoria
             nuevo_arbol.clase = nuevo_target.value_counts().idxmax()
             nuevo_arbol._traer_hiperparametros(self) # hice un metodo porque van a ser muchos de hiperparametros
         
@@ -65,7 +66,7 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
         if ok_min_obs_hoja:
             self.subs = tmp_subs
     
-    def entropia(self) -> float:
+    def _entropia(self) -> float:
         entropia = 0
         proporciones = self.target.value_counts(normalize= True)
         target_categorias = self.target.unique()
@@ -74,8 +75,8 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
             entropia += proporcion * np.log2(proporcion)
         return -entropia if entropia != 0 else 0
     
-    def _information_gain(self, atributo: str) -> float:
-        entropia_actual = self.entropia()
+    def _information_gain(self, atributo: str, valor = None) -> float:
+        entropia_actual = self._entropia()
         len_actual = len(self.data)
 
         nuevo = self.copy()
@@ -84,7 +85,7 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
         entropias_subarboles = 0 
 
         for subarbol in nuevo.subs:
-            entropia = subarbol.entropia()
+            entropia = subarbol._entropia()
             len_subarbol = len(subarbol.data)
             entropias_subarboles += ((len_subarbol/len_actual)*entropia)
 
@@ -108,14 +109,15 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
                     or (arbol.min_obs_nodo != -1 and arbol.min_obs_nodo > arbol._total_samples() ) 
                     ):
                 
-                mejor_atributo = arbol._mejor_split()
+                mejor_atributo = arbol._mejor_atributo_split()
                 mejor_ig = arbol._information_gain(mejor_atributo)
-                
+    
                 if (arbol.min_infor_gain == -1 or mejor_ig >= arbol.min_infor_gain):
                     arbol._split(mejor_atributo)
-                
+       
                     for sub_arbol in arbol.subs:
-                        _interna(sub_arbol, prof_acum+1)        
+                        _interna(sub_arbol, prof_acum+1)
+
         _interna(self)
     
     def predict(self, X:pd.DataFrame) -> list[str]:
@@ -127,7 +129,7 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
             else:
                 direccion = fila[arbol.atributo]
                 for subarbol in arbol.subs:
-                    if direccion == subarbol.categoria: #subarbol.valor
+                    if direccion == subarbol.valor:
                         _recorrer(subarbol, fila)
         
         for _, fila in X.iterrows():
@@ -138,8 +140,8 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
     def imprimir(self, prefijo: str = '  ', es_ultimo: bool = True) -> None:
         simbolo_rama = '└─── ' if es_ultimo else '├─── '
         split = "Split: " + str(self.atributo)
-        rta = "Valor: " + str(self.categoria)
-        entropia = f"Entropia: {round(self.entropia(), 2)}"
+        rta = "Valor: " + str(self.valor)
+        entropia = f"Entropia: {round(self._entropia(), 2)}"
         samples = f"Samples: {str (self._total_samples())}"
         values = f"Values: {str(self._values())}"
         clase = 'Clase: ' + str(self.clase)
