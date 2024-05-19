@@ -163,9 +163,38 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
             print(prefijo_hoja + samples)
             print(prefijo_hoja + values)
             print(prefijo_hoja + clase)
+    
+    
+    def _error_clasificacion(y, y_pred):
+        return np.mean(y != y_pred)
+        
+    def Reduced_Error_Pruning (self, x_test: any, y_test: any):
+        # if arbol.es_hoja:
+        #     return
+        
+        pred_original = self.predict (x_test)
+        accuracy_original = self (y_test, pred_original)
+        error_clasif_original = self._error_clasificacion(y_test, pred_original)
+        
+        for rama in self.subs:
+            new_arbol: ArbolDecisionID3 = rama
+            pred_podada = new_arbol.predict (x_test)
+            accuracy_podada = self (y_test, pred_podada)
+            error_clasif_podada = self._error_clasificacion(y_test, pred_podada)
+        
+        # if precision_podada > mejor_precision:
+        #     mejor_rama = rama
+        #     mejor_precision = precision_podada
 
-
-def accuracy_score(y_true: list[str], y_pred: list[str]) -> float:
+        # if mejor_rama is not None:
+        #     arbol_podado = podar_rama(arbol, mejor_rama)
+        #     return REP(arbol_podado, conjunto_validacion)
+        # else:
+        #     return arbol
+  
+        # for subarbol in arbol.subs:    
+        
+    def accuracy_score(y_true: list[str], y_pred: list[str]) -> float:
         if len(y_true) != len(y_pred):
             raise ValueError()
         correctas = sum(1 for yt, yp in zip(y_true, y_pred) if yt == yp)
@@ -181,7 +210,10 @@ def probar(df, target:str):
     arbol.fit(x_train, y_train)
     arbol.imprimir()
     y_pred = arbol.predict(x_test)
-    print(f"\naccuracy: {accuracy_score(y_test.tolist(), y_pred)}")
+ 
+    arbol.Reduced_Error_Pruning(x_test, y_test)
+ 
+    print(f"\naccuracy: {arbol.accuracy_score(y_test.tolist(), y_pred)}")
     print(f"cantidad de nodos: {len(arbol)}")
     print(f"altura: {arbol.altura()}\n")
 
