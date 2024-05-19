@@ -1,3 +1,4 @@
+from copy import deepcopy
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
@@ -14,6 +15,12 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
         subarbol.min_infor_gain = self.min_infor_gain
         subarbol.min_obs_hoja = self.min_obs_hoja
         self.subs.append(subarbol)
+
+    # def _traer_hiperparametros(self, arbol_previo):
+    #     self.max_prof = arbol_previo.max_prof
+    #     self.min_obs_nodo = arbol_previo.min_obs_nodo
+    #     self.min_infor_gain = arbol_previo.min_infor_gain
+    #     self.min_obs_hoja = arbol_previo.min_obs_hoja
     
     def _mejor_atributo_split(self) -> str:
         mejor_ig = -1
@@ -40,8 +47,8 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
         return nuevo
 
     def _split(self, atributo: str, valor= None) -> None:
-        
-        tmp_subs: list[Arbol]= []
+        temp = deepcopy(self)
+        #tmp_subs: list[Arbol]= []
         self.atributo = atributo # guardo el atributo por el cual spliteo
         
         for categoria in self.data[atributo].unique(): #recorre el dominio de valores del atributo
@@ -54,17 +61,15 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
             nuevo_arbol.target = nuevo_target   #Asigna target
             nuevo_arbol.valor = categoria
             nuevo_arbol.clase = nuevo_target.value_counts().idxmax()
-            nuevo_arbol._traer_hiperparametros(self) # hice un metodo porque van a ser muchos de hiperparametros
-        
-            tmp_subs.append (nuevo_arbol)   #Agrego el nuevo arbol en la lista temporal
+            temp.agregar_subarbol(nuevo_arbol)   #Agrego el nuevo arbol en el arbol temporal
         
         ok_min_obs_hoja = True
-        for sub_arbol in tmp_subs:
+        for sub_arbol in temp.subs:
             if (self.min_obs_hoja !=-1 and sub_arbol._total_samples() < self.min_obs_hoja):
                 ok_min_obs_hoja = False
         
         if ok_min_obs_hoja:
-            self.subs = tmp_subs
+            self.subs = temp.subs
     
     def _entropia(self) -> float:
         entropia = 0
