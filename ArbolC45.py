@@ -31,7 +31,7 @@ class ArbolDecisionC45(ArbolDecisionID3):
             self.agregar_subarbol(nuevo_si)
             self.agregar_subarbol(nuevo_sd)
         else:
-            #super()._split(atributo) crea arboles id3
+            #super()._split(atributo) crea arboles id3, por eso no lo uso
             for categoria in self.data[atributo].unique():
                 nueva_data = self.data[self.data[atributo] == categoria]
                 nueva_data = nueva_data.drop(atributo, axis = 1) # la data del nuevo nodo sin el atributo por el cual ya se filtró
@@ -45,6 +45,7 @@ class ArbolDecisionC45(ArbolDecisionID3):
         
 
     def _information_gain(self, atributo: str, valor=None) -> float:
+        # si valor no es none estamos usando un atributo numerico
         if valor:
             entropia_actual = self._entropia()
             len_actual = len(self.data)
@@ -61,28 +62,35 @@ class ArbolDecisionC45(ArbolDecisionID3):
 
             information_gain -= ((len_izq/len_actual)*entropia_izq + (len_der/len_actual)*entropia_der)
 
-        else:
+        else: # si no es continuo
             information_gain =  super()._information_gain(atributo) 
 
         return information_gain   
 
     def _mejor_umbral_split(self, atributo: str) -> float:
+        # ordeno la data
         self.data = self.data.sort_values(by=atributo)
         self.target = self.target.loc[self.data.index]
-        #serie_sorted.reset_index(drop=True, inplace=True)
 
         mejor_ig = -1
         mejor_umbral = None
 
         for umbral in self.data[atributo].values:
-            ig = self._information_gain(atributo, umbral) # mejorar a ig ratio
+            ig = self._information_gain(atributo, umbral) # uso information_gain, gain_ratio es para la seleccion de atributo
             if ig > mejor_ig:
                 mejor_ig = ig
                 mejor_umbral = umbral
 
         return float(mejor_umbral)
         
-        
+    def _gain_ratio(self)
+        pass
+
+    # sobreescribir para que use gain_ratio
+    def _mejor_atributo_split(self) -> str:
+        pass
+
+
     def fit(self, X: pd.DataFrame, y: pd.Series):
         self.target = y
         self.data = X
@@ -98,7 +106,7 @@ class ArbolDecisionC45(ArbolDecisionID3):
                     or (arbol.max_prof != -1 and arbol.max_prof <= prof_acum) 
                     or (arbol.min_obs_nodo != -1 and arbol.min_obs_nodo > arbol._total_samples() ) ):
                 
-                mejor_atributo = arbol._mejor_atributo_split()
+                mejor_atributo = arbol._mejor_atributo_split() # este metodo usa information_gain y deberia usar gain_ratio, si entendi bien el gain_ratio es solo para eleccion de atributo
 
                 if pd.api.types.is_numeric_dtype(self.data[mejor_atributo]): # si es numerica
                     mejor_umbral = arbol._mejor_umbral_split(mejor_atributo)
@@ -152,6 +160,8 @@ class ArbolDecisionC45(ArbolDecisionID3):
             print(prefijo_hoja + samples)
             print(prefijo_hoja + values)
             print(prefijo_hoja + clase)
+
+
 if __name__ == "__main__":
     import sklearn.datasets
     iris = sklearn.datasets.load_iris()
