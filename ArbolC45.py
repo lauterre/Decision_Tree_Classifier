@@ -10,39 +10,33 @@ class ArbolDecisionC45(ArbolDecisionID3):
     def __init__(self, max_prof: int = -1, min_obs_nodo: int = -1) -> None:
         super().__init__(max_prof, min_obs_nodo)
 
+
+    def _nuevo_subarbol(self, atributo: str, operacion: str, valor: Any = None):
+        nuevo = ArbolDecisionC45()
+        if operacion == "menor":
+            nuevo.data = self.data[self.data[atributo] < valor]
+            nuevo.target = self.target[self.data[atributo] < valor]
+        elif operacion == "mayor":
+            nuevo.data = self.data[self.data[atributo] > valor]
+            nuevo.target = self.target[self.data[atributo] > valor]
+        elif operacion == "igual":
+            nueva_data = self.data[self.data[atributo] == valor]
+            nueva_data = nueva_data.drop(atributo, axis = 1)
+            nuevo.data = nueva_data
+            nuevo.target = self.target[self.data[atributo] == valor]
+        nuevo.clase = nuevo.target.value_counts().idxmax()
+        nuevo.valor = valor
+        self.agregar_subarbol(nuevo)
+
     
     def _split(self, atributo: str, valor: Any = None) -> None:
         self.atributo = atributo
         if valor:
-            nueva_data_si = self.data[self.data[atributo] < valor]
-            nueva_data_sd = self.data[self.data[atributo] > valor]
-            nueva_target_si = self.target[self.data[atributo] < valor]
-            nueva_target_sd = self.target[self.data[atributo] > valor]
-            nuevo_si = ArbolDecisionC45()
-            nuevo_sd = ArbolDecisionC45()
-            nuevo_si.data = nueva_data_si
-            nuevo_sd.data = nueva_data_sd
-            nuevo_si.target = nueva_target_si
-            nuevo_sd.target = nueva_target_sd
-            nuevo_si.clase = nueva_target_si.value_counts().idxmax()
-            nuevo_sd.clase = nueva_target_sd.value_counts().idxmax()# if len(nueva_target_sd) > 0 else None
-            nuevo_si.valor = valor
-            nuevo_sd.valor = valor
-            self.agregar_subarbol(nuevo_si)
-            self.agregar_subarbol(nuevo_sd)
+            self._nuevo_subarbol(atributo, "menor", valor)
+            self._nuevo_subarbol(atributo, "mayor", valor)
         else:
-            #super()._split(atributo) crea arboles id3, por eso no lo uso
             for categoria in self.data[atributo].unique():
-                nueva_data = self.data[self.data[atributo] == categoria]
-                nueva_data = nueva_data.drop(atributo, axis = 1) # la data del nuevo nodo sin el atributo por el cual ya se filtró
-                nuevo_target = self.target[self.data[atributo] == categoria]
-                nuevo_arbol = ArbolDecisionC45()
-                nuevo_arbol.data = nueva_data
-                nuevo_arbol.target = nuevo_target
-                nuevo_arbol.valor = categoria
-                nuevo_arbol.clase = nuevo_target.value_counts().idxmax()
-                self.agregar_subarbol(nuevo_arbol)
-        
+                self._nuevo_subarbol(atributo, "igual", categoria)        
 
     def _information_gain(self, atributo: str, valor=None) -> float:
         # si valor no es none estamos usando un atributo numerico
@@ -66,6 +60,12 @@ class ArbolDecisionC45(ArbolDecisionID3):
             information_gain =  super()._information_gain(atributo) 
 
         return information_gain   
+    
+    def gain_ratio(self, atributo:str):
+        pass
+    
+    def split_info(self, atributo:str):
+        pass
 
     def _mejor_umbral_split(self, atributo: str) -> float:
         # ordeno la data
@@ -76,15 +76,25 @@ class ArbolDecisionC45(ArbolDecisionID3):
 
         valores_unicos = self.data[atributo].unique()
 
-        for i, valor in enumerate(valores_unicos):
-            if i+1 == len(valores_unicos): # feo, pero sirve
-                break
+        
+        # for i, valor in enumerate(valores_unicos):
+        #     if i+1 == len(valores_unicos): # feo, pero sirve
+        #         break
 
-            umbral = (valor + valores_unicos[i+1]) / 2 # el umbral es el valor medio entre valor actual y el siguiente
+        #     umbral = (valor + valores_unicos[i+1]) / 2 # el umbral es el valor medio entre valor actual y el siguiente
+        #     ig = self._information_gain(atributo, umbral) # uso information_gain, gain_ratio es para la seleccion de atributo
+        #     if ig > mejor_ig:
+        #         mejor_ig = ig
+        #         mejor_umbral = umbral
+
+        i = 0
+        while i < len(valores_unicos) - 1:
+            umbral = (valores_unicos[i] + valores_unicos[i+1]) / 2 # el umbral es el valor medio entre valor actual y el siguiente
             ig = self._information_gain(atributo, umbral) # uso information_gain, gain_ratio es para la seleccion de atributo
             if ig > mejor_ig:
                 mejor_ig = ig
                 mejor_umbral = umbral
+            i += 1
 
         return float(mejor_umbral)
         
@@ -176,6 +186,6 @@ if __name__ == "__main__":
     X = df.drop("target", axis = 1)
     y = df["target"]
 
-    arbol = ArbolDecisionC45(max_prof=3)
+    arbol = ArbolDecisionC45(max_prof=5)
     arbol.fit(X, y)
     arbol.imprimir()
