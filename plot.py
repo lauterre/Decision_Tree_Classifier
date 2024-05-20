@@ -259,9 +259,18 @@ class ArbolID3(Arbol, ClasificadorArbol):
             return 1
         return 1 + max(subarbol.altura() for subarbol in self.subarboles)
 
+import matplotlib.pyplot as plt
+import pandas as pd
+from collections import defaultdict
+
+# para solucionar el problema de las arboles grandes podria crear un metodo que calcule el ancho del arbol
+# y luego usar el tamaño del arbol para escalar xy, level_width, level_height, xlim, ylim, etc.
+# YA LO HACE _get_fig_size() pero no lo escala
+# Para c45 puede que alcance como está, aunque si un atributo categorico tiene muchos valores los nodos se van a superponer
+
 class TreePlot:
-    def __init__(self, tree: ArbolID3, ax=None, fontsize=10):
-        self.tree = tree
+    def __init__(self, arbol, ax=None, fontsize=1):
+        self.arbol = arbol
         self.ax = ax
         self.fontsize = fontsize
 
@@ -270,58 +279,55 @@ class TreePlot:
             fig, self.ax = plt.subplots(figsize=self._get_fig_size())
         self.ax.clear()
         self.ax.set_axis_off()
-        self._plot_tree(self.tree, parent_xy=(0.5, 1.0), level_width=1.0, level_height=0.2, depth=0)
+        self.ax.set_xlim(-1, 1) # podria empezar en negativos para arboles grandes
+        self.ax.set_ylim(-1, 1) # podria empezar en negativos para arboles grandes
+        self._plot_tree(self.arbol, xy=(0, 1), level_width=2.0, level_height=0.4, depth=0) # level_width es la longitud de xlim
+        # si level_heigh se va de la longitdu de ylim (>= 2) van a faltar niveles
         plt.show()
 
-    def _plot_tree(self, tree, parent_xy, level_width, level_height, depth):
-        # Data para la caja
-        bbox_args = dict(boxstyle="round", fc="lightgreen" if tree.es_hoja() else "white", ec="black")
+    def _plot_tree(self, arbol, xy, level_width, level_height, depth):
+        bbox_args = dict(boxstyle="round", fc="lightgreen" if arbol.es_hoja() else "white", ec="black")
+        self._annotate(str(arbol), xy, depth, bbox_args)
 
-        # Calculate the position of the current node
-        xy = (parent_xy[0], parent_xy[1] - level_height)
-
-        # Anotar el nodo
-        self._annotate(str(tree), xy, depth, bbox_args) # str(tree) es el texto de la caja
-
-        if tree.subarboles:
-            num_subarboles = len(tree.subarboles)
+        if arbol.subarboles:
+            num_subarboles = len(arbol.subarboles)
             width_per_node = level_width / max(num_subarboles, 1)
-            for i, subarbol in enumerate(tree.subarboles):
-                new_x = parent_xy[0] - (level_width / 2) + (i + 0.5) * width_per_node
+            child_positions = []
+
+            for i, subarbol in enumerate(arbol.subarboles):
+                new_x = xy[0] - (level_width / 2) + (i + 0.5) * width_per_node
                 new_xy = (new_x, xy[1] - level_height)
-                # Dibuja la linea (en cualquier parte)
-                self.ax.plot([parent_xy[0], new_x], [parent_xy[1], new_xy[1]], color="black")
+                child_positions.append((subarbol, new_xy))
+                self.ax.plot([xy[0], new_x], [xy[1], new_xy[1]], color="black")
+
+            for subarbol, new_xy in child_positions:
                 self._plot_tree(subarbol, new_xy, width_per_node, level_height, depth + 1)
 
     def _annotate(self, text, xy, depth, bbox_args):
         kwargs = dict(
             bbox=bbox_args,
-            ha="center", # posicion del texto en la caja
-            va="bottom", # posicion de la caja, hay que ver como hacer que la linea este en esta posicion
+            ha="center",
+            va="center",
             zorder=100 - 10 * depth,
-            xycoords="axes fraction"
+            xycoords="data",
+            fontsize = self.fontsize
         )
-        if self.fontsize is not None:
-            kwargs["fontsize"] = self.fontsize
-
+        # if self.fontsize is not None:
+        #     kwargs["fontsize"] = self.fontsize
         self.ax.annotate(text, xy=xy, **kwargs)
 
     def _get_fig_size(self):
-        # Calcular la altura y el ancho del arbol
-        depth = self.tree.altura()
-        max_width = self._max_width(self.tree)
-        # Ajusta la figura en base a esas mediciones
-        width = max(10, max_width * 2)  # Minimum width of 10, scales with the tree width
-        height = max(10, depth * 2)  # Minimum height of 10, scales with the tree depth
+        depth = self.arbol.altura()
+        max_width = self._max_width(self.arbol)
+        width = max(10, max_width * 2)
+        height = max(10, depth * 2)
         return (width, height)
 
-    def _max_width(self, tree, level=0, level_counts=None):
+    def _max_width(self, arbol, level=0, level_counts=None):
         if level_counts is None:
-            level_counts = {}
-        if level not in level_counts:
-            level_counts[level] = 0
+            level_counts = defaultdict(int)
         level_counts[level] += 1
-        for subarbol in tree.subarboles:
+        for subarbol in arbol.subarboles:
             self._max_width(subarbol, level + 1, level_counts)
         return max(level_counts.values())
 
@@ -330,11 +336,11 @@ if __name__ == "__main__":
     tennis = pd.read_csv("PlayTennis.csv")
     patients = pd.read_csv("cancer_patients.csv", index_col=0)
 
-    patients = patients.drop("Patient Id", axis = 1)
+    patients = patients.drop("Patient Id", axis=1)
     bins = [0, 15, 20, 30, 40, 50, 60, 70, float('inf')]
     labels = ['0-15', '15-20', '20-30', '30-40', '40-50', '50-60', '60-70', '70+']
     patients['Age'] = pd.cut(patients['Age'], bins=bins, labels=labels, right=False)
-    X = patients.drop("Level", axis = 1)
+    X = patients.drop("Level", axis=1)
     y = patients["Level"]
 
     arbol = ArbolID3()
@@ -342,9 +348,9 @@ if __name__ == "__main__":
 
     X2 = tennis.drop("Play Tennis", axis=1)
     y2 = tennis["Play Tennis"]
-    
+
     arbol.fit(X, y)
     arbol2.fit(X2, y2)
-    
+
     arbol.plot_tree()
     arbol2.plot_tree()
