@@ -164,6 +164,9 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
             print(prefijo_hoja + samples)
             print(prefijo_hoja + values)
             print(prefijo_hoja + clase)
+            
+    def plot_tree(self, ax=None, fontsize=None):
+        TreePlot(self, ax, fontsize).plot()    
 
 
 def accuracy_score(y_true: list[str], y_pred: list[str]) -> float:
@@ -185,8 +188,9 @@ def probar(df, target:str):
     print(f"\naccuracy: {accuracy_score(y_test.tolist(), y_pred)}")
     print(f"cantidad de nodos: {len(arbol)}")
     print(f"altura: {arbol.altura()}\n")
-    plotter = TreePlot(arbol)
-    plotter.plot()
+    arbol.plot_tree()
+
+
 
 if __name__ == "__main__":
     #https://www.kaggle.com/datasets/thedevastator/cancer-patients-and-air-pollution-a-new-link
@@ -196,7 +200,7 @@ if __name__ == "__main__":
     labels = ['0-15', '15-20', '20-30', '30-40', '40-50', '50-60', '60-70', '70+']
     patients['Age'] = pd.cut(patients['Age'], bins=bins, labels=labels, right=False)
 
-    tennis = pd.read_csv("TP_Final/PlayTennis.csv")
+    tennis = pd.read_csv("PlayTennis.csv")
 
     print("Pruebo con patients\n")
     probar(patients, "Level")
