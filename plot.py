@@ -192,7 +192,7 @@ class ArbolID3(Arbol, ClasificadorArbol):
             else:
                 direccion = fila[arbol.atributo]
                 for subarbol in arbol.subarboles:
-                    if direccion == subarbol.categoria: #subarbol.valor
+                    if direccion == subarbol.valor:
                         _recorrer(subarbol, fila)
         
         for _, fila in X.iterrows():
@@ -269,24 +269,26 @@ from collections import defaultdict
 # Para c45 puede que alcance como está, aunque si un atributo categorico tiene muchos valores los nodos se van a superponer
 
 class TreePlot:
-    def __init__(self, arbol, ax=None, fontsize=1):
+    def __init__(self, arbol, ax=None, fontsize=0.1):
         self.arbol = arbol
         self.ax = ax
         self.fontsize = fontsize
 
     def plot(self):
         if self.ax is None:
-            fig, self.ax = plt.subplots(figsize=self._get_fig_size())
+            _, self.ax = plt.subplots(figsize=(self._ancho_max(arbol), arbol.altura())) #self.get_fig_size()
         self.ax.clear()
         self.ax.set_axis_off()
-        self.ax.set_xlim(-1, 1) # podria empezar en negativos para arboles grandes
-        self.ax.set_ylim(-1, 1) # podria empezar en negativos para arboles grandes
-        self._plot_tree(self.arbol, xy=(0, 1), level_width=2.0, level_height=0.4, depth=0) # level_width es la longitud de xlim
-        # si level_heigh se va de la longitdu de ylim (>= 2) van a faltar niveles
+        xlim = (-1, 1) # deberia depender del ancho max
+        ylim = (-1, 1) # deberia depender de la altura
+        self.ax.set_xlim(xlim)
+        self.ax.set_ylim(ylim)
+        self._plot_tree(self.arbol, xy=(0, 1), level_width=len(xlim), level_height = len(ylim) *3/10, depth=0) # level_height = 0.6, width = 2
         plt.show()
 
     def _plot_tree(self, arbol, xy, level_width, level_height, depth):
-        bbox_args = dict(boxstyle="round", fc="lightgreen" if arbol.es_hoja() else "white", ec="black")
+
+        bbox_args = dict(boxstyle="round", fc=self.get_color(arbol, arbol.clase) if arbol.es_hoja() else "white", ec="black")
         self._annotate(str(arbol), xy, depth, bbox_args)
 
         if arbol.subarboles:
@@ -312,24 +314,39 @@ class TreePlot:
             xycoords="data",
             fontsize = self.fontsize
         )
-        # if self.fontsize is not None:
-        #     kwargs["fontsize"] = self.fontsize
         self.ax.annotate(text, xy=xy, **kwargs)
 
-    def _get_fig_size(self):
-        depth = self.arbol.altura()
-        max_width = self._max_width(self.arbol)
-        width = max(10, max_width * 2)
-        height = max(10, depth * 2)
-        return (width, height)
+    # def _get_fig_size(self):
+    #     prof = self.arbol.altura()
+    #     ancho_max = self._ancho_max(self.arbol)
+    #     ancho = max(10, ancho_max * 2)
+    #     altura = max(10, prof * 2)
+    #     return (ancho, altura)
 
-    def _max_width(self, arbol, level=0, level_counts=None):
-        if level_counts is None:
-            level_counts = defaultdict(int)
-        level_counts[level] += 1
+    def _ancho_max(self, arbol, nivel=0, nodos=None): # en Arbol
+        if nodos is None:
+            nodos = defaultdict(int)
+        nodos[nivel] += 1
         for subarbol in arbol.subarboles:
-            self._max_width(subarbol, level + 1, level_counts)
-        return max(level_counts.values())
+            self._ancho_max(subarbol, nivel + 1, nodos)
+        return max(nodos.values())
+    
+    # Podria servir
+    def _ancho_nivel(self, arbol, nivel = 0, nodos= None): # deberia estar en Arbol
+        if nodos is None:
+            nodos = defaultdict(int)
+        nodos[nivel] += 1
+        for subarbol in arbol.subarboles:
+            self._ancho_nivel(subarbol, nivel + 1, nodos)
+        return nodos[nivel]
+    
+    def get_color(self, arbol, clase):
+        clases = arbol.target_categorias
+        colores = ["lightgreen", "lightblue", (1, 1, 0.6)] #agregar
+        colores_clases = {}
+        for i, c in enumerate(clases):
+            colores_clases[c] = colores[i]
+        return colores_clases[clase]
 
 # Ejemplo de uso
 if __name__ == "__main__":
