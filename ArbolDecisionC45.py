@@ -2,16 +2,16 @@ from copy import deepcopy
 from ArbolDecisionID3 import ArbolDecisionID3
 import pandas as pd
 import numpy as np
-from _superclases import ClasificadorArbol, Arbol
 from typing import Any, Optional
 
 
 class ArbolDecisionC45(ArbolDecisionID3):
     def __init__(self, max_prof: int = -1, min_obs_nodo: int = -1) -> None:
         super().__init__(max_prof, min_obs_nodo)
+        self.valor_split: Optional[float] = None
 
 
-    def _nuevo_subarbol(self, atributo: str, operacion: str, valor: Any = None):
+    def _nuevo_subarbol(self, atributo: str, operacion: str, valor: Any):
         nuevo = ArbolDecisionC45()
         if operacion == "menor":
             nuevo.data = self.data[self.data[atributo] < valor]
@@ -25,12 +25,14 @@ class ArbolDecisionC45(ArbolDecisionID3):
             nuevo.data = nueva_data
             nuevo.target = self.target[self.data[atributo] == valor]
         nuevo.clase = nuevo.target.value_counts().idxmax()
-        nuevo.valor = valor
+        nuevo.atributo_split_anterior = atributo
+        nuevo.valor_split_anterior = valor
         self.agregar_subarbol(nuevo)
 
     
     def _split(self, atributo: str, valor: Any = None) -> None:
-        self.atributo = atributo
+        self.atributo_split = atributo
+        self.valor_split = valor
         if valor:
             self._nuevo_subarbol(atributo, "menor", valor)
             self._nuevo_subarbol(atributo, "mayor", valor)
@@ -132,8 +134,8 @@ class ArbolDecisionC45(ArbolDecisionID3):
                     or (arbol.max_prof != -1 and arbol.max_prof <= prof_acum) 
                     or (arbol.min_obs_nodo != -1 and arbol.min_obs_nodo > arbol._total_samples() ) ):
                 
-                mejor_atributo = arbol._mejor_atributo_split() # este metodo usa information_gain y deberia usar gain_ratio, si entendi bien el gain_ratio es solo para eleccion de atributo
-
+                mejor_atributo = arbol._mejor_atributo_split()
+                
                 if pd.api.types.is_numeric_dtype(self.data[mejor_atributo]): # si es numerica
                     mejor_umbral = arbol._mejor_umbral_split(mejor_atributo)
                     arbol._split(mejor_atributo, mejor_umbral)
@@ -146,19 +148,21 @@ class ArbolDecisionC45(ArbolDecisionID3):
         _interna(self)
     
     def imprimir(self, prefijo: str = '  ', es_ultimo: bool = True) -> None:
-        simbolo_rama = '└─── ' if es_ultimo else '├─── '
-        split = f"Split: {str(self.atributo)}"
-        rta = f"Valor: > {str(self.valor)}" if es_ultimo else f"Valor: < {str(self.valor)}"
-        entropia = f"Entropia: {round(self._entropia(), 2)}"
-        samples = f"Samples: {str (self._total_samples())}"
-        values = f"Values: {str(self._values())}"
-        clase = 'Clase: ' + str(self.clase)
+        simbolo_rama = '└─ NO ── ' if es_ultimo else '├─ SI ── '
+        split = f"{self.atributo_split} < {self.valor_split:.2f} ?" if self.valor_split else ""
+        #umbral = f"Umbral: {self.valor_split}"
+        #rta = f"{self.atributo_split_anterior} > {self.valor_split_anterior}" if es_ultimo else f"{self.atributo_split_anterior} < {self.valor_split_anterior}"
+        entropia = f"Entropia: {self._entropia():.2f}"
+        samples = f"Samples: {self._total_samples()}"
+        values = f"Values: {self._values()}"
+        clase = f"Clase: {self.clase}"
         if self.es_raiz():
             print(entropia)
             print(samples)
             print(values)
             print(clase)
             print(split)
+            #print(umbral)
 
             for i, sub_arbol in enumerate(self.subs):
                 ultimo: bool = i == len(self.subs) - 1
@@ -166,13 +170,15 @@ class ArbolDecisionC45(ArbolDecisionID3):
 
         elif not self.es_hoja():
             print(prefijo + "│")
-            print(prefijo + simbolo_rama + rta)
+            #print(prefijo + simbolo_rama + rta)
+            print(prefijo + simbolo_rama + entropia)
             prefijo2 = prefijo + " " * (len(simbolo_rama)) if es_ultimo else prefijo +"│" + " " * (len(simbolo_rama) - 1)
-            print(prefijo2 + entropia)
+            #print(prefijo2 + entropia)
             print(prefijo2 + samples)
             print(prefijo2 + values)
             print(prefijo2 + clase)
             print(prefijo2 + split)
+            #print(prefijo2 + umbral)
             
             prefijo += ' '*10 if es_ultimo else '│' + ' '*9
             for i, sub_arbol in enumerate(self.subs):
@@ -181,11 +187,13 @@ class ArbolDecisionC45(ArbolDecisionID3):
         else:
             prefijo_hoja = prefijo + " "*len(simbolo_rama) if es_ultimo else prefijo + "│" + " "*(len(simbolo_rama) -1)
             print(prefijo + "│")
-            print(prefijo + simbolo_rama + rta)
-            print(prefijo_hoja + entropia)
+            #print(prefijo + simbolo_rama + rta)
+            print(prefijo + simbolo_rama + entropia)
+            #print(prefijo_hoja + entropia)
             print(prefijo_hoja + samples)
             print(prefijo_hoja + values)
             print(prefijo_hoja + clase)
+
 
 
 if __name__ == "__main__":

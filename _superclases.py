@@ -21,14 +21,15 @@ class Arbol(ABC):
     def __init__(self) -> None:
         self.data: pd.DataFrame 
         self.target: pd.Series
-        self.atributo: Optional[str] = None
-        self.valor: Optional[str]= None
+        self.atributo_split: Optional[str] = None
+        self.atributo_split_anterior: Optional[str] = None
+        self.valor_split_anterior: Optional[str]= None
         self.target_categorias: Optional[list[str]]= None
         self.clase: Optional[str] = None
         self.subs: list[Arbol]= []
     
     def es_raiz(self):
-        return self.valor is None
+        return self.valor_split_anterior is None
     
     def es_hoja(self):
         return self.subs == []
