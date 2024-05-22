@@ -1,8 +1,11 @@
 from copy import deepcopy
+from sklearn.model_selection import train_test_split
 from ArbolDecisionID3 import ArbolDecisionID3
 import pandas as pd
 import numpy as np
 from typing import Any, Optional
+
+from Metricas import Metricas
 
 
 class ArbolDecisionC45(ArbolDecisionID3):
@@ -78,8 +81,11 @@ class ArbolDecisionC45(ArbolDecisionID3):
         nuevo = deepcopy(self)
 
         information_gain = nuevo._information_gain(atributo)
+        umbral = None
 
-        umbral = nuevo._mejor_umbral_split(atributo)
+        if pd.api.types.is_numeric_dtype(self.data[atributo]): #es numerico
+            umbral = nuevo._mejor_umbral_split(atributo)
+
         nuevo._split(atributo, umbral)
 
         split_info = nuevo._split_info()
@@ -146,7 +152,31 @@ class ArbolDecisionC45(ArbolDecisionID3):
                     _interna(sub_arbol, prof_acum+1)
 
         _interna(self)
+
+    def predict(self, X:pd.DataFrame) -> list:
+        predicciones = []
+
+        def _recorrer(arbol, fila: pd.Series) -> None:
+            if arbol.es_hoja():
+                predicciones.append(arbol.clase)
+            else:
+                valor = fila[arbol.atributo_split]
+                if pd.api.types.is_numeric_dtype(valor):
+                    if valor < arbol.valor_split:
+                        _recorrer(arbol.subs[0], fila)
+                    elif valor > arbol.valor_split:
+                        _recorrer(arbol.subs[1], fila)
+                else:
+                    for subarbol in arbol.subs:
+                        if valor == subarbol.valor_split_anterior:
+                            _recorrer(subarbol, fila)
+        
+        for _, fila in X.iterrows():
+            _recorrer(self, fila)
+        
+        return predicciones
     
+    # TODO: adaptar para los split categoricos
     def imprimir(self, prefijo: str = '  ', es_ultimo: bool = True) -> None:
         simbolo_rama = '└─ NO ── ' if es_ultimo else '├─ SI ── '
         split = f"{self.atributo_split} < {self.valor_split:.2f} ?" if self.valor_split else ""
@@ -204,7 +234,49 @@ if __name__ == "__main__":
 
     X = df.drop("target", axis = 1)
     y = df["target"]
+    
+    X_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    arbol = ArbolDecisionC45(max_prof=5)
-    arbol.fit(X, y)
+    arbol = ArbolDecisionC45(max_prof=3)
+    arbol.fit(X_train, y_train)
     arbol.imprimir()
+    y_pred = arbol.predict(x_test)
+
+    print(f"\naccuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
+    print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio= "macro"):.2f}\n")
+
+    print("pruebo con patients") 
+
+    patients = pd.read_csv("cancer_patients.csv", index_col=0)
+    patients = patients.drop("Patient Id", axis = 1)
+
+    X = patients.drop("Level", axis = 1)
+    y = patients["Level"]
+    patients.loc[:, patients.columns != "Age"] = patients.loc[:, patients.columns != "Age"].astype(str) # para que sean categorias
+    
+    X_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    arbol = ArbolDecisionC45(max_prof=4)
+    arbol.fit(X_train, y_train)
+    # arbol.imprimir() no funciona
+    y_pred = arbol.predict(x_test)
+
+    print(f"\naccuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
+    print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio= "ponderado"):.2f}\n")
+
+    print("pruebo con tennis")
+
+    tennis = pd.read_csv("PlayTennis.csv")
+
+    X = tennis.drop("Play Tennis", axis = 1)
+    y = tennis["Play Tennis"]
+    
+    X_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    arbol = ArbolDecisionC45(max_prof=2)
+    arbol.fit(X_train, y_train)
+    # arbol.imprimir() no funciona
+    y_pred = arbol.predict(x_test)
+
+    print(f"\naccuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
+    print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio= "micro"):.2f}\n")
