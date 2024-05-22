@@ -2,6 +2,7 @@ from copy import deepcopy
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
+from Metricas import Metricas
 from _superclases import ClasificadorArbol, Arbol
 
 class ArbolDecisionID3(Arbol, ClasificadorArbol):
@@ -127,7 +128,7 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
 
         _interna(self)
     
-    def predict(self, X:pd.DataFrame) -> list[str]:
+    def predict(self, X:pd.DataFrame) -> list:
         predicciones = []
 
         def _recorrer(arbol, fila: pd.Series) -> None:
@@ -187,14 +188,6 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
             print(prefijo_hoja + clase)
 
 
-def accuracy_score(y_true: list[str], y_pred: list[str]) -> float:
-        if len(y_true) != len(y_pred):
-            raise ValueError()
-        correctas = sum(1 for yt, yp in zip(y_true, y_pred) if yt == yp)
-        precision = correctas / len(y_true)
-        return precision
-
-
 def probar(df, target:str):
     X = df.drop(target, axis=1)
     y = df[target]
@@ -202,13 +195,14 @@ def probar(df, target:str):
     x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     #arbol = ArbolDecisionID3(min_obs_nodo=1)
     #arbol = ArbolDecisionID3(min_infor_gain=0.85)
-    arbol = ArbolDecisionID3(min_obs_hoja=8)
+    arbol = ArbolDecisionID3(max_prof=2)
     arbol.fit(x_train, y_train)
-    arbol.imprimir()
+    #arbol.imprimir()
     y_pred = arbol.predict(x_test)
-    print(f"\naccuracy: {accuracy_score(y_test.tolist(), y_pred)}")
-    print(f"cantidad de nodos: {len(arbol)}")
-    print(f"altura: {arbol.altura()}\n")
+    print(f"\naccuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
+    print(f"f1-score: {Metricas.f1_score(y_test, y_pred):.2f}\n")
+    #print(f"cantidad de nodos: {len(arbol)}")
+    #print(f"altura: {arbol.altura()}\n")
 
 
 if __name__ == "__main__":
@@ -221,7 +215,7 @@ if __name__ == "__main__":
 
     tennis = pd.read_csv("PlayTennis.csv")
 
-    print("Pruebo con patients\n")
+    print("Pruebo con patients")
     probar(patients, "Level")
-    print("Pruebo con Play Tennis\n")
+    print("Pruebo con Play Tennis")
     probar(tennis, "Play Tennis")
