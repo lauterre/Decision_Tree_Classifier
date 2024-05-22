@@ -200,7 +200,7 @@ def probar(df, target:str):
     #arbol.imprimir()
     y_pred = arbol.predict(x_test)
     print(f"\naccuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
-    print(f"f1-score: {Metricas.f1_score(y_test, y_pred):.2f}\n")
+    print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio = "macro"):.2f}\n")
     #print(f"cantidad de nodos: {len(arbol)}")
     #print(f"altura: {arbol.altura()}\n")
 
