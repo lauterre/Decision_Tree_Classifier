@@ -113,13 +113,17 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
                 predicciones.append(arbol.clase)
             else:
                 direccion = fila[arbol.atributo]
+                existe = False
                 for subarbol in arbol.subs:
                     if direccion == subarbol.categoria: #subarbol.valor
+                        existe = True
                         _recorrer(subarbol, fila)
-        
+                if existe == False:
+                    predicciones.append(predicciones[0])
+                
         for _, fila in X.iterrows():
-            _recorrer(self, fila)
-        
+            _recorrer(self, fila)        
+            
         return predicciones
     
     def imprimir(self, prefijo: str = '  ', es_ultimo: bool = True) -> None:
