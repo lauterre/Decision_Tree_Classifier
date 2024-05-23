@@ -12,24 +12,22 @@ class Clasificador(ABC):
         raise NotImplementedError
 
 class ClasificadorArbol(Clasificador, ABC):
-    def __init__(self, max_prof: int = -1, min_obs_nodo: int = -1, min_infor_gain: float = -1, min_obs_hoja: int = -1):
+    def __init__(self, max_prof: int = -1, min_obs_nodo: int = -1):
         self.max_prof = max_prof
         self.min_obs_nodo = min_obs_nodo
-        self.min_infor_gain = min_infor_gain     
-        self.min_obs_hoja = min_obs_hoja
+    
 class Arbol(ABC):
     def __init__(self) -> None:
         self.data: pd.DataFrame 
         self.target: pd.Series
-        self.atributo_split: Optional[str] = None
-        self.atributo_split_anterior: Optional[str] = None
-        self.valor_split_anterior: Optional[str]= None
+        self.atributo: Optional[str] = None
+        self.categoria: Optional[str]= None
         self.target_categorias: Optional[list[str]]= None
         self.clase: Optional[str] = None
         self.subs: list[Arbol]= []
     
     def es_raiz(self):
-        return self.valor_split_anterior is None
+        return self.categoria is None
     
     def es_hoja(self):
         return self.subs == []
@@ -58,27 +56,23 @@ class Arbol(ABC):
         return len(self.data)
     
     @abstractmethod
-    def agregar_subarbol(self, subarbol):
-        raise NotImplementedError
-    
-    @abstractmethod
     def copy(self):
         raise NotImplementedError
 
     @abstractmethod
-    def _mejor_atributo_split(self):
+    def _mejor_split(self):
         raise NotImplementedError
     
     @abstractmethod
-    def _split(self, atributo: str, valor: Any = None) -> None:
+    def _split(self, atributo: str, valor: Any) -> None:
         raise NotImplementedError
     
     @abstractmethod
-    def _entropia(self):
+    def entropia(self):
         raise NotImplementedError       #Este método no se si va aca, creo que solo es ID3. C4.5 usa la Ganancia de Informacion normalizada
     
     @abstractmethod
-    def _information_gain(self, atributo: str, valor:Any = None) -> float:
+    def _information_gain(self, atributo: str) -> float:
         raise NotImplementedError    
     
     @abstractmethod
