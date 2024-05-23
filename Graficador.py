@@ -98,6 +98,3 @@ class TreePlot:
         colores = ["lightgreen", "lightblue", (1, 1, 0.6)]
         colores_clases = {c: colores[i] for i, c in enumerate(clases)}
         return colores_clases.get(clase, "white")
-    
-    
-
