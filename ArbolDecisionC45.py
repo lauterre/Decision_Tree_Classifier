@@ -240,29 +240,30 @@ if __name__ == "__main__":
     arbol = ArbolDecisionC45(max_prof=3)
     arbol.fit(X_train, y_train)
     arbol.imprimir()
+    arbol.graficar() #TODO: adaptar el plot a c4.5 
     y_pred = arbol.predict(x_test)
 
     print(f"\naccuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
     print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio= "macro"):.2f}\n")
 
-    print("pruebo con patients") 
+    # print("pruebo con patients") 
 
-    patients = pd.read_csv("cancer_patients.csv", index_col=0)
-    patients = patients.drop("Patient Id", axis = 1)
+    # patients = pd.read_csv("cancer_patients.csv", index_col=0)
+    # patients = patients.drop("Patient Id", axis = 1)
 
-    X = patients.drop("Level", axis = 1)
-    y = patients["Level"]
-    patients.loc[:, patients.columns != "Age"] = patients.loc[:, patients.columns != "Age"].astype(str) # para que sean categorias
+    # X = patients.drop("Level", axis = 1)
+    # y = patients["Level"]
+    # patients.loc[:, patients.columns != "Age"] = patients.loc[:, patients.columns != "Age"].astype(str) # para que sean categorias
     
-    X_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    # X_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    arbol = ArbolDecisionC45(max_prof=4)
-    arbol.fit(X_train, y_train)
-    # arbol.imprimir() no funciona
-    y_pred = arbol.predict(x_test)
+    # arbol = ArbolDecisionC45(max_prof=4)
+    # arbol.fit(X_train, y_train)
+    # # arbol.imprimir() no funciona
+    # y_pred = arbol.predict(x_test)
 
-    print(f"\naccuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
-    print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio= "ponderado"):.2f}\n")
+    # print(f"\naccuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
+    # print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio= "ponderado"):.2f}\n")
 
     print("pruebo con tennis")
 

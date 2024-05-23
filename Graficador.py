@@ -38,12 +38,12 @@ class TreePlot:
     def _crear_caja(self, arbol):
         retorno = []
         if not arbol.es_raiz():
-            retorno.append(f"Categoría: {arbol.categoria}")
+            retorno.append(f"Categoría: {arbol.valor_split_anterior}")
         retorno.append(f"Muestras: {arbol._total_samples()}")
         retorno.append(f"Valores: {arbol._values()}")
-        retorno.append(f"Entropía: {arbol.entropia():.2f}")
-        if arbol.atributo:
-            retorno.append(f"Atributo: {arbol.atributo}")
+        retorno.append(f"Entropía: {arbol._entropia():.2f}")
+        if arbol.atributo_split:
+            retorno.append(f"Atributo: {arbol.atributo_split}")
         if not arbol.subs and arbol.clase:
             retorno.append(f"Clase: {arbol.clase}")
         return "\n".join(retorno)
