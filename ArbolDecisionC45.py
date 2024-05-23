@@ -205,6 +205,6 @@ if __name__ == "__main__":
     X = df.drop("target", axis = 1)
     y = df["target"]
 
-    arbol = ArbolDecisionC45(max_prof=5)
+    arbol = ArbolDecisionC45(max_prof=5, min_obs_nodo = 50)
     arbol.fit(X, y)
     arbol.imprimir()

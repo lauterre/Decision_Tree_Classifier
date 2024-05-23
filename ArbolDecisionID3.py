@@ -33,7 +33,7 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
     
     def _mejor_atributo_split(self) -> str:
         mejor_ig = -1
-        mejor_atributo = None
+        mejor_atributo = ""
         atributos = self.data.columns
 
         for atributo in atributos:
