@@ -4,7 +4,6 @@ import pandas as pd
 import numpy as np
 from Metricas import Metricas
 from _superclases import ClasificadorArbol, Arbol
-from Graficador import TreePlot
 
 class ArbolDecisionID3(Arbol, ClasificadorArbol):
     def __init__(self, max_prof: int = -1, min_obs_nodo: int = -1, min_infor_gain: int = -1, min_obs_hoja: int = -1 ) -> None:
@@ -217,6 +216,3 @@ if __name__ == "__main__":
     probar(patients, "Level")
     print("Pruebo con Play Tennis")
     probar(tennis, "Play Tennis")
-
-
-
