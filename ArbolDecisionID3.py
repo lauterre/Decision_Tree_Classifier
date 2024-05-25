@@ -2,7 +2,9 @@ from copy import deepcopy
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
-from _superclases import ClasificadorArbol, Arbol, Hiperparametros
+from Metricas import Metricas
+from _superclases import ClasificadorArbol, Arbol
+from Graficador import TreePlot
 
 class ArbolDecisionID3(Arbol, ClasificadorArbol):
     def __init__(self, **kwargs) -> None:
@@ -132,7 +134,7 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
 
         _interna(self)
     
-    def predict(self, X:pd.DataFrame) -> list[str]:
+    def predict(self, X:pd.DataFrame) -> list:
         predicciones = []
 
         def _recorrer(arbol, fila: pd.Series) -> None:
@@ -142,11 +144,10 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
                 direccion = fila[arbol.atributo_split]
                 for subarbol in arbol.subs:
                     if direccion == subarbol.valor_split_anterior:
-                        _recorrer(subarbol, fila)
-        
+                        _recorrer(subarbol, fila)                
         for _, fila in X.iterrows():
-            _recorrer(self, fila)
-        
+            _recorrer(self, fila)        
+            
         return predicciones
     
     def imprimir(self, prefijo: str = '  ', es_ultimo: bool = True) -> None:
@@ -190,7 +191,58 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
             print(prefijo_hoja + samples)
             print(prefijo_hoja + values)
             print(prefijo_hoja + clase)
+    def graficar(self):
+        plotter = TreePlot(self)
 
+    def _error_clasificacion(self, y, y_pred):
+        x = []
+        for i in range (len(y)):
+            x.append (y[i] != y_pred[i])
+        return np.mean(x)
+        
+    def Reduced_Error_Pruning (self, x_test: any, y_test: any):
+        
+        def _interna_REP (arbol: ArbolDecisionID3, x_test, y_test):
+            
+            if arbol.es_hoja():
+                return
+            
+            for subarbol in arbol.subs:
+                _interna_REP (subarbol, x_test, y_test)
+                
+            pred_raiz: list[str] = arbol.predict (x_test)
+            accuracy_raiz = arbol.accuracy_score (y_test.tolist(), pred_raiz)
+            error_clasif_raiz = arbol._error_clasificacion(y_test.tolist(), pred_raiz)
+
+            error_clasif_ramas = 0.0
+            
+            for rama in arbol.subs:
+                new_arbol: ArbolDecisionID3 = rama
+                pred_podada = new_arbol.predict (x_test)
+                accuracy_podada = new_arbol.accuracy_score (y_test.tolist(), pred_podada)
+                error_clasif_podada = new_arbol._error_clasificacion(y_test.tolist(), pred_podada)
+                error_clasif_ramas = error_clasif_ramas + error_clasif_podada
+
+            if error_clasif_ramas < error_clasif_raiz:
+                print (" * Podar \n")
+                arbol.subs = []
+            else:
+                print (" * No podar \n")
+            return
+        
+        _interna_REP (self, x_test, y_test)
+        
+        # if precision_podada > mejor_precision:
+        #     mejor_rama = rama
+        #     mejor_precision = precision_podada
+
+        # if mejor_rama is not None:
+        #     arbol_podado = podar_rama(arbol, mejor_rama)
+        #     return REP(arbol_podado, conjunto_validacion)
+        # else:
+        #     return arbol
+  
+        # for subarbol in arbol.subs:    
 
 def accuracy_score(y_true: list[str], y_pred: list[str]) -> float:
         if len(y_true) != len(y_pred):
@@ -207,15 +259,16 @@ def probar(df, target:str):
     x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     #arbol = ArbolDecisionID3(min_obs_nodo=1)
     #arbol = ArbolDecisionID3(min_infor_gain=0.85)
-    arbol = ArbolDecisionID3(min_obs_hoja=8)
+    arbol = ArbolDecisionID3()
     arbol.fit(x_train, y_train)
     arbol.imprimir()
     y_pred = arbol.predict(x_test)
-    print(f"\naccuracy: {accuracy_score(y_test.tolist(), y_pred)}")
-    print(f"cantidad de nodos: {len(arbol)}")
-    print(f"altura: {arbol.altura()}\n")
-    
-
+ 
+    arbol.Reduced_Error_Pruning(x_test, y_test)
+ 
+    print(f"\n accuracy: {arbol.Metricas.accuracy_score(y_test, y_pred):.2f}")
+    print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio = "ponderado")}\n")
+    arbol.graficar()
 
 if __name__ == "__main__":
     #https://www.kaggle.com/datasets/thedevastator/cancer-patients-and-air-pollution-a-new-link
@@ -227,7 +280,7 @@ if __name__ == "__main__":
 
     tennis = pd.read_csv("PlayTennis.csv")
 
-    print("Pruebo con patients\n")
+    print("Pruebo con patients")
     probar(patients, "Level")
-    print("Pruebo con Play Tennis\n")
+    print("Pruebo con Play Tennis")
     probar(tennis, "Play Tennis")
