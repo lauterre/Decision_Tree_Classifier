@@ -147,7 +147,7 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
                     if direccion == subarbol.valor_split_anterior: #subarbol.valor
                         existe = True
                         _recorrer(subarbol, fila)
-                if existe == False:
+                if existe == False and predicciones:
                     predicciones.append(predicciones[0])
                 
         for _, fila in X.iterrows():

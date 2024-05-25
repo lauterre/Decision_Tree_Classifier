@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Optional
 import pandas as pd
+import numpy as np
 
 class Clasificador(ABC):
     @abstractmethod
@@ -13,10 +14,11 @@ class Clasificador(ABC):
     
 class Hiperparametros:
     def __init__(self, **kwargs):
-        self.max_prof = kwargs.get('max_prof', -1)
-        self.min_obs_nodo = kwargs.get('min_obs_nodo', -1)
-        self.min_infor_gain = kwargs.get('min_infor_gain', -1.0)
-        self.min_obs_hoja = kwargs.get('min_obs_hoja', -1)
+        self.max_prof: int = kwargs.get('max_prof', -1)
+        self.min_obs_nodo: int = kwargs.get('min_obs_nodo', -1)
+        self.min_infor_gain: float = kwargs.get('min_infor_gain', -1.0)
+        self.min_obs_hoja: int = kwargs.get('min_obs_hoja', -1)
+        self.criterio: str = kwargs.get('criterio', 'entropia')
 
 class ClasificadorArbol(Clasificador, ABC):
     def __init__(self, **kwargs):
@@ -92,3 +94,26 @@ class Arbol(ABC):
     def imprimir(self) -> None:
         raise NotImplementedError
     
+
+class ClasificadorBosque(Clasificador, ABC):
+        def __init__(self,**kwargs) -> None:
+            hiperparametros_arbol = Hiperparametros(**kwargs)        
+            for key, value in hiperparametros_arbol.__dict__.items():
+                setattr(self, key, value)
+
+class Bosque(ABC):
+    def __init__(self, clase_arbol: str = "id3", cantidad_arboles: int = 10, cantidad_atributos:str ='sqrt') -> None:
+        self.arboles: list[Arbol] = []
+        self.cantidad_arboles = cantidad_arboles
+        self.cantidad_atributos = cantidad_atributos
+        self.clase_arbol = clase_arbol
+
+    @staticmethod
+    def _bootstrap_samples(X: pd.DataFrame, y:pd.Series) ->tuple[pd.DataFrame, pd.Series]:
+        n_samples = X.shape[0]
+        atributos = np.random.choice(n_samples, n_samples, replace=True)
+        return X[atributos], y[atributos]
+    
+    @abstractmethod
+    def seleccionar_atributos(self, X:pd.DataFrame):
+        raise NotImplementedError
