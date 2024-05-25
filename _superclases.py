@@ -10,13 +10,20 @@ class Clasificador(ABC):
     @abstractmethod
     def predict(self, X):
         raise NotImplementedError
+    
+class Hiperparametros:
+    def __init__(self, **kwargs):
+        self.max_prof = kwargs.get('max_prof', -1)
+        self.min_obs_nodo = kwargs.get('min_obs_nodo', -1)
+        self.min_infor_gain = kwargs.get('min_infor_gain', -1.0)
+        self.min_obs_hoja = kwargs.get('min_obs_hoja', -1)
 
 class ClasificadorArbol(Clasificador, ABC):
-    def __init__(self, max_prof: int = -1, min_obs_nodo: int = -1, min_infor_gain: float = -1, min_obs_hoja: int = -1):
-        self.max_prof = max_prof
-        self.min_obs_nodo = min_obs_nodo
-        self.min_infor_gain = min_infor_gain     
-        self.min_obs_hoja = min_obs_hoja
+    def __init__(self, **kwargs):
+        hiperparametros = Hiperparametros(**kwargs)        
+        for key, value in hiperparametros.__dict__.items():
+            setattr(self, key, value)
+
 class Arbol(ABC):
     def __init__(self) -> None:
         self.data: pd.DataFrame 
@@ -84,3 +91,4 @@ class Arbol(ABC):
     @abstractmethod
     def imprimir(self) -> None:
         raise NotImplementedError
+    

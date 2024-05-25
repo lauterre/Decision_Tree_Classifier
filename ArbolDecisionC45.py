@@ -9,8 +9,8 @@ from Metricas import Metricas
 
 
 class ArbolDecisionC45(ArbolDecisionID3):
-    def __init__(self, max_prof: int = -1, min_obs_nodo: int = -1) -> None:
-        super().__init__(max_prof, min_obs_nodo)
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
         self.valor_split: Optional[float] = None
 
 

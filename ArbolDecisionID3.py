@@ -3,19 +3,28 @@ from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
 from Metricas import Metricas
-from _superclases import ClasificadorArbol, Arbol
+from _superclases import ClasificadorArbol, Arbol, Hiperparametros
 from Graficador import TreePlot
 
 class ArbolDecisionID3(Arbol, ClasificadorArbol):
-    def __init__(self, max_prof: int = -1, min_obs_nodo: int = -1, min_infor_gain: int = -1, min_obs_hoja: int = -1 ) -> None:
+    def __init__(self, **kwargs) -> None:
         super().__init__()
-        ClasificadorArbol.__init__(self, max_prof, min_obs_nodo, min_infor_gain, min_obs_hoja)
+        ClasificadorArbol.__init__(self,**kwargs)
         
+    # def agregar_subarbol(self, subarbol):
+    #     subarbol.max_prof = self.max_prof
+    #     subarbol.min_obs_nodo = self.min_obs_nodo
+    #     subarbol.min_infor_gain = self.min_infor_gain
+    #     subarbol.min_obs_hoja = self.min_obs_hoja
+    #     self.subs.append(subarbol)
+
+        #Cambie este metodo y el de copy para que ande el cambio. 
+        #Cumple su funcion de no modificar los init si agregamos hiperparametros, pero el pylance putea cada vez que llamemos un self.hiperparametro (por ejemplo en la interna del fit)
+
     def agregar_subarbol(self, subarbol):
-        subarbol.max_prof = self.max_prof
-        subarbol.min_obs_nodo = self.min_obs_nodo
-        subarbol.min_infor_gain = self.min_infor_gain
-        subarbol.min_obs_hoja = self.min_obs_hoja
+        for key, value in self.__dict__.items():
+            if key in Hiperparametros().__dict__:  # Solo copiar los atributos que están en Hiperparametros
+                setattr(subarbol, key, value)
         self.subs.append(subarbol)
 
     # def _traer_hiperparametros(self, arbol_previo):
@@ -26,7 +35,7 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
     
     def _mejor_atributo_split(self) -> str:
         mejor_ig = -1
-        mejor_atributo = None
+        mejor_atributo = ""
         atributos = self.data.columns
 
         for atributo in atributos:
@@ -38,14 +47,10 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
         return mejor_atributo
     
     def copy(self):
-        nuevo = ArbolDecisionID3(self.max_prof, self.min_obs_nodo, self.min_infor_gain)
+        nuevo = ArbolDecisionID3(**self.__dict__)
         nuevo.data = self.data.copy()
         nuevo.target = self.target.copy()
-        nuevo.atributo_split = self.atributo_split
-        nuevo.valor_split_anterior = self.valor_split_anterior
-        nuevo.atributo_split_anterior = self.atributo_split_anterior
         nuevo.target_categorias = self.target_categorias.copy()
-        nuevo.clase = self.clase
         nuevo.subs = [sub.copy() for sub in self.subs]
         return nuevo
 
@@ -263,7 +268,6 @@ def probar(df, target:str):
  
     print(f"\n accuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
     print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio = "ponderado")}\n")
-    arbol.graficar()
 
 if __name__ == "__main__":
     #https://www.kaggle.com/datasets/thedevastator/cancer-patients-and-air-pollution-a-new-link
