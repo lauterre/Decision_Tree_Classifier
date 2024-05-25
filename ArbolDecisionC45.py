@@ -237,7 +237,7 @@ if __name__ == "__main__":
     
     X_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    arbol = ArbolDecisionC45(max_prof=3)
+    arbol = ArbolDecisionC45(max_prof=6)
     arbol.fit(X_train, y_train)
     arbol.imprimir()
     arbol.graficar() #TODO: adaptar el plot a c4.5 

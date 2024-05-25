@@ -3,7 +3,7 @@ from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
 from Metricas import Metricas
-from _superclases import ClasificadorArbol, Arbol
+from _superclases import ClasificadorArbol, Arbol, Hiperparametros
 from Graficador import TreePlot
 
 class ArbolDecisionID3(Arbol, ClasificadorArbol):
@@ -134,7 +134,7 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
 
         _interna(self)
     
-    def predict(self, X:pd.DataFrame) -> list:
+    def predict(self, X:pd.DataFrame) -> list[str]:
         predicciones = []
 
         def _recorrer(arbol, fila: pd.Series) -> None:
@@ -142,9 +142,14 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
                 predicciones.append(arbol.clase)
             else:
                 direccion = fila[arbol.atributo_split]
+                existe = False
                 for subarbol in arbol.subs:
-                    if direccion == subarbol.valor_split_anterior:
-                        _recorrer(subarbol, fila)                
+                    if direccion == subarbol.valor_split_anterior: #subarbol.valor
+                        existe = True
+                        _recorrer(subarbol, fila)
+                if existe == False:
+                    predicciones.append(predicciones[0])
+                
         for _, fila in X.iterrows():
             _recorrer(self, fila)        
             
@@ -191,8 +196,11 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
             print(prefijo_hoja + samples)
             print(prefijo_hoja + values)
             print(prefijo_hoja + clase)
+    
     def graficar(self):
         plotter = TreePlot(self)
+        plotter.plot()
+
 
     def _error_clasificacion(self, y, y_pred):
         x = []
@@ -211,7 +219,8 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
                 _interna_REP (subarbol, x_test, y_test)
                 
             pred_raiz: list[str] = arbol.predict (x_test)
-            accuracy_raiz = arbol.accuracy_score (y_test.tolist(), pred_raiz)
+            print(len(x_test), len(pred_raiz))
+            accuracy_raiz = Metricas.accuracy_score (y_test.tolist(), pred_raiz)
             error_clasif_raiz = arbol._error_clasificacion(y_test.tolist(), pred_raiz)
 
             error_clasif_ramas = 0.0
@@ -219,7 +228,7 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
             for rama in arbol.subs:
                 new_arbol: ArbolDecisionID3 = rama
                 pred_podada = new_arbol.predict (x_test)
-                accuracy_podada = new_arbol.accuracy_score (y_test.tolist(), pred_podada)
+                accuracy_podada = Metricas.accuracy_score (y_test.tolist(), pred_podada)
                 error_clasif_podada = new_arbol._error_clasificacion(y_test.tolist(), pred_podada)
                 error_clasif_ramas = error_clasif_ramas + error_clasif_podada
 
@@ -266,9 +275,9 @@ def probar(df, target:str):
  
     arbol.Reduced_Error_Pruning(x_test, y_test)
  
-    print(f"\n accuracy: {arbol.Metricas.accuracy_score(y_test, y_pred):.2f}")
+    print(f"\n accuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
     print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio = "ponderado")}\n")
-    arbol.graficar()
+    #arbol.graficar()
 
 if __name__ == "__main__":
     #https://www.kaggle.com/datasets/thedevastator/cancer-patients-and-air-pollution-a-new-link
