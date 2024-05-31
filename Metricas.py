@@ -1,10 +1,11 @@
 import pandas as pd
 # TODO: investigar y agregar: recall_score, precision_score, roc_auc_score, log-loss, etc.  (no creo que sea necesario)
+from typing import Union, Dict
 
 class Metricas:
 
     @staticmethod
-    def f1_score(y_true: pd.Series, y_pred: list, promedio = "binario") -> float | dict:
+    def f1_score(y_true: pd.Series, y_pred: list, promedio = "binario") -> Union[float, Dict]:
 
         if len(y_true) != len(y_pred):
             raise ValueError("y_true e y_pred debe tener la misma longitud")
