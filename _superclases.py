@@ -36,33 +36,57 @@ class Arbol(ABC):
         self.subs: list[Arbol]= []
     
     def es_raiz(self):
-        return self.valor_split_anterior is None
-    
+        try:
+            return self.valor_split_anterior is None
+        except Exception as e:
+            print(f"Error de verificación si el nodo es raiz: {e}")
+            return False
+
     def es_hoja(self):
-        return self.subs == []
-    
+        try:
+            return self.subs == []
+        except Exception as e:
+            print(f"Error de verificación si el nodo es hoja: {e}")
+            return False
+
     def __len__(self) -> int:
-        if self.es_hoja():
-            return 1
-        else:
-            return 1 + sum([len(subarbol) for subarbol in self.subs])
-        
+        try:
+            if self.es_hoja():
+                return 1
+            else:
+                return 1 + sum([len(subarbol) for subarbol in self.subs])
+        except Exception as e:
+            print(f"Error al calcular la longitud del arbol: {e}")
+            return 0
+
     def _values(self):
-        recuento_values = self.target.value_counts()
-        values = []
-        for valor in self.target_categorias:
-            value = recuento_values.get(valor, 0)
-            values.append(value)
-        return values
-    
+        try:
+            recuento_values = self.target.value_counts()
+            values = []
+            for valor in self.target_categorias:
+                value = recuento_values.get(valor, 0)
+                values.append(value)
+            return values
+        except Exception as e:
+            print(f"Error al calcular los valores: {e}")
+            return []
+
     def altura(self) -> int:
-        altura_actual = 0
-        for subarbol in self.subs:
-            altura_actual = max(altura_actual, subarbol.altura())
-        return altura_actual + 1
+        try:
+            altura_actual = 0
+            for subarbol in self.subs:
+                altura_actual = max(altura_actual, subarbol.altura())
+            return altura_actual + 1
+        except Exception as e:
+            print(f"Error al calcular la altura del arbol: {e}")
+            return 0
 
     def _total_samples(self):
-        return len(self.data)
+        try:
+            return len(self.data)
+        except Exception as e:
+            print(f"Error al calcular el total de muestras: {e}")
+            return 0
     
     @abstractmethod
     def agregar_subarbol(self, subarbol):
