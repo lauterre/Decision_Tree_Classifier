@@ -154,7 +154,7 @@ class ArbolDecisionC45(Arbol, ClasificadorArbol):
                 mejor_umbral = umbral
             i += 1
 
-        return float(mejor_umbral)
+        return mejor_umbral
         
     def fit(self, X: pd.DataFrame, y: pd.Series):
         self.target = y
@@ -312,7 +312,7 @@ if __name__ == "__main__":
     
     X_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    arbol = ArbolDecisionC45(max_prof = 5) #TODO: no anda el fit cuando el max_prof es mayot (o no hay limite de profundidad)
+    arbol = ArbolDecisionC45()
     arbol.fit(X_train, y_train)
     arbol.imprimir()
     arbol.graficar() 
