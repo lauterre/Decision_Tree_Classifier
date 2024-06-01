@@ -5,14 +5,13 @@ import numpy as np
 from Metricas import Metricas
 from _superclases import ClasificadorBosque, Bosque, Hiperparametros, Arbol
 from ArbolDecisionID3 import ArbolDecisionID3
-from Graficador import TreePlot
 
 class RandomForest(Bosque, ClasificadorBosque):
-    def __init__(self,**kwargs):
-        super().__init__()
+    def __init__(self,clase_arbol: str = "id3", cantidad_arboles: int = 10, cantidad_atributos:str ='sqrt',**kwargs):
+        super().__init__(clase_arbol, cantidad_arboles, cantidad_atributos)
         ClasificadorBosque.__init__(self, **kwargs)
 
-    def seleccionar_atributos(self, X):
+    def seleccionar_atributos(self, X: pd.DataFrame)-> list[int]:
         n_features = X.shape[1]
         if self.cantidad_atributos == 'sqrt':
             size = int(np.sqrt(n_features))
@@ -25,27 +24,30 @@ class RandomForest(Bosque, ClasificadorBosque):
         return indices
 
 
-    def fit(self, X, y):
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> None:
         for _ in range(self.cantidad_arboles):
+            print(f"Contruyendo arbol nro: {_ + 1}")
             # Bootstrapping
             X_sample, y_sample = self._bootstrap_samples(X, y)
 
             # Selección de atributos
             atributos = self.seleccionar_atributos(X_sample)
-            X_sample = X_sample[:, atributos]
+            X_sample = X_sample.iloc[:, atributos]
 
             # Crear y entrenar un nuevo árbol
             if self.clase_arbol == 'id3':
                 arbol = ArbolDecisionID3(max_prof=self.max_prof, min_obs_nodo=self.min_obs_nodo)
                 arbol.fit(pd.DataFrame(X_sample), pd.Series(y_sample))
                 self.arboles.append(arbol)
+            else:
+                raise ValueError("Clase de arbol soportado por el bosque: 'id3'")
+            #arbol.imprimir()
 
-    def predict(self, X):
-        # Lista para almacenar las predicciones de cada árbol
-        todas_predicciones = pd.DataFrame(index=X.index, columns=range(len(self.arboles)))  # Ahora es DataFrame
+    def predict(self, X: pd.DataFrame) -> pd.Series:
+        todas_predicciones = pd.DataFrame(index=X.index, columns=range(len(self.arboles))) 
         
         for i, arbol in enumerate(self.arboles):
-            todas_predicciones[i] = arbol.predict(X)  # Guardar las predicciones en el DataFrame
+            todas_predicciones[i] = arbol.predict(X)
 
         # Aplicar la votación mayoritaria
         predicciones_finales = todas_predicciones.apply(lambda x: x.value_counts().idxmax(), axis=1)
@@ -55,16 +57,21 @@ class RandomForest(Bosque, ClasificadorBosque):
 
 if __name__ == "__main__":
     # Crea un conjunto de datos de ejemplo
-    from sklearn.datasets import load_iris
-    data = load_iris()
-    X, y = data.data, data.target
+    patients = pd.read_csv("cancer_patients.csv", index_col=0)
+    patients = patients.drop("Patient Id", axis = 1)
+    bins = [0, 15, 20, 30, 40, 50, 60, 70, float('inf')]
+    labels = ['0-15', '15-20', '20-30', '30-40', '40-50', '50-60', '60-70', '70+']
+    patients['Age'] = pd.cut(patients['Age'], bins=bins, labels=labels, right=False)
+    X = patients.drop('Level', axis=1)
+    y = patients["Level"]
+    x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    # Entrena el RandomForest con ArbolDecisionID3
-    rf = RandomForest(clase_arbol=ArbolDecisionID3, cantidad_arboles=10, cantidad_atributos='sqrt', max_prof=10, mon_obs_nodo=2)
-    rf.fit(X, y)
+    # fiteo el RandomForest con ArbolDecisionID3
+    rf = RandomForest(clase_arbol="id3", cantidad_arboles = 10, cantidad_atributos='sqrt', max_prof=10, min_obs_nodo=100)
+    rf.fit(x_train, y_train)
 
     # Predice con el RandomForest
-    predicciones = rf.predict(pd.DataFrame(X))
-    print(predicciones)
+    predicciones = rf.predict(x_test)
+    print(f'Accuracy Score: {Metricas.accuracy_score(y_test, predicciones)}')
 
         

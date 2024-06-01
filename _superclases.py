@@ -133,11 +133,11 @@ class Bosque(ABC):
         self.clase_arbol = clase_arbol
 
     @staticmethod
-    def _bootstrap_samples(X: pd.DataFrame, y:pd.Series) ->tuple[pd.DataFrame, pd.Series]:
+    def _bootstrap_samples(X: pd.DataFrame, y: pd.Series) -> tuple[pd.DataFrame, pd.Series]:
         n_samples = X.shape[0]
         atributos = np.random.choice(n_samples, n_samples, replace=True)
-        return X[atributos], y[atributos]
+        return X.iloc[atributos], y.iloc[atributos]
     
     @abstractmethod
-    def seleccionar_atributos(self, X:pd.DataFrame):
+    def seleccionar_atributos(self, X: pd.DataFrame)-> list[int]:
         raise NotImplementedError
