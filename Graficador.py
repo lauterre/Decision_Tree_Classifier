@@ -1,9 +1,12 @@
 from _superclases import Arbol
 import matplotlib.pyplot as plt
 from collections import defaultdict
+from Excepciones import *
 
 class TreePlot:
     def __init__(self, arbol, ax=None, fontsize=None):
+        if not isinstance(arbol, Arbol):
+            raise ValorInvalidoException("El objeto arbol debe ser una instancia de la clase Arbol.")
         self.arbol = arbol
         self.ax = ax
         self.fontsize = fontsize
@@ -17,7 +20,7 @@ class TreePlot:
             self._plot_tree(self.arbol, xy=(self._ancho_nivel(self.arbol), self.arbol.altura()), level_width=self._ancho_nivel(self.arbol))
             plt.show()
         except Exception as e:
-            print(f"Error de ploteo del arbol: {e}")
+            raise GraficadorException(f"Error al graficar el árbol: {e}")
 
     def _plot_tree(self, arbol, xy, level_width, level_height=1, depth=0):
         try:
@@ -39,7 +42,7 @@ class TreePlot:
                 for subarbol, new_xy in child_positions:
                     self._plot_tree(subarbol, new_xy, width_per_node, level_height, depth + 1)
         except Exception as e:
-            print(f"Error de ploteo del subarbol: {e}")
+            raise GraficadorException(f"Error al crear el árbol: {e}")
 
     def _crear_caja(self, arbol):
         try:
@@ -55,8 +58,7 @@ class TreePlot:
                 retorno.append(f"Clase: {arbol.clase}")
             return "\n".join(retorno)
         except Exception as e:
-            print(f"Error al crear el cuadro de texto: {e}")
-            return "Error"
+            raise GraficadorException(f"Error al crear la caja de texto: {e}")
 
     def _annotate(self, text, xy, depth, bbox_args):
         try:
@@ -71,7 +73,7 @@ class TreePlot:
             )
             self.ax.annotate(text, xy=xy, **kwargs)
         except Exception as e:
-            print(f"Error de anotación del texto: {e}")
+            raise GraficadorException(f"Error al anotar el árbol: {e}")
 
     def _calculate_fontsize(self):
         try:
@@ -79,8 +81,7 @@ class TreePlot:
             base_size = 10  # base fontsize
             return max(2, base_size - num_nodes // 10)
         except Exception as e:
-            print(f"Error al calcular el tamaño de la fuente: {e}")
-            return 10  # default fontsize in case of error
+            raise GraficadorException(f"Error al calcular el tamaño de la fuente: {e}")
 
     def _get_fig_size(self):
         try:
@@ -90,8 +91,7 @@ class TreePlot:
             altura = max(1, prof)
             return (ancho, altura)
         except Exception as e:
-            print(f"Error al obtener el tama;o de la figura: {e}")
-            return (10, 10)  
+            raise GraficadorException(f"Error al obtener el tamaño de la figura: {e}")
 
     def _ancho_max(self, arbol, nivel=0, nodos=None):
         try:
@@ -102,8 +102,7 @@ class TreePlot:
                 self._ancho_max(subarbol, nivel + 1, nodos)
             return max(nodos.values())
         except Exception as e:
-            print(f"Error al calcular el ancho máximo: {e}")
-            return 1  # default value in case of error
+            raise GraficadorException(f"Error al calcular el ancho máximo: {e}")
 
     def _ancho_nivel(self, arbol, nivel=0, nodos=None):
         try:
@@ -114,8 +113,7 @@ class TreePlot:
                 self._ancho_nivel(subarbol, nivel + 1, nodos)
             return nodos[nivel]
         except Exception as e:
-            print(f"Error al calcular el ancho del nivel: {e}")
-            return 1  
+            raise GraficadorException(f"Error al calcular el ancho por nivel: {e}")
 
     def _count_nodes(self, arbol):
         try:
@@ -123,8 +121,7 @@ class TreePlot:
                 return 1
             return 1 + sum(self._count_nodes(sub) for sub in arbol.subs)
         except Exception as e:
-            print(f"Error de conteo de los nodos: {e}")
-            return 1  
+            raise GraficadorException(f"Error al contar los nodos: {e}")
 
     def get_color(self, arbol, clase):
         try:
@@ -133,5 +130,4 @@ class TreePlot:
             colores_clases = {c: colores[i] for i, c in enumerate(clases)}
             return colores_clases.get(clase, "white")
         except Exception as e:
-            print(f"Error al obtener el color: {e}")
-            return "white"  
+            raise GraficadorException(f"Error al obtener el color: {e}")

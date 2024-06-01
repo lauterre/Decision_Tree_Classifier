@@ -1,4 +1,5 @@
 from copy import deepcopy
+from Excepciones import *
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
@@ -69,33 +70,33 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
             return None
 
     def _split(self, atributo: str, valor= None) -> None:
-        try:
-            temp = deepcopy(self)  # TODO: arreglar copy
-            #tmp_subs: list[Arbol]= []
-            self.atributo_split = atributo  # guardo el atributo por el cual spliteo
+        if atributo not in self.data.columns:
+            raise AtributoNoEncontradoException(f"Atributo '{atributo}' no encontrado en los datos.")
+        temp = deepcopy(self)  # TODO: arreglar copy
+        #tmp_subs: list[Arbol]= []
+        self.atributo_split = atributo  # guardo el atributo por el cual spliteo
 
-            for categoria in self.data[atributo].unique():  # recorre el dominio de valores del atributo
-                nueva_data = self.data[self.data[atributo] == categoria]
-                nueva_data = nueva_data.drop(atributo, axis=1)  # la data del nuevo nodo sin el atributo por el cual ya se filtró
-                nuevo_target = self.target[self.data[atributo] == categoria]
+        for categoria in self.data[atributo].unique():  # recorre el dominio de valores del atributo
+            nueva_data = self.data[self.data[atributo] == categoria]
+            nueva_data = nueva_data.drop(atributo, axis=1)  # la data del nuevo nodo sin el atributo por el cual ya se filtró
+            nuevo_target = self.target[self.data[atributo] == categoria]
 
-                nuevo_arbol = ArbolDecisionID3()  # Crea un nuevo arbol
-                nuevo_arbol.data = nueva_data  # Asigna nodo
-                nuevo_arbol.target = nuevo_target  # Asigna target
-                nuevo_arbol.valor_split_anterior = categoria
-                nuevo_arbol.atributo_split_anterior = atributo
-                nuevo_arbol.clase = nuevo_target.value_counts().idxmax()
-                temp.agregar_subarbol(nuevo_arbol)  # Agrego el nuevo arbol en el arbol temporal
+            nuevo_arbol = ArbolDecisionID3()  # Crea un nuevo arbol
+            nuevo_arbol.data = nueva_data  # Asigna nodo
+            nuevo_arbol.target = nuevo_target  # Asigna target
+            nuevo_arbol.valor_split_anterior = categoria
+            nuevo_arbol.atributo_split_anterior = atributo
+            nuevo_arbol.clase = nuevo_target.value_counts().idxmax()
+            temp.agregar_subarbol(nuevo_arbol)  # Agrego el nuevo arbol en el arbol temporal
 
-            ok_min_obs_hoja = True
-            for sub_arbol in temp.subs:
-                if (self.min_obs_hoja !=-1 and sub_arbol._total_samples() < self.min_obs_hoja):
-                    ok_min_obs_hoja = False
+        ok_min_obs_hoja = True
+        for sub_arbol in temp.subs:
+            if (self.min_obs_hoja !=-1 and sub_arbol._total_samples() < self.min_obs_hoja):
+                ok_min_obs_hoja = False
 
-            if ok_min_obs_hoja:
-                self.subs = temp.subs
-        except Exception as e:
-            print(f"Error al tratar de hacer split: {e}")
+        if ok_min_obs_hoja:
+            self.subs = temp.subs
+        
 
     def _entropia(self) -> float:
         try:
@@ -117,7 +118,7 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
 
             nuevo = self.copy()
             if nuevo is None:
-                raise ValueError("Fallo al tratar de copiar el arbol")
+                raise ValorInvalidoException("Fallo al tratar de copiar el árbol")
 
             nuevo._split(atributo)
 
@@ -134,6 +135,10 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
             return 0
 
     def fit(self, X: pd.DataFrame, y: pd.Series):
+        if not isinstance(X, pd.DataFrame):
+            raise ConversionDeTiposException("X debe ser un DataFrame de pandas")
+        if not isinstance(y, pd.Series):
+            raise ConversionDeTiposException("y debe ser una Serie de pandas")
         try:
             self.target = y
             self.data = X
@@ -166,8 +171,10 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
             print(f"Error al tratar de fittear el arbol: {e}")
 
     def predict(self, X: pd.DataFrame) -> list[str]:
-        predicciones = []
-        try:
+        if X.empty:
+            raise ValorInvalidoException("El conjunto de datos de entrada está vacío")
+        else:
+            predicciones = []
             def _recorrer(arbol, fila: pd.Series) -> None:
                 if arbol.es_hoja():
                     predicciones.append(arbol.clase)
@@ -183,10 +190,6 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
 
             for _, fila in X.iterrows():
                 _recorrer(self, fila)
-
-        except Exception as e:
-            print(f"Error de predicción: {e}")
-        return predicciones
 
     def imprimir(self, prefijo: str = '  ', es_ultimo: bool = True) -> None:
         try:
@@ -241,14 +244,13 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
             print(f"Error al tratar de graficar el arbol: {e}")
 
     def _error_clasificacion(self, y, y_pred):
-        try:
+        if len(y) != len(y_pred):
+            raise LongitudInvalidaException("Las longitudes de y y y_pred no coinciden")
+        else:
             x = []
             for i in range(len(y)):
                 x.append(y[i] != y_pred[i])
             return np.mean(x)
-        except Exception as e:
-            print(f"Error al calcular el error de clasificación: {e}")
-            return 0
 
     def Reduced_Error_Pruning(self, x_test: any, y_test: any):
         try:
@@ -298,7 +300,6 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
             # for subarbol in arbol.subs: 
 
 def probar(df, target: str):
-    try:
         X = df.drop(target, axis=1)
         y = df[target]
 
@@ -312,10 +313,10 @@ def probar(df, target: str):
 
         arbol.Reduced_Error_Pruning(x_test, y_test)
 
-        print(f"\n accuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
+        print(f"\naccuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
+        
         print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio='ponderado')}\n")
-    except Exception as e:
-        print(f"Error de testing del modelo: {e}")
+        
 
 if __name__ == "__main__":
     #https://www.kaggle.com/datasets/thedevastator/cancer-patients-and-air-pollution-a-new-link

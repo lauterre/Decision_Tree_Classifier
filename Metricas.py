@@ -1,4 +1,5 @@
 import pandas as pd
+from Excepciones import * 
 # TODO: investigar y agregar: recall_score, precision_score, roc_auc_score, log-loss, etc.  (no creo que sea necesario)
 from typing import Union, Dict
 
@@ -8,7 +9,7 @@ class Metricas:
     def f1_score(y_true: pd.Series, y_pred: list, promedio = "binario") -> Union[float, Dict]:
 
         if len(y_true) != len(y_pred):
-            raise ValueError("y_true e y_pred debe tener la misma longitud")
+            raise LongitudInvalidaException("y_true e y_pred debe tener la misma longitud")
         
         y_true = y_true.tolist()
 
@@ -52,7 +53,7 @@ class Metricas:
         
         if promedio == "binario":
             if len(clases) != 2:
-                raise ValueError("Promedio binario no es válido en problemas multiclase")
+                raise ValorInvalidoException("Promedio binario no es válido en problemas multiclase")
             
             f1_score = f1_scores[0] # considero la primera clase que aparece como la positiva, podria ver como usar pos_label
 
@@ -84,7 +85,7 @@ class Metricas:
     @staticmethod
     def accuracy_score(y_true: pd.Series, y_pred: list):
         if len(y_true) != len(y_pred):
-            raise ValueError("y_true e y_pred debe tener la misma longitud")
+            raise LongitudInvalidaException("y_true e y_pred debe tener la misma longitud")
         
         combinada = list(zip(y_true, y_pred))
         verdaderos_p = sum(1 for y_t, y_p in combinada if y_t == y_p)
