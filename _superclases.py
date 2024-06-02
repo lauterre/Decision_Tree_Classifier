@@ -98,21 +98,21 @@ class Arbol(ABC):
     def copy(self):
         raise NotImplementedError
 
-    @abstractmethod
-    def _mejor_atributo_split(self):
-        raise NotImplementedError
+    # @abstractmethod
+    # def _mejor_atributo_split(self):
+    #     raise NotImplementedError
     
-    @abstractmethod
-    def _split(self, atributo: str, valor: Any = None) -> None:
-        raise NotImplementedError
+    # @abstractmethod
+    # def _split(self, atributo: str, valor: Any = None) -> None:
+    #     raise NotImplementedError
     
     @abstractmethod
     def _entropia(self):
         raise NotImplementedError       #Este método no se si va aca, creo que solo es ID3. C4.5 usa la Ganancia de Informacion normalizada
     
-    @abstractmethod
-    def _information_gain(self, atributo: str, valor:Any = None) -> float:
-        raise NotImplementedError    
+    # @abstractmethod
+    # def _information_gain(self, atributo: str, valor:Any = None) -> float:
+    #     raise NotImplementedError    
     
     @abstractmethod
     def imprimir(self) -> None:

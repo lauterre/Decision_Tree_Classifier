@@ -2,7 +2,7 @@ from copy import deepcopy
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 from Graficador import TreePlot
 from _superclases import Arbol, ClasificadorArbol, Hiperparametros
 
@@ -47,15 +47,16 @@ class ArbolDecisionC45(Arbol, ClasificadorArbol):
         nuevo.valor_split_anterior = valor
         self.agregar_subarbol(nuevo)
         
-    def _split(self, atributo: str, valor: Any = None) -> None:
+    def _split_numerico(self, atributo: str, umbral: float | int) -> None:
         self.atributo_split = atributo
-        self.valor_split = valor
-        if valor:
-            self._nuevo_subarbol(atributo, "menor", valor)
-            self._nuevo_subarbol(atributo, "mayor", valor)
-        else:
-            for categoria in self.data[atributo].unique():
-                self._nuevo_subarbol(atributo, "igual", categoria)
+        self.valor_split = umbral
+        self._nuevo_subarbol(atributo, "menor", umbral)
+        self._nuevo_subarbol(atributo, "mayor", umbral)
+
+    # el mismo de id3, estaba bien que sea subclase?
+    def _split_categorico(self, atributo: str) -> None:
+        for categoria in self.data[atributo].unique():
+            self._nuevo_subarbol(atributo, "igual", categoria)
     
     def _entropia(self) -> float:
         entropia = 0
@@ -65,41 +66,35 @@ class ArbolDecisionC45(Arbol, ClasificadorArbol):
             proporcion = proporciones.get(c, 0)
             entropia += proporcion * np.log2(proporcion)
         return -entropia if entropia != 0 else 0
-        
-    # No me gusta esto de pasar None
-    # preguntar a Mariano
-    def _information_gain(self, atributo: str, valor=None) -> float:
-            # si valor no es none estamos usando un atributo numerico
+    
+    def _information_gain(self, atributo: str, split: Callable) -> float:
         entropia_actual = self._entropia()
         len_actual = len(self.data)
+        nuevo = deepcopy(self) # usar copy propio cuando funcione
 
-        information_gain = entropia_actual
+        split(nuevo, atributo)
 
-        nuevo = deepcopy(self)
+        entropias_subarboles = 0 
+        for subarbol in nuevo.subs:
+            entropia = subarbol._entropia()
+            len_subarbol = len(subarbol.data)
+            entropias_subarboles += ((len_subarbol/len_actual) * entropia)
 
-        if valor:
-            nuevo._split(atributo, valor)
-
-            entropia_izq = nuevo.subs[0]._entropia()
-            len_izq = len(nuevo.subs[0].data)
-            entropia_der = nuevo.subs[1]._entropia()
-            len_der = len(nuevo.subs[1].data)
-
-            information_gain -= ((len_izq / len_actual) * entropia_izq + (len_der / len_actual) * entropia_der)
-        else: # si no es continuo
-            
-            nuevo._split(atributo)
-
-            entropias_subarboles = 0 
-            for subarbol in nuevo.subs:
-                entropia = subarbol._entropia()
-                len_subarbol = len(subarbol.data)
-                entropias_subarboles += ((len_subarbol/len_actual) * entropia)
-
-            information_gain = entropia_actual - entropias_subarboles
-            return information_gain
-
+        information_gain = entropia_actual - entropias_subarboles
         return information_gain
+        
+    def _information_gain_numerico(self, atributo: str, umbral: float | int) -> float:
+        def split_numerico(nuevo, atributo):
+            nuevo._split_numerico(atributo, umbral)
+    
+        return self._information_gain(atributo, split_numerico) # clausura
+    
+
+    def _information_gain_categorico(self, atributo: str) -> float:
+        def split_categorico(nuevo, atributo):
+            nuevo._split_categorico(atributo)
+        
+        return self._information_gain(atributo, split_categorico)
         
     def _split_info(self):
         split_info = 0
@@ -109,24 +104,25 @@ class ArbolDecisionC45(Arbol, ClasificadorArbol):
             split_info += (len_subarbol / len_actual) * np.log2(len_subarbol / len_actual)
         return -split_info
         
-    def _gain_ratio(self, atributo: str):
-        
-        nuevo = deepcopy(self)
+    def _gain_ratio(self, atributo: str) -> float:
+        nuevo = deepcopy(self) # usar copy propio
 
-        information_gain = nuevo._information_gain(atributo)
-        umbral = None
-
-        if pd.api.types.is_numeric_dtype(self.data[atributo]): #es numerico
+        if pd.api.types.is_numeric_dtype(self.data[atributo]): # si es numerico
             umbral = nuevo._mejor_umbral_split(atributo)
+            information_gain = nuevo._information_gain_numerico(atributo, umbral)
+            nuevo._split_numerico(atributo, umbral)
+            split_info = nuevo._split_info()
 
-        nuevo._split(atributo, umbral)
-        split_info = nuevo._split_info()
+        else:
+            information_gain = nuevo._information_gain_categorico(atributo)
+            nuevo._split_categorico(atributo)
+            split_info = nuevo._split_info()
 
         return information_gain / split_info
-        
+    
     def _mejor_atributo_split(self) -> str:
         mejor_gain_ratio = -1
-        mejor_atributo = None
+        #mejor_atributo = None
         atributos = self.data.columns
 
         for atributo in atributos:
@@ -139,16 +135,14 @@ class ArbolDecisionC45(Arbol, ClasificadorArbol):
     
     def _mejor_umbral_split(self, atributo: str) -> float:
         self.data = self.data.sort_values(by=atributo)
-
         mejor_ig = -1
-        mejor_umbral = None
-
         valores_unicos = self.data[atributo].unique()
+        mejor_umbral = valores_unicos[0]
 
         i = 0
         while i < len(valores_unicos) - 1:
             umbral = (valores_unicos[i] + valores_unicos[i + 1]) / 2
-            ig = self._information_gain(atributo, umbral) # uso information_gain, gain_ratio es para la seleccion de atributo
+            ig = self._information_gain_numerico(atributo, umbral) # uso information_gain, gain_ratio es para la seleccion de atributo
             if ig > mejor_ig:
                 mejor_ig = ig
                 mejor_umbral = umbral
@@ -175,9 +169,9 @@ class ArbolDecisionC45(Arbol, ClasificadorArbol):
 
                 if pd.api.types.is_numeric_dtype(self.data[mejor_atributo]): # si es numerica
                     mejor_umbral = arbol._mejor_umbral_split(mejor_atributo)
-                    arbol._split(mejor_atributo, mejor_umbral)
+                    arbol._split_numerico(mejor_atributo, mejor_umbral)
                 else:
-                    arbol._split(mejor_atributo)
+                    arbol._split_categorico(mejor_atributo)
 
                 for sub_arbol in arbol.subs:
                     _interna(sub_arbol, prof_acum + 1)
@@ -295,7 +289,7 @@ def probar(df, target: str):
     arbol.imprimir()
     y_pred = arbol.predict(x_test)
 
-    arbol.Reduced_Error_Pruning(x_test, y_test)
+    #arbol.Reduced_Error_Pruning(x_test, y_test)
 
     print(f"\naccuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
     print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio='ponderado')}\n")
@@ -340,20 +334,20 @@ if __name__ == "__main__":
     # print(f"\naccuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
     # print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio= "ponderado"):.2f}\n")
 
-    print("pruebo con tennis")
+    # print("pruebo con tennis")
 
-    tennis = pd.read_csv("PlayTennis.csv")
+    # tennis = pd.read_csv("PlayTennis.csv")
 
-    X = tennis.drop("Play Tennis", axis = 1)
-    y = tennis["Play Tennis"]
+    # X = tennis.drop("Play Tennis", axis = 1)
+    # y = tennis["Play Tennis"]
     
-    X_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    # X_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    arbol = ArbolDecisionC45()
-    arbol.fit(X_train, y_train)
-    # arbol.imprimir() no funciona
-    arbol.graficar()
-    y_pred = arbol.predict(x_test)
+    # arbol = ArbolDecisionC45()
+    # arbol.fit(X_train, y_train)
+    # # arbol.imprimir() no funciona
+    # arbol.graficar()
+    # y_pred = arbol.predict(x_test)
 
-    print(f"\naccuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
-    print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio= 'micro'):.2f}\n")
+    # print(f"\naccuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
+    # print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio= 'micro'):.2f}\n")

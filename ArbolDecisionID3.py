@@ -68,7 +68,7 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
             print(f"Error al tratar de copiar el arbol: {e}")
             return None
 
-    def _split(self, atributo: str, valor= None) -> None:
+    def _split(self, atributo: str) -> None:
         try:
             temp = deepcopy(self)  # TODO: arreglar copy
             #tmp_subs: list[Arbol]= []
@@ -110,7 +110,7 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
             print(f"Error al tratar de calcular la entropia: {e}")
             return 0
 
-    def _information_gain(self, atributo: str, valor = None) -> float:
+    def _information_gain(self, atributo: str) -> float:
         try:
             entropia_actual = self._entropia()
             len_actual = len(self.data)
