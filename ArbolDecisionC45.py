@@ -53,10 +53,17 @@ class ArbolDecisionC45(Arbol, ClasificadorArbol):
         self._nuevo_subarbol(atributo, "menor", umbral)
         self._nuevo_subarbol(atributo, "mayor", umbral)
 
-    # el mismo de id3, estaba bien que sea subclase?
     def _split_categorico(self, atributo: str) -> None:
         for categoria in self.data[atributo].unique():
             self._nuevo_subarbol(atributo, "igual", categoria)
+    
+    # respeta la firma de la superclase (o de id3 en caso de decidir que sea subclase)
+    def _split(self, atributo):
+        if pd.api.types.is_numeric_dtype(self.data[atributo]):
+            mejor_umbral = self._mejor_umbral_split(atributo)
+            self._split_numerico(atributo, mejor_umbral)
+        else:
+            self._split_categorico(atributo)
     
     def _entropia(self) -> float:
         entropia = 0
@@ -67,6 +74,7 @@ class ArbolDecisionC45(Arbol, ClasificadorArbol):
             entropia += proporcion * np.log2(proporcion)
         return -entropia if entropia != 0 else 0
     
+    # podriamos hacer lo mismo que hice en _split
     def _information_gain(self, atributo: str, split: Callable) -> float:
         entropia_actual = self._entropia()
         len_actual = len(self.data)
@@ -161,18 +169,15 @@ class ArbolDecisionC45(Arbol, ClasificadorArbol):
             if prof_acum == 0:
                 prof_acum = 1
 
+            # TODO: meter las condiciones de parada en un metodo _puede_splitearse(), lo intenté pero no anda
             if not (len(arbol.target.unique()) == 1 or len(arbol.data.columns) == 0
                     or (arbol.max_prof != -1 and arbol.max_prof <= prof_acum)
                     or (arbol.min_obs_nodo != -1 and arbol.min_obs_nodo > arbol._total_samples())):
 
                 mejor_atributo = arbol._mejor_atributo_split()
 
-                if pd.api.types.is_numeric_dtype(self.data[mejor_atributo]): # si es numerica
-                    mejor_umbral = arbol._mejor_umbral_split(mejor_atributo)
-                    arbol._split_numerico(mejor_atributo, mejor_umbral)
-                else:
-                    arbol._split_categorico(mejor_atributo)
-
+                arbol._split(mejor_atributo) # el check de numerico ahora ocurre dentro de _split()
+                
                 for sub_arbol in arbol.subs:
                     _interna(sub_arbol, prof_acum + 1)
         
