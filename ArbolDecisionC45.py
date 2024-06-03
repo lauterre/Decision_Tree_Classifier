@@ -74,8 +74,7 @@ class ArbolDecisionC45(Arbol, ClasificadorArbol):
             entropia += proporcion * np.log2(proporcion)
         return -entropia if entropia != 0 else 0
     
-    # podriamos hacer lo mismo que hice en _split
-    def _information_gain(self, atributo: str, split: Callable) -> float:
+    def _information_gain_base(self, atributo: str, split: Callable):
         entropia_actual = self._entropia()
         len_actual = len(self.data)
         nuevo = deepcopy(self) # usar copy propio cuando funcione
@@ -90,20 +89,13 @@ class ArbolDecisionC45(Arbol, ClasificadorArbol):
 
         information_gain = entropia_actual - entropias_subarboles
         return information_gain
-        
-    def _information_gain_numerico(self, atributo: str, umbral: float | int) -> float:
-        def split_numerico(nuevo, atributo):
-            nuevo._split_numerico(atributo, umbral)
     
-        return self._information_gain(atributo, split_numerico) # clausura
+    def _information_gain(self, atributo: str) -> float:  #IMPORTANTE: este information gain calcula el mejor umbral de ser necesario
+        def split(arbol, atributo):
+            arbol._split(atributo)
+        
+        return self._information_gain_base(atributo, split)
     
-
-    def _information_gain_categorico(self, atributo: str) -> float:
-        def split_categorico(nuevo, atributo):
-            nuevo._split_categorico(atributo)
-        
-        return self._information_gain(atributo, split_categorico)
-        
     def _split_info(self):
         split_info = 0
         len_actual = len(self.data)
@@ -115,33 +107,35 @@ class ArbolDecisionC45(Arbol, ClasificadorArbol):
     def _gain_ratio(self, atributo: str) -> float:
         nuevo = deepcopy(self) # usar copy propio
 
-        if pd.api.types.is_numeric_dtype(self.data[atributo]): # si es numerico
-            umbral = nuevo._mejor_umbral_split(atributo)
-            information_gain = nuevo._information_gain_numerico(atributo, umbral)
-            nuevo._split_numerico(atributo, umbral)
-            split_info = nuevo._split_info()
-
-        else:
-            information_gain = nuevo._information_gain_categorico(atributo)
-            nuevo._split_categorico(atributo)
-            split_info = nuevo._split_info()
+        information_gain = nuevo._information_gain(atributo)
+        nuevo._split(atributo)
+        split_info = nuevo._split_info()
 
         return information_gain / split_info
     
-    def _mejor_atributo_split(self) -> str:
+    def _mejor_atributo_split(self) -> str | None:
         mejor_gain_ratio = -1
-        #mejor_atributo = None
+        mejor_atributo = None
         atributos = self.data.columns
 
         for atributo in atributos:
-            gain_ratio = self._gain_ratio(atributo)
-            if gain_ratio > mejor_gain_ratio:
-                mejor_gain_ratio = gain_ratio
-                mejor_atributo = atributo
+            if len(self.data[atributo].unique()) > 1:
+                gain_ratio = self._gain_ratio(atributo)
+                if gain_ratio > mejor_gain_ratio:
+                    mejor_gain_ratio = gain_ratio
+                    mejor_atributo = atributo
 
         return mejor_atributo
     
+    # Nunca hice algo asi, espero que funcione
+    def __information_gain_numerico(self, atributo: str, umbral: float | int):  # helper de mejor_umbral_split
+            def split_num(arbol, atributo):
+                arbol._split_numerico(atributo, umbral)
+            
+            return self._information_gain_base(atributo, split_num) # clausura, se deberia llevar el umbral
+    
     def _mejor_umbral_split(self, atributo: str) -> float:
+        
         self.data = self.data.sort_values(by=atributo)
         mejor_ig = -1
         valores_unicos = self.data[atributo].unique()
@@ -150,7 +144,7 @@ class ArbolDecisionC45(Arbol, ClasificadorArbol):
         i = 0
         while i < len(valores_unicos) - 1:
             umbral = (valores_unicos[i] + valores_unicos[i + 1]) / 2
-            ig = self._information_gain_numerico(atributo, umbral) # uso information_gain, gain_ratio es para la seleccion de atributo
+            ig = self.__information_gain_numerico(atributo, umbral) # uso information_gain, gain_ratio es para la seleccion de atributo
             if ig > mejor_ig:
                 mejor_ig = ig
                 mejor_umbral = umbral
@@ -176,10 +170,11 @@ class ArbolDecisionC45(Arbol, ClasificadorArbol):
 
                 mejor_atributo = arbol._mejor_atributo_split()
 
-                arbol._split(mejor_atributo) # el check de numerico ahora ocurre dentro de _split()
-                
-                for sub_arbol in arbol.subs:
-                    _interna(sub_arbol, prof_acum + 1)
+                if mejor_atributo:
+                    arbol._split(mejor_atributo) # el check de numerico ahora ocurre dentro de _split()
+                    
+                    for sub_arbol in arbol.subs:
+                        _interna(sub_arbol, prof_acum + 1)
         
         _interna(self)
         

@@ -108,11 +108,11 @@ class Arbol(ABC):
     
     @abstractmethod
     def _entropia(self):
-        raise NotImplementedError       #Este método no se si va aca, creo que solo es ID3. C4.5 usa la Ganancia de Informacion normalizada
+        raise NotImplementedError
     
-    # @abstractmethod
-    # def _information_gain(self, atributo: str) -> float:
-    #     raise NotImplementedError    
+    @abstractmethod
+    def _information_gain(self, atributo: str) -> float:
+        raise NotImplementedError
     
     @abstractmethod
     def imprimir(self) -> None:
