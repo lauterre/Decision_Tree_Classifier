@@ -34,25 +34,35 @@ class ArbolDecisionC45(Arbol, ClasificadorArbol):
         if operacion == "menor":
             nuevo.data = self.data[self.data[atributo] < valor]
             nuevo.target = self.target[self.data[atributo] < valor]
+        
         elif operacion == "mayor":
             nuevo.data = self.data[self.data[atributo] > valor]
             nuevo.target = self.target[self.data[atributo] > valor]
+        
         elif operacion == "igual":
             nueva_data = self.data[self.data[atributo] == valor]
             nueva_data = nueva_data.drop(atributo, axis=1)
             nuevo.data = nueva_data
             nuevo.target = self.target[self.data[atributo] == valor]
+        
         nuevo.clase = nuevo.target.value_counts().idxmax()
         nuevo.atributo_split_anterior = atributo
         nuevo.valor_split_anterior = valor
         self.agregar_subarbol(nuevo)
         
-    def _split(self, atributo: str, valor: Any = None) -> None:
+    def _split(self, atributo: str, valor_umbral: Any = None) -> None:
+        if valor_umbral is None:
+            self.tipo_atributo = "G" #Categorico
+        else:
+            self.tipo_atributo = "C" #Continuo
+            
         self.atributo_split = atributo
-        self.valor_split = valor
-        if valor:
-            self._nuevo_subarbol(atributo, "menor", valor)
-            self._nuevo_subarbol(atributo, "mayor", valor)
+        self.valor_split = valor_umbral
+        
+        if valor_umbral:
+            self._nuevo_subarbol(atributo, "menor", valor_umbral)
+            self._nuevo_subarbol(atributo, "mayor", valor_umbral)
+        
         else:
             for categoria in self.data[atributo].unique():
                 self._nuevo_subarbol(atributo, "igual", categoria)
@@ -247,12 +257,19 @@ class ArbolDecisionC45(Arbol, ClasificadorArbol):
     
     # TODO: adaptar para los split categoricos
     def imprimir(self, prefijo: str = '  ', es_ultimo: bool = True) -> None:
-        simbolo_rama = '└─ NO ── ' if es_ultimo else '├─ SI ── '
-        split = f"{self.atributo_split} < {self.valor_split:.2f} ?" if self.valor_split else ""
+        
+        if self.es_atrib_continuo():
+            simbolo_rama = '└─ NO ── ' if es_ultimo else '├─ SI ── '
+            split = f"{self.atributo_split} < {self.valor_split:.2f} ?" if self.valor_split else ""
+        else:
+            simbolo_rama = '└─── ' if es_ultimo else '├─── '
+            split = "Split: " + str(self.atributo_split)
+        
         entropia = f"Entropia: {self._entropia():.2f}"
         samples = f"Samples: {self._total_samples()}"
         values = f"Values: {self._values()}"
         clase = f"Clase: {self.clase}"
+
         if self.es_raiz():
             print(entropia)
             print(samples)
@@ -266,12 +283,23 @@ class ArbolDecisionC45(Arbol, ClasificadorArbol):
 
         elif not self.es_hoja():
             print(prefijo + "│")
-            print(prefijo + simbolo_rama + entropia)
-            prefijo2 = prefijo + " " * (len(simbolo_rama)) if es_ultimo else prefijo + "│" + " " * (len(simbolo_rama) - 1)
-            print(prefijo2 + samples)
-            print(prefijo2 + values)
-            print(prefijo2 + clase)
-            print(prefijo2 + split)
+            
+            if self.es_atrib_continuo():
+                print(prefijo + simbolo_rama + entropia)
+                prefijo2 = prefijo + " " * (len(simbolo_rama)) if es_ultimo else prefijo + "│" + " " * (len(simbolo_rama) - 1)
+                print(prefijo2 + samples)
+                print(prefijo2 + values)
+                print(prefijo2 + clase)
+                print(prefijo2 + split)
+            else:
+                rta =  f"{self.atributo_split_anterior} = {self.valor_split_anterior}"
+                print(prefijo + simbolo_rama + rta)            
+                prefijo2 = prefijo + " " * (len(simbolo_rama)) if es_ultimo else prefijo + "│" + " " * (len(simbolo_rama) - 1)
+                print(prefijo2 + entropia)
+                print(prefijo2 + samples)
+                print(prefijo2 + values)
+                print(prefijo2 + clase)
+                print(prefijo2 + split)
 
             prefijo += ' ' * 10 if es_ultimo else '│' + ' ' * 9
             for i, sub_arbol in enumerate(self.subs):
@@ -280,11 +308,21 @@ class ArbolDecisionC45(Arbol, ClasificadorArbol):
         else:
             prefijo_hoja = prefijo + " " * len(simbolo_rama) if es_ultimo else prefijo + "│" + " " * (len(simbolo_rama) - 1)
             print(prefijo + "│")
-            print(prefijo + simbolo_rama + entropia)
-            print(prefijo_hoja + samples)
-            print(prefijo_hoja + values)
-            print(prefijo_hoja + clase)
-    
+                        
+            if self.es_atrib_continuo():
+                print(prefijo + simbolo_rama + entropia)
+                print(prefijo_hoja + samples)
+                print(prefijo_hoja + values)
+                print(prefijo_hoja + clase)
+            else:
+                rta =  f"{self.atributo_split_anterior} = {self.valor_split_anterior}"
+                print(prefijo + simbolo_rama + rta)            
+                print(prefijo_hoja + entropia)
+                print(prefijo_hoja + samples)
+                print(prefijo_hoja + values)
+                print(prefijo_hoja + clase)
+                print(prefijo_hoja + split)    
+                
 def probar(df, target: str):
     X = df.drop(target, axis=1)
     y = df[target]
@@ -303,6 +341,7 @@ def probar(df, target: str):
 
 if __name__ == "__main__":
     import sklearn.datasets
+
     iris = sklearn.datasets.load_iris()
     df = pd.DataFrame(data=iris.data, columns=iris.feature_names)
     df['target'] = iris.target
@@ -315,7 +354,7 @@ if __name__ == "__main__":
     arbol = ArbolDecisionC45()
     arbol.fit(X_train, y_train)
     arbol.imprimir()
-    arbol.graficar() 
+    #arbol.graficar() 
     y_pred = arbol.predict(x_test)
 
     print(f"\naccuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
@@ -341,7 +380,6 @@ if __name__ == "__main__":
     # print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio= "ponderado"):.2f}\n")
 
     print("pruebo con tennis")
-
     tennis = pd.read_csv("PlayTennis.csv")
 
     X = tennis.drop("Play Tennis", axis = 1)
@@ -349,11 +387,11 @@ if __name__ == "__main__":
     
     X_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    arbol = ArbolDecisionC45()
-    arbol.fit(X_train, y_train)
-    # arbol.imprimir() no funciona
-    arbol.graficar()
-    y_pred = arbol.predict(x_test)
+    arbol_tennis = ArbolDecisionC45()
+    arbol_tennis.fit(X_train, y_train)
+    arbol_tennis.imprimir() #no funciona
+    arbol_tennis.graficar()
+    y_pred = arbol_tennis.predict(x_test)
 
     print(f"\naccuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
     print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio= 'micro'):.2f}\n")

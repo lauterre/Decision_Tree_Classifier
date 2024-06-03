@@ -30,6 +30,7 @@ class Arbol(ABC):
     def __init__(self) -> None:
         self.data: pd.DataFrame 
         self.target: pd.Series
+        self.tipo_atributo: Optional[str] = None
         self.atributo_split: Optional[str] = None
         self.atributo_split_anterior: Optional[str] = None
         self.valor_split_anterior: Optional[str]= None
@@ -44,6 +45,9 @@ class Arbol(ABC):
             print(f"Error de verificación si el nodo es raiz: {e}")
             return False
 
+    def es_atrib_continuo(self):
+        return self.tipo_atributo == 'C'
+    
     def es_hoja(self):
         try:
             return self.subs == []
