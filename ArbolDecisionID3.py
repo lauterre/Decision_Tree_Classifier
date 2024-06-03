@@ -190,6 +190,7 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
             samples = f"Samples: {str(self._total_samples())}"
             values = f"Values: {str(self._values())}"
             clase = 'Clase: ' + str(self.clase)
+            
             if self.es_raiz():
                 print(entropia)
                 print(samples)
