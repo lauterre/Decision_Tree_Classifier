@@ -244,8 +244,6 @@ class ArbolDecisionC45(Arbol, ClasificadorArbol):
 
             _interna_REP(self, x_test, y_test)
     
-    
-    # TODO: adaptar para los split categoricos
     def imprimir(self, prefijo: str = '  ', es_ultimo: bool = True) -> None:
         
         if self.es_atrib_continuo():
@@ -372,16 +370,16 @@ if __name__ == "__main__":
     print("pruebo con tennis")
     tennis = pd.read_csv("PlayTennis.csv")
 
-    # X = tennis.drop("Play Tennis", axis = 1)
-    # y = tennis["Play Tennis"]
+    X = tennis.drop("Play Tennis", axis = 1)
+    y = tennis["Play Tennis"]
     
-    # X_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    X_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     arbol_tennis = ArbolDecisionC45()
     arbol_tennis.fit(X_train, y_train)
-    arbol_tennis.imprimir() #no funciona
+    arbol_tennis.imprimir()
     arbol_tennis.graficar()
     y_pred = arbol_tennis.predict(x_test)
 
-    # print(f"\naccuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
-    # print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio= 'micro'):.2f}\n")
+    print(f"\naccuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
+    print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio= 'micro'):.2f}\n")
