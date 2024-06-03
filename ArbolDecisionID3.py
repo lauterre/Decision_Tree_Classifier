@@ -39,23 +39,20 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
     #     self.min_infor_gain = arbol_previo.min_infor_gain
     #     self.min_obs_hoja = arbol_previo.min_obs_hoja
 
-    def _mejor_atributo_split(self) -> str:
-        try:
-            mejor_ig = -1
-            mejor_atributo = ""
-            atributos = self.data.columns
+    def _mejor_atributo_split(self) -> str | None:
+        mejor_ig = -1
+        mejor_atributo = None
+        atributos = self.data.columns
 
-            for atributo in atributos:
+        for atributo in atributos:
+            if len(self.data[atributo].unique()) > 1:
                 ig = self._information_gain(atributo)
                 if ig > mejor_ig:
                     mejor_ig = ig
                     mejor_atributo = atributo
 
-            return mejor_atributo
-        except Exception as e:
-            print(f"Error al tratar de encontrar el mejor atributo de división: {e}")
-            return ""
-
+        return mejor_atributo
+    
     def copy(self):
         try:
             nuevo = ArbolDecisionID3(**self.__dict__)
@@ -68,7 +65,7 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
             print(f"Error al tratar de copiar el arbol: {e}")
             return None
 
-    def _split(self, atributo: str, valor= None) -> None:
+    def _split(self, atributo: str) -> None:
         try:
             temp = deepcopy(self)  # TODO: arreglar copy
             #tmp_subs: list[Arbol]= []
@@ -110,7 +107,7 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
             print(f"Error al tratar de calcular la entropia: {e}")
             return 0
 
-    def _information_gain(self, atributo: str, valor = None) -> float:
+    def _information_gain(self, atributo: str) -> float:
         try:
             entropia_actual = self._entropia()
             len_actual = len(self.data)
@@ -134,37 +131,33 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
             return 0
 
     def fit(self, X: pd.DataFrame, y: pd.Series):
-        try:
-            self.target = y
-            self.data = X
-            self.clase = self.target.value_counts().idxmax()
+        self.target = y
+        self.data = X
+        self.clase = self.target.value_counts().idxmax()
 
-            def _interna(arbol: ArbolDecisionID3, prof_acum: int = 0):
-                try:
-                    arbol.target_categorias = y.unique()
+        def _interna(arbol: ArbolDecisionID3, prof_acum: int = 0):
+            arbol.target_categorias = y.unique()
 
-                    if prof_acum == 0:
-                        prof_acum = 1
+            if prof_acum == 0:
+                prof_acum = 1
 
-                    if not (len(arbol.target.unique()) == 1 or len(arbol.data.columns) == 0 
-                            or (arbol.max_prof != -1 and arbol.max_prof <= prof_acum) 
-                            or (arbol.min_obs_nodo != -1 and arbol.min_obs_nodo > arbol._total_samples())):
+            if not (len(arbol.target.unique()) == 1 or len(arbol.data.columns) == 0 
+                    or (arbol.max_prof != -1 and arbol.max_prof <= prof_acum) 
+                    or (arbol.min_obs_nodo != -1 and arbol.min_obs_nodo > arbol._total_samples())):
 
-                        mejor_atributo = arbol._mejor_atributo_split()
-                        mejor_ig = arbol._information_gain(mejor_atributo)
+                mejor_atributo = arbol._mejor_atributo_split()
 
-                        if (arbol.min_infor_gain == -1 or mejor_ig >= arbol.min_infor_gain):
-                            arbol._split(mejor_atributo)
+                if mejor_atributo:
+                    mejor_ig = arbol._information_gain(mejor_atributo)
 
-                            for sub_arbol in arbol.subs:
-                                _interna(sub_arbol, prof_acum + 1)
-                except Exception as e:
-                    print(f"Error en la funcion interna del fit: {e}")
+                    if (arbol.min_infor_gain == -1 or mejor_ig >= arbol.min_infor_gain):
+                        arbol._split(mejor_atributo)
 
-            _interna(self)
-        except Exception as e:
-            print(f"Error al tratar de fittear el arbol: {e}")
-
+                        for sub_arbol in arbol.subs:
+                            _interna(sub_arbol, prof_acum + 1)
+                    
+        _interna(self)
+        
     def predict(self, X: pd.DataFrame) -> list[str]:
         predicciones = []
         try:
@@ -299,24 +292,21 @@ class ArbolDecisionID3(Arbol, ClasificadorArbol):
             # for subarbol in arbol.subs: 
 
 def probar(df, target: str):
-    try:
-        X = df.drop(target, axis=1)
-        y = df[target]
+    X = df.drop(target, axis=1)
+    y = df[target]
 
-        x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-        #arbol = ArbolDecisionID3(min_obs_nodo=1)
-        #arbol = ArbolDecisionID3(min_infor_gain=0.85)
-        arbol = ArbolDecisionID3(min_obs_nodo=1)
-        arbol.fit(x_train, y_train)
-        arbol.imprimir()
-        y_pred = arbol.predict(x_test)
+    x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    #arbol = ArbolDecisionID3(min_obs_nodo=1)
+    #arbol = ArbolDecisionID3(min_infor_gain=0.85)
+    arbol = ArbolDecisionID3()
+    arbol.fit(x_train, y_train)
+    arbol.imprimir()
+    y_pred = arbol.predict(x_test)
 
-        arbol.Reduced_Error_Pruning(x_test, y_test)
+    #arbol.Reduced_Error_Pruning(x_test, y_test)
 
-        print(f"\n accuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
-        print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio='ponderado')}\n")
-    except Exception as e:
-        print(f"Error de testing del modelo: {e}")
+    print(f"\n accuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
+    print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio='ponderado')}\n")
 
 if __name__ == "__main__":
     #https://www.kaggle.com/datasets/thedevastator/cancer-patients-and-air-pollution-a-new-link
