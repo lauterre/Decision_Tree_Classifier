@@ -2,7 +2,7 @@ from copy import deepcopy
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
-from metricas import Metricas
+from metrics import Metricas
 from _superclases import BosqueClasificador, Bosque, Hiperparametros, Arbol
 from arbol_clasificador_id3 import ArbolDecisionID3
 

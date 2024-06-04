@@ -3,9 +3,9 @@ from typing import Any
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
-from metricas import Metricas
+from metrics import Metricas
 from _superclases import ArbolClasificador, Hiperparametros
-from graficador import GraficadorArbol
+from graficadr import GraficadorArbol
 
 class ArbolClasificadorID3(ArbolClasificador):
     def __init__(self, **kwargs) -> None:
