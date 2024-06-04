@@ -3,17 +3,15 @@ from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
 from typing import Any, Callable, Optional
-from Graficador import TreePlot
-from _superclases import Arbol, ClasificadorArbol, Hiperparametros
+from graficador import GraficadorArbol
+from _superclases import ArbolClasificador, Hiperparametros
+from metricas import Metricas
 
-from Metricas import Metricas
 
-
-class ArbolDecisionC45(Arbol, ClasificadorArbol):
+class ArbolDecisionC45(ArbolClasificador):
     def __init__(self, **kwargs) -> None:
-        super().__init__()
-        ClasificadorArbol.__init__(self,**kwargs)
-        self.valor_split: Optional[float] = None
+        super().__init__(**kwargs)
+        self.umbral_split: Optional[float] = None
 
     def copy(self):
         nuevo = ArbolDecisionC45(**self.__dict__)
@@ -52,7 +50,7 @@ class ArbolDecisionC45(Arbol, ClasificadorArbol):
         
     def _split_numerico(self, atributo: str, umbral: float | int) -> None:
         self.atributo_split = atributo
-        self.valor_split = umbral
+        self.umbral_split = umbral
         self._nuevo_subarbol(atributo, "menor", umbral)
         self._nuevo_subarbol(atributo, "mayor", umbral)
 
@@ -63,13 +61,16 @@ class ArbolDecisionC45(Arbol, ClasificadorArbol):
     
     # respeta la firma de la superclase (o de id3 en caso de decidir que sea subclase)
     def _split(self, atributo):
-        if pd.api.types.is_numeric_dtype(self.data[atributo]):
-            self.tipo_atributo = "C" #Continuo
+        if self.es_atributo_numerico(atributo):
+            self.tipo_atributo = "C" #Continuo   # guarda el tipo de atributo por el que se hace split
             mejor_umbral = self._mejor_umbral_split(atributo)
             self._split_numerico(atributo, mejor_umbral)
         else:
-            self.tipo_atributo = "G" #Categorico
+            self.tipo_atributo = "G" #Categorico  # guarda el tipo de atributo por el que se hace split
             self._split_categorico(atributo)
+
+    def es_atributo_numerico(self, atributo: str) -> bool:
+        return pd.api.types.is_numeric_dtype(self.data[atributo])
     
     def _entropia(self) -> float:
         entropia = 0
@@ -133,8 +134,7 @@ class ArbolDecisionC45(Arbol, ClasificadorArbol):
 
         return mejor_atributo
     
-    # Nunca hice algo asi, espero que funcione
-    def __information_gain_numerico(self, atributo: str, umbral: float | int):  # helper de mejor_umbral_split
+    def __information_gain_numerico(self, atributo: str, umbral: float | int):  # helper de mejor_umbral_split, no calcula el mejor umbral
             def split_num(arbol, atributo):
                 arbol._split_numerico(atributo, umbral)
             
@@ -157,23 +157,16 @@ class ArbolDecisionC45(Arbol, ClasificadorArbol):
             i += 1
 
         return mejor_umbral
-        
+    
     def fit(self, X: pd.DataFrame, y: pd.Series):
         self.target = y
         self.data = X
-        self.clase = self.target.value_counts().idxmax()
+        self.set_clase()
 
-        def _interna(arbol: ArbolDecisionC45, prof_acum: int = 0):
-            arbol.target_categorias = y.unique()
+        def _interna(arbol: ArbolDecisionC45, prof_acum: int = 1):
+            arbol.set_target_categorias(y)
 
-            if prof_acum == 0:
-                prof_acum = 1
-
-            # TODO: meter las condiciones de parada en un metodo _puede_splitearse(), lo intenté pero no anda
-            if not (len(arbol.target.unique()) == 1 or len(arbol.data.columns) == 0
-                    or (arbol.max_prof != -1 and arbol.max_prof <= prof_acum)
-                    or (arbol.min_obs_nodo != -1 and arbol.min_obs_nodo > arbol._total_samples())):
-
+            if arbol._puede_splitearse(prof_acum):
                 mejor_atributo = arbol._mejor_atributo_split()
 
                 if mejor_atributo:
@@ -191,10 +184,10 @@ class ArbolDecisionC45(Arbol, ClasificadorArbol):
                 predicciones.append(arbol.clase)
             else:
                 valor = fila[arbol.atributo_split]
-                if pd.api.types.is_numeric_dtype(valor):
-                    if valor < arbol.valor_split:
+                if arbol.es_atributo_numerico(arbol.atributo_split):  # es split numerico
+                    if valor < arbol.umbral_split:
                         _recorrer(arbol.subs[0], fila)
-                    elif valor > arbol.valor_split:
+                    elif valor > arbol.umbral_split:
                         _recorrer(arbol.subs[1], fila)
                 else:
                     for subarbol in arbol.subs:
@@ -206,7 +199,7 @@ class ArbolDecisionC45(Arbol, ClasificadorArbol):
         return predicciones
     
     def graficar(self):    
-        plotter = TreePlot(self)
+        plotter = GraficadorArbol(self)
         plotter.plot()
 
     def _error_clasificacion(self, y, y_pred):
@@ -246,9 +239,9 @@ class ArbolDecisionC45(Arbol, ClasificadorArbol):
     
     def imprimir(self, prefijo: str = '  ', es_ultimo: bool = True) -> None:
         
-        if self.es_atrib_continuo():
+        if self.es_atrib_continuo():  # self.es_atributo_numerico(self.atributo_split) #TODO
             simbolo_rama = '└─ NO ── ' if es_ultimo else '├─ SI ── '
-            split = f"{self.atributo_split} < {self.valor_split:.2f} ?" if self.valor_split else ""
+            split = f"{self.atributo_split} < {self.umbral_split:.2f} ?" if self.umbral_split else ""
         else:
             simbolo_rama = '└─── ' if es_ultimo else '├─── '
             split = "Split: " + str(self.atributo_split)
@@ -293,11 +286,12 @@ class ArbolDecisionC45(Arbol, ClasificadorArbol):
             for i, sub_arbol in enumerate(self.subs):
                 ultimo: bool = i == len(self.subs) - 1
                 sub_arbol.imprimir(prefijo, ultimo)
-        else:
+
+        else: # es hoja
             prefijo_hoja = prefijo + " " * len(simbolo_rama) if es_ultimo else prefijo + "│" + " " * (len(simbolo_rama) - 1)
             print(prefijo + "│")
                         
-            if self.es_atrib_continuo():
+            if self.es_atrib_continuo(): # nunca entra aca porque una hoja nunca hace split
                 print(prefijo + simbolo_rama + entropia)
                 print(prefijo_hoja + samples)
                 print(prefijo_hoja + values)
@@ -308,15 +302,14 @@ class ArbolDecisionC45(Arbol, ClasificadorArbol):
                 print(prefijo_hoja + entropia)
                 print(prefijo_hoja + samples)
                 print(prefijo_hoja + values)
-                print(prefijo_hoja + clase)
-                print(prefijo_hoja + split)    
+                print(prefijo_hoja + clase)    
                 
 def probar(df, target: str):
     X = df.drop(target, axis=1)
     y = df[target]
 
     x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    arbol = ArbolDecisionC45(min_obs_nodo=1)
+    arbol = ArbolDecisionC45()
     arbol.fit(x_train, y_train)
     arbol.imprimir()
     y_pred = arbol.predict(x_test)
@@ -334,52 +327,21 @@ if __name__ == "__main__":
     df = pd.DataFrame(data=iris.data, columns=iris.feature_names)
     df['target'] = iris.target
 
-    X = df.drop("target", axis = 1)
-    y = df["target"]
-    
-    X_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-    arbol = ArbolDecisionC45()
-    arbol.fit(X_train, y_train)
-    arbol.imprimir()
-    #arbol.graficar() 
-    y_pred = arbol.predict(x_test)
-
-    print(f"\naccuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
-    print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio= 'macro'):.2f}\n")
-
-    # print("pruebo con patients") 
-
-    # patients = pd.read_csv("cancer_patients.csv", index_col=0)
-    # patients = patients.drop("Patient Id", axis = 1)
-
-    # X = patients.drop("Level", axis = 1)
-    # y = patients["Level"]
-    # patients.loc[:, patients.columns != "Age"] = patients.loc[:, patients.columns != "Age"].astype(str) # para que sean categorias
-    
-    # X_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-    # arbol = ArbolDecisionC45(max_prof=4)
-    # arbol.fit(X_train, y_train)
-    # # arbol.imprimir() no funciona
-    # y_pred = arbol.predict(x_test)
-
-    # print(f"\naccuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
-    # print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio= "ponderado"):.2f}\n")
+    print("pruebo con iris")
+    probar(df, "target")
 
     print("pruebo con tennis")
-    tennis = pd.read_csv("PlayTennis.csv")
+    tennis = pd.read_csv("./datasets/PlayTennis.csv")
 
-    X = tennis.drop("Play Tennis", axis = 1)
-    y = tennis["Play Tennis"]
+    probar(tennis, "Play Tennis")
+
+
+    # TODO: arreglar el predict, hay un issue
+    # print("pruebo con patients") 
+
+    # patients = pd.read_csv("./datasets/cancer_patients.csv", index_col=0)
+    # patients = patients.drop("Patient Id", axis = 1)
+    # patients.loc[:, patients.columns != "Age"] = patients.loc[:, patients.columns != "Age"].astype(str) # para que sean categorias
     
-    X_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-    arbol_tennis = ArbolDecisionC45()
-    arbol_tennis.fit(X_train, y_train)
-    arbol_tennis.imprimir()
-    arbol_tennis.graficar()
-    y_pred = arbol_tennis.predict(x_test)
-
-    print(f"\naccuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
-    print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio= 'micro'):.2f}\n")
+    # probar(patients, "Level")
+    

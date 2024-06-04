@@ -2,14 +2,14 @@ from copy import deepcopy
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
-from Metricas import Metricas
-from _superclases import ClasificadorBosque, Bosque, Hiperparametros, Arbol
-from ArbolDecisionID3 import ArbolDecisionID3
+from metricas import Metricas
+from _superclases import BosqueClasificador, Bosque, Hiperparametros, Arbol
+from arbol_clasificador_id3 import ArbolDecisionID3
 
-class RandomForest(Bosque, ClasificadorBosque):
+class RandomForest(Bosque, BosqueClasificador):
     def __init__(self,clase_arbol: str = "id3", cantidad_arboles: int = 10, cantidad_atributos:str ='sqrt',**kwargs):
         super().__init__(clase_arbol, cantidad_arboles, cantidad_atributos)
-        ClasificadorBosque.__init__(self, **kwargs)
+        BosqueClasificador.__init__(self, **kwargs)
 
     def seleccionar_atributos(self, X: pd.DataFrame)-> list[int]:
         n_features = X.shape[1]
