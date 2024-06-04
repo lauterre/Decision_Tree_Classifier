@@ -15,6 +15,7 @@ class Clasificador(ABC):
     
 class Hiperparametros:
     def __init__(self, **kwargs):
+        # No sería mas claro dejarlos en None si no estan definidos?
         self.max_prof: int = kwargs.get('max_prof', -1)
         self.min_obs_nodo: int = kwargs.get('min_obs_nodo', -1)
         self.min_infor_gain: float = kwargs.get('min_infor_gain', -1.0)
@@ -23,7 +24,7 @@ class Hiperparametros:
 
 class Arbol(ABC): # seria ArbolNario
     def __init__(self) -> None:
-        # saque los atributos que habia acá porque considero que no son propios de un arbol
+        # moví los atributos que habia acá porque considero que no son propios de un arbol, sino de un modelo
         self.subs: list[Arbol]= []
     
     @abstractmethod
@@ -65,6 +66,7 @@ class Arbol(ABC): # seria ArbolNario
     def copy(self):
         raise NotImplementedError
     
+    # TODO: pasar a __str__()
     @abstractmethod
     def imprimir(self) -> None:
         raise NotImplementedError
@@ -136,12 +138,16 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
         raise NotImplementedError
     
 
-# Esto no lo toque porque aun no lo miré, tengo miedo de romper
-# Habria que seguir la misma logica del ArbolClasificador
+# Esto no lo toque porque aun no lo miré
     
+# Habria que seguir la misma logica del ArbolClasificador
+# BosqueClasificador deberia ser el RandomForest
+# quizas la clase bosque no va, por ahora agrega solo dos comportamientos tipicos de un bosque: self.arboles, self.cantidad_arboles
+
+
 class BosqueClasificador(Clasificador, ABC):
     def __init__(self,**kwargs) -> None:
-        hiperparametros_arbol = Hiperparametros(**kwargs)        
+        hiperparametros_arbol = Hiperparametros(**kwargs)
         for key, value in hiperparametros_arbol.__dict__.items():
             setattr(self, key, value)
 
@@ -149,9 +155,11 @@ class Bosque(ABC):
     def __init__(self, clase_arbol: str = "id3", cantidad_arboles: int = 10, cantidad_atributos:str ='sqrt') -> None:
         self.arboles: list[Arbol] = []
         self.cantidad_arboles = cantidad_arboles
+        # estos atributos son propios de un modelo, deberian estar en BosqueClasificador
         self.cantidad_atributos = cantidad_atributos
         self.clase_arbol = clase_arbol
 
+    # estos metodos tambien
     @staticmethod
     def _bootstrap_samples(X: pd.DataFrame, y: pd.Series) -> tuple[pd.DataFrame, pd.Series]:
         n_samples = X.shape[0]
