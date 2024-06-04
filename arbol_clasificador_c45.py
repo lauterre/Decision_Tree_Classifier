@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 from typing import Any, Callable, Optional
 from graficador import GraficadorArbol
-from _superclases import ArbolClasificador, Hiperparametros
+from _superclases import ArbolClasificador
 from metricas import Metricas
 
 
@@ -20,12 +20,6 @@ class ArbolClasificadorC45(ArbolClasificador):
         nuevo.target_categorias = self.target_categorias.copy()
         nuevo.subs = [sub.copy() for sub in self.subs]
         return nuevo
-    
-    def agregar_subarbol(self, subarbol):
-        for key, value in self.__dict__.items():
-            if key in Hiperparametros().__dict__:  # Solo copiar los atributos que están en Hiperparametros
-                setattr(subarbol, key, value)
-        self.subs.append(subarbol)
         
     def _nuevo_subarbol(self, atributo: str, operacion: str, valor: Any):
         nuevo = ArbolClasificadorC45(**self.__dict__)
@@ -43,7 +37,7 @@ class ArbolClasificadorC45(ArbolClasificador):
             nuevo.data = nueva_data
             nuevo.target = self.target[self.data[atributo] == valor]
         
-        nuevo.clase = nuevo.target.value_counts().idxmax()
+        nuevo.set_clase()
         nuevo.atributo_split_anterior = atributo
         nuevo.valor_split_anterior = valor
         self.agregar_subarbol(nuevo)
@@ -59,31 +53,19 @@ class ArbolClasificadorC45(ArbolClasificador):
         for categoria in self.data[atributo].unique():
             self._nuevo_subarbol(atributo, "igual", categoria)
     
-    # respeta la firma de la superclase (o de id3 en caso de decidir que sea subclase)
     def _split(self, atributo):
         if self.es_atributo_numerico(atributo):
-            self.tipo_atributo = "C" #Continuo   # guarda el tipo de atributo por el que se hace split
             mejor_umbral = self._mejor_umbral_split(atributo)
             self._split_numerico(atributo, mejor_umbral)
         else:
-            self.tipo_atributo = "G" #Categorico  # guarda el tipo de atributo por el que se hace split
             self._split_categorico(atributo)
 
     def es_atributo_numerico(self, atributo: str) -> bool:
         return pd.api.types.is_numeric_dtype(self.data[atributo])
     
-    def _entropia(self) -> float:
-        entropia = 0
-        proporciones = self.target.value_counts(normalize=True)
-        target_categorias = self.target.unique()
-        for c in target_categorias:
-            proporcion = proporciones.get(c, 0)
-            entropia += proporcion * np.log2(proporcion)
-        return -entropia if entropia != 0 else 0
-    
     def _information_gain_base(self, atributo: str, split: Callable):
         entropia_actual = self._entropia()
-        len_actual = len(self.data)
+        len_actual = self._total_samples()
         nuevo = deepcopy(self) # usar copy propio cuando funcione
 
         split(nuevo, atributo)
@@ -91,7 +73,7 @@ class ArbolClasificadorC45(ArbolClasificador):
         entropias_subarboles = 0 
         for subarbol in nuevo.subs:
             entropia = subarbol._entropia()
-            len_subarbol = len(subarbol.data)
+            len_subarbol = subarbol._total_samples()
             entropias_subarboles += ((len_subarbol/len_actual) * entropia)
 
         information_gain = entropia_actual - entropias_subarboles
@@ -105,9 +87,9 @@ class ArbolClasificadorC45(ArbolClasificador):
     
     def _split_info(self):
         split_info = 0
-        len_actual = len(self.data)
+        len_actual = self._total_samples()
         for subarbol in self.subs:
-            len_subarbol = len(subarbol.data)
+            len_subarbol = subarbol._total_samples()
             split_info += (len_subarbol / len_actual) * np.log2(len_subarbol / len_actual)
         return -split_info
         
@@ -237,9 +219,9 @@ class ArbolClasificadorC45(ArbolClasificador):
 
             _interna_REP(self, x_test, y_test)
     
+    # TODO: arreglar las hojas, en lugar de usar atributo_split podriamos usar atributo_split_anterior
     def imprimir(self, prefijo: str = '  ', es_ultimo: bool = True) -> None:
-        
-        if self.es_atrib_continuo():  # self.es_atributo_numerico(self.atributo_split) #TODO
+        if self.atributo_split and self.es_atributo_numerico(self.atributo_split):
             simbolo_rama = '└─ NO ── ' if es_ultimo else '├─ SI ── '
             split = f"{self.atributo_split} < {self.umbral_split:.2f} ?" if self.umbral_split else ""
         else:
@@ -265,7 +247,7 @@ class ArbolClasificadorC45(ArbolClasificador):
         elif not self.es_hoja():
             print(prefijo + "│")
             
-            if self.es_atrib_continuo():
+            if self.atributo_split and self.es_atributo_numerico(self.atributo_split):
                 print(prefijo + simbolo_rama + entropia)
                 prefijo2 = prefijo + " " * (len(simbolo_rama)) if es_ultimo else prefijo + "│" + " " * (len(simbolo_rama) - 1)
                 print(prefijo2 + samples)
@@ -291,7 +273,7 @@ class ArbolClasificadorC45(ArbolClasificador):
             prefijo_hoja = prefijo + " " * len(simbolo_rama) if es_ultimo else prefijo + "│" + " " * (len(simbolo_rama) - 1)
             print(prefijo + "│")
                         
-            if self.es_atrib_continuo(): # nunca entra aca porque una hoja nunca hace split
+            if self.atributo_split and self.es_atributo_numerico(self.atributo_split): # nunca entra aca porque una hoja nunca hace split
                 print(prefijo + simbolo_rama + entropia)
                 print(prefijo_hoja + samples)
                 print(prefijo_hoja + values)
@@ -302,7 +284,7 @@ class ArbolClasificadorC45(ArbolClasificador):
                 print(prefijo_hoja + entropia)
                 print(prefijo_hoja + samples)
                 print(prefijo_hoja + values)
-                print(prefijo_hoja + clase)    
+                print(prefijo_hoja + clase)
                 
 def probar(df, target: str):
     X = df.drop(target, axis=1)

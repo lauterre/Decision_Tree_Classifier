@@ -4,18 +4,12 @@ from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
 from metricas import Metricas
-from _superclases import ArbolClasificador, Hiperparametros
+from _superclases import ArbolClasificador
 from graficador import GraficadorArbol
 
 class ArbolClasificadorID3(ArbolClasificador):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        
-    def agregar_subarbol(self, subarbol):
-        for key, value in self.__dict__.items():
-            if key in Hiperparametros().__dict__:  # Solo copiar los atributos que están en Hiperparametros
-                setattr(subarbol, key, value)
-        self.subs.append(subarbol)
         
     def _mejor_atributo_split(self) -> str | None:
         mejor_ig = -1
@@ -42,7 +36,6 @@ class ArbolClasificadorID3(ArbolClasificador):
     def _split(self, atributo: str) -> None:
         
         temp = deepcopy(self)  # TODO: arreglar copy
-        #tmp_subs: list[Arbol]= []
         self.atributo_split = atributo  # guardo el atributo por el cual spliteo
 
         for categoria in self.data[atributo].unique():  # recorre el dominio de valores del atributo
@@ -66,29 +59,18 @@ class ArbolClasificadorID3(ArbolClasificador):
         if ok_min_obs_hoja:
             self.subs = temp.subs
     
-    def _entropia(self) -> float:
-        entropia = 0
-        proporciones = self.target.value_counts(normalize=True)
-        target_categorias = self.target.unique()
-        for c in target_categorias:
-            proporcion = proporciones.get(c, 0)
-            entropia += proporcion * np.log2(proporcion)
-        return -entropia if entropia != 0 else 0
-        
     def _information_gain(self, atributo: str) -> float:
         entropia_actual = self._entropia()
-        len_actual = len(self.data)
+        len_actual = self._total_samples()
 
         nuevo = self.copy()
-        if nuevo is None:
-            raise ValueError("Fallo al tratar de copiar el arbol")
 
         nuevo._split(atributo)
 
         entropias_subarboles = 0 
         for subarbol in nuevo.subs:
             entropia = subarbol._entropia()
-            len_subarbol = len(subarbol.data)
+            len_subarbol = subarbol._total_samples()
             entropias_subarboles += ((len_subarbol/len_actual) * entropia)
 
         information_gain = entropia_actual - entropias_subarboles
@@ -228,6 +210,7 @@ def probar(df, target: str):
     arbol = ArbolClasificadorID3()
     arbol.fit(x_train, y_train)
     arbol.imprimir()
+    arbol.graficar()
     y_pred = arbol.predict(x_test)
 
     #arbol.Reduced_Error_Pruning(x_test, y_test)

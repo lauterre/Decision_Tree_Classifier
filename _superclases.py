@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from collections import defaultdict
 from typing import Optional
 import pandas as pd
 import numpy as np
@@ -23,7 +24,7 @@ class Hiperparametros:
 class Arbol(ABC): # seria ArbolNario
     def __init__(self) -> None:
         # saque los atributos que habia acá porque considero que no son propios de un arbol
-        self.subs: list[Arbol]= [] # capaz sea mejor que este en ArbolClasificador y que Arbol sea una "interfaz", parece raro que sea un arbol y SOLO tenga este atributo
+        self.subs: list[Arbol]= []
     
     @abstractmethod
     def es_raiz(self):
@@ -43,7 +44,19 @@ class Arbol(ABC): # seria ArbolNario
         for subarbol in self.subs:
             altura_actual = max(altura_actual, subarbol.altura())
         return altura_actual + 1
-        
+    
+    def ancho(self, nivel=0, nodos=defaultdict(int)):
+        nodos[nivel] += 1
+        for subarbol in self.subs:
+            subarbol.ancho(nivel + 1, nodos)
+        return max(nodos.values())
+    
+    def ancho_nivel(self, nivel=0, nodos=defaultdict(int)):
+        nodos[nivel] += 1
+        for subarbol in self.subs:
+            subarbol.ancho_nivel(nivel + 1, nodos)
+        return nodos[nivel]
+    
     @abstractmethod
     def agregar_subarbol(self, subarbol):
         raise NotImplementedError
@@ -62,12 +75,9 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
         hiperparametros = Hiperparametros(**kwargs)  
         for key, value in hiperparametros.__dict__.items():
             setattr(self, key, value)
-        ###### puede ser que esto vaya en Clasificador, pero no creo que random forest lo use
         self.data: pd.DataFrame
         self.target: pd.Series
         self.target_categorias: Optional[list[str]]= None
-        ######
-        self.tipo_atributo: Optional[str] = None # NO VA, lo voy a reemplazar
         self.atributo_split: Optional[str] = None
         self.atributo_split_anterior: Optional[str] = None
         self.valor_split_anterior: Optional[str]= None
@@ -90,9 +100,6 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
     def set_target_categorias(self, y) -> None:
         self.target_categorias = y.unique()
     
-    def es_atrib_continuo(self):
-        return self.tipo_atributo == 'C'  # NO VA, lo voy a reemplazar
-    
     def _total_samples(self):
         return len(self.data)
     
@@ -101,8 +108,6 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
                     or (self.max_prof != -1 and self.max_prof <= prof_acum)
                     or (self.min_obs_nodo != -1 and self.min_obs_nodo > self._total_samples()))
     
-    
-    # TODO: hay que borrar estos metodos de los arboles id3 y c45
     def _entropia(self) -> float:
         entropia = 0
         proporciones = self.target.value_counts(normalize=True)
@@ -118,19 +123,9 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
                 setattr(subarbol, key, value)
         self.subs.append(subarbol)
 
+    @abstractmethod
     def _mejor_atributo_split(self) -> str | None:
-        mejor_ig = -1
-        mejor_atributo = None
-        atributos = self.data.columns
-
-        for atributo in atributos:
-            if len(self.data[atributo].unique()) > 1:
-                ig = self._information_gain(atributo)
-                if ig > mejor_ig:
-                    mejor_ig = ig
-                    mejor_atributo = atributo
-
-        return mejor_atributo
+        raise NotImplementedError
     
     @abstractmethod
     def _information_gain(self, atributo: str) -> float:

@@ -1,6 +1,4 @@
-from _superclases import Arbol
 import matplotlib.pyplot as plt
-from collections import defaultdict
 
 class GraficadorArbol:
     def __init__(self, arbol, ax=None, fontsize=None):
@@ -13,7 +11,7 @@ class GraficadorArbol:
             _, self.ax = plt.subplots(figsize=(self._get_fig_size()))
         self.ax.clear()
         self.ax.set_axis_off()
-        self._plot_tree(self.arbol, xy=(self._ancho_nivel(self.arbol), self.arbol.altura()), level_width=self._ancho_nivel(self.arbol))
+        self._plot_tree(self.arbol, xy=(self.arbol.ancho_nivel(), self.arbol.altura()), level_width=self.arbol.ancho_nivel())
         plt.show()
         
     def _plot_tree(self, arbol, xy, level_width, level_height=1, depth=0):
@@ -62,37 +60,16 @@ class GraficadorArbol:
         self.ax.annotate(text, xy=xy, **kwargs)
         
     def _calculate_fontsize(self):
-        num_nodes = self._count_nodes(self.arbol)
+        num_nodes = len(self.arbol)
         base_size = 10  # base fontsize
         return max(2, base_size - num_nodes // 10)
         
     def _get_fig_size(self):
         prof = self.arbol.altura()
-        ancho_max = self._ancho_max(self.arbol)
+        ancho_max = self.arbol.ancho()
         ancho = max(1, ancho_max * 2)
         altura = max(1, prof)
         return (ancho, altura)
-        
-    def _ancho_max(self, arbol, nivel=0, nodos=None):
-        if nodos is None:
-            nodos = defaultdict(int)
-        nodos[nivel] += 1
-        for subarbol in arbol.subs:
-            self._ancho_max(subarbol, nivel + 1, nodos)
-        return max(nodos.values())
-    
-    def _ancho_nivel(self, arbol, nivel=0, nodos=None):
-        if nodos is None:
-            nodos = defaultdict(int)
-        nodos[nivel] += 1
-        for subarbol in arbol.subs:
-            self._ancho_nivel(subarbol, nivel + 1, nodos)
-        return nodos[nivel]
-        
-    def _count_nodes(self, arbol):
-        if not arbol.subs:
-            return 1
-        return 1 + sum(self._count_nodes(sub) for sub in arbol.subs)
         
     def get_color(self, arbol, clase):
         clases = arbol.target_categorias
