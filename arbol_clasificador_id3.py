@@ -7,7 +7,7 @@ from metricas import Metricas
 from _superclases import ArbolClasificador, Hiperparametros
 from graficador import GraficadorArbol
 
-class ArbolDecisionID3(ArbolClasificador):
+class ArbolClasificadorID3(ArbolClasificador):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         
@@ -32,7 +32,7 @@ class ArbolDecisionID3(ArbolClasificador):
         return mejor_atributo
     
     def copy(self):
-        nuevo = ArbolDecisionID3(**self.__dict__)
+        nuevo = ArbolClasificadorID3(**self.__dict__)
         nuevo.data = self.data.copy()
         nuevo.target = self.target.copy()
         nuevo.target_categorias = self.target_categorias.copy()
@@ -50,7 +50,7 @@ class ArbolDecisionID3(ArbolClasificador):
             nueva_data = nueva_data.drop(atributo, axis=1)  # la data del nuevo nodo sin el atributo por el cual ya se filtró
             nuevo_target = self.target[self.data[atributo] == categoria]
 
-            nuevo_arbol = ArbolDecisionID3()  # Crea un nuevo arbol
+            nuevo_arbol = ArbolClasificadorID3()  # Crea un nuevo arbol
             nuevo_arbol.data = nueva_data  # Asigna nodo
             nuevo_arbol.target = nuevo_target  # Asigna target
             nuevo_arbol.valor_split_anterior = categoria
@@ -99,7 +99,7 @@ class ArbolDecisionID3(ArbolClasificador):
         self.data = X
         self.set_clase()
 
-        def _interna(arbol: ArbolDecisionID3, prof_acum: int = 1):
+        def _interna(arbol: ArbolClasificadorID3, prof_acum: int = 1):
             arbol.set_target_categorias(y)
 
             if arbol._puede_splitearse(prof_acum):
@@ -190,7 +190,7 @@ class ArbolDecisionID3(ArbolClasificador):
         return np.mean(x)
         
     def Reduced_Error_Pruning(self, x_test: Any, y_test: Any):
-        def _interna_REP(arbol: ArbolDecisionID3, x_test, y_test):
+        def _interna_REP(arbol: ArbolClasificadorID3, x_test, y_test):
             if arbol.es_hoja():
                 return
 
@@ -204,7 +204,7 @@ class ArbolDecisionID3(ArbolClasificador):
                 error_clasif_ramas = 0.0
 
                 for rama in arbol.subs:
-                    new_arbol: ArbolDecisionID3 = rama
+                    new_arbol: ArbolClasificadorID3 = rama
                     pred_podada = new_arbol.predict(x_test)
                     accuracy_podada = Metricas.accuracy_score(y_test.tolist(), pred_podada)
                     error_clasif_podada = new_arbol._error_clasificacion(y_test.tolist(), pred_podada)
@@ -223,9 +223,9 @@ def probar(df, target: str):
     y = df[target]
 
     x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    #arbol = ArbolDecisionID3(min_obs_nodo=1)
-    #arbol = ArbolDecisionID3(min_infor_gain=0.85)
-    arbol = ArbolDecisionID3()
+    #arbol = ArbolClasificadorID3(min_obs_nodo=1)
+    #arbol = ArbolClasificadorID3(min_infor_gain=0.85)
+    arbol = ArbolClasificadorID3()
     arbol.fit(x_train, y_train)
     arbol.imprimir()
     y_pred = arbol.predict(x_test)

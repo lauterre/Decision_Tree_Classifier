@@ -8,13 +8,13 @@ from _superclases import ArbolClasificador, Hiperparametros
 from metricas import Metricas
 
 
-class ArbolDecisionC45(ArbolClasificador):
+class ArbolClasificadorC45(ArbolClasificador):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self.umbral_split: Optional[float] = None
 
     def copy(self):
-        nuevo = ArbolDecisionC45(**self.__dict__)
+        nuevo = ArbolClasificadorC45(**self.__dict__)
         nuevo.data = self.data.copy()
         nuevo.target = self.target.copy()
         nuevo.target_categorias = self.target_categorias.copy()
@@ -28,7 +28,7 @@ class ArbolDecisionC45(ArbolClasificador):
         self.subs.append(subarbol)
         
     def _nuevo_subarbol(self, atributo: str, operacion: str, valor: Any):
-        nuevo = ArbolDecisionC45(**self.__dict__)
+        nuevo = ArbolClasificadorC45(**self.__dict__)
         if operacion == "menor":
             nuevo.data = self.data[self.data[atributo] < valor]
             nuevo.target = self.target[self.data[atributo] < valor]
@@ -163,7 +163,7 @@ class ArbolDecisionC45(ArbolClasificador):
         self.data = X
         self.set_clase()
 
-        def _interna(arbol: ArbolDecisionC45, prof_acum: int = 1):
+        def _interna(arbol: ArbolClasificadorC45, prof_acum: int = 1):
             arbol.set_target_categorias(y)
 
             if arbol._puede_splitearse(prof_acum):
@@ -209,7 +209,7 @@ class ArbolDecisionC45(ArbolClasificador):
         return np.mean(x)
         
     def Reduced_Error_Pruning(self, x_test: Any, y_test: Any):
-            def _interna_REP(arbol: ArbolDecisionC45, x_test, y_test):
+            def _interna_REP(arbol: ArbolClasificadorC45, x_test, y_test):
                 if arbol.es_hoja():
                     return
 
@@ -223,7 +223,7 @@ class ArbolDecisionC45(ArbolClasificador):
                     error_clasif_ramas = 0.0
 
                     for rama in arbol.subs:
-                        new_arbol: ArbolDecisionC45 = rama
+                        new_arbol: ArbolClasificadorC45 = rama
                         pred_podada = new_arbol.predict(x_test)
                         accuracy_podada = Metricas.accuracy_score(y_test.tolist(), pred_podada)
                         error_clasif_podada = new_arbol._error_clasificacion(y_test.tolist(), pred_podada)
@@ -309,7 +309,7 @@ def probar(df, target: str):
     y = df[target]
 
     x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    arbol = ArbolDecisionC45()
+    arbol = ArbolClasificadorC45()
     arbol.fit(x_train, y_train)
     arbol.imprimir()
     y_pred = arbol.predict(x_test)
