@@ -3,9 +3,9 @@ from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
 from typing import Any, Callable, Optional
-from graficadr import GraficadorArbol
+from graficador import GraficadorArbol
 from _superclases import ArbolClasificador, Hiperparametros
-from metrics import Metricas
+from metricas import Metricas
 
 
 class ArbolClasificadorC45(ArbolClasificador):

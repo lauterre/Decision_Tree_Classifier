@@ -2,9 +2,9 @@ from copy import deepcopy
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
-from metrics import Metricas
+from metricas import Metricas
 from _superclases import BosqueClasificador, Bosque, Hiperparametros, Arbol
-from arbol_clasificador_id3 import ArbolDecisionID3
+from arbol_clasificador_id3 import ArbolClasificadorID3
 
 class RandomForest(Bosque, BosqueClasificador):
     def __init__(self,clase_arbol: str = "id3", cantidad_arboles: int = 10, cantidad_atributos:str ='sqrt',**kwargs):
@@ -36,7 +36,7 @@ class RandomForest(Bosque, BosqueClasificador):
 
             # Crear y entrenar un nuevo árbol
             if self.clase_arbol == 'id3':
-                arbol = ArbolDecisionID3(max_prof=self.max_prof, min_obs_nodo=self.min_obs_nodo)
+                arbol = ArbolClasificadorID3(max_prof=self.max_prof, min_obs_nodo=self.min_obs_nodo)
                 arbol.fit(pd.DataFrame(X_sample), pd.Series(y_sample))
                 self.arboles.append(arbol)
             else:
