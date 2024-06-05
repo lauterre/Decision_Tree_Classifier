@@ -65,6 +65,22 @@ class BosqueClasificador(Bosque, Clasificador): # Bosque
         
         return predicciones_finales
     
+    def cross_validate(features, target, classifier, k_fold) :
+
+        # derive a set of (random) training and testing indices
+        k_fold_indices = KFold(len(features), n_folds=k_fold,
+                            shuffle=True, random_state=0)
+        # for each training and testing slices run the classifier, and score the results
+        k_score_total = 0
+        for train_slice, test_slice in k_fold_indices :
+            model = classifier.fit(features[train_slice],
+                                target[train_slice])
+            k_score = model.score(features[test_slice],
+                                target[test_slice])
+            k_score_total += k_score
+        # return the average accuracy
+        return k_score_total/k_fold
+    
 if __name__ == "__main__":
     # Crea un conjunto de datos de ejemplo
     patients = pd.read_csv("./datasets/cancer_patients.csv", index_col=0)
@@ -75,6 +91,20 @@ if __name__ == "__main__":
     X = patients.drop('Level', axis=1)
     y = patients["Level"]
     x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    lista_indices = x_train.index
+    folds = 3
+    group_size = len(lista_indices) // folds
+    groups = []
+    for i in range (folds):
+        desde = i * group_size
+        hasta = desde + group_size
+        groups.append(lista_indices[i:hasta])
+
+    if len(groups[-1]) < group_size:  # Handle the case when the last group has fewer numbers
+        remaining_numbers: int = groups.pop()
+        groups.append(remaining_numbers[:group_size])
+        groups.append(remaining_numbers[group_size:])
 
     # fiteo el RandomForest con ArbolDecisionID3
     rf = BosqueClasificador(clase_arbol="id3", cantidad_arboles = 10, cantidad_atributos='sqrt', max_prof=10, min_obs_nodo=100)
