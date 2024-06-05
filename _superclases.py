@@ -138,6 +138,7 @@ class Bosque(ABC):
 
     @staticmethod
     def _bootstrap_samples(X: pd.DataFrame, y: pd.Series) -> tuple[pd.DataFrame, pd.Series]:
+        #Nro filas
         n_samples = X.shape[0]
         atributos = np.random.choice(n_samples, n_samples, replace=True)
         return X.iloc[atributos], y.iloc[atributos]
