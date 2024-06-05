@@ -1,4 +1,3 @@
-from copy import deepcopy
 from typing import Any
 from sklearn.model_selection import train_test_split
 import pandas as pd
@@ -10,14 +9,15 @@ from graficador import GraficadorArbol
 class ArbolClasificadorID3(ArbolClasificador):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        
+    
+    # Lo podemos pasar a ArbolClasificador, usar clausura
     def _mejor_atributo_split(self) -> str | None:
         mejor_ig = -1
         mejor_atributo = None
         atributos = self.data.columns
 
         for atributo in atributos:
-            if len(self.data[atributo].unique()) > 1:
+            if len(self.data[atributo].unique()) > 1: 
                 ig = self._information_gain(atributo)
                 if ig > mejor_ig:
                     mejor_ig = ig
@@ -35,7 +35,7 @@ class ArbolClasificadorID3(ArbolClasificador):
         
     def _split(self, atributo: str) -> None:
         
-        temp = deepcopy(self)  # TODO: arreglar copy
+        temp = self.copy()
         self.atributo_split = atributo  # guardo el atributo por el cual spliteo
 
         for categoria in self.data[atributo].unique():  # recorre el dominio de valores del atributo

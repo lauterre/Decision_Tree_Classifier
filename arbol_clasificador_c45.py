@@ -1,4 +1,3 @@
-from copy import deepcopy
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
@@ -53,7 +52,7 @@ class ArbolClasificadorC45(ArbolClasificador):
         for categoria in self.data[atributo].unique():
             self._nuevo_subarbol(atributo, "igual", categoria)
     
-    def _split(self, atributo):
+    def _split(self, atributo: str):
         if self.es_atributo_numerico(atributo):
             mejor_umbral = self._mejor_umbral_split(atributo)
             self._split_numerico(atributo, mejor_umbral)
@@ -66,7 +65,7 @@ class ArbolClasificadorC45(ArbolClasificador):
     def _information_gain_base(self, atributo: str, split: Callable):
         entropia_actual = self._entropia()
         len_actual = self._total_samples()
-        nuevo = deepcopy(self) # usar copy propio cuando funcione
+        nuevo = self.copy()
 
         split(nuevo, atributo)
 
@@ -94,7 +93,8 @@ class ArbolClasificadorC45(ArbolClasificador):
         return -split_info
         
     def _gain_ratio(self, atributo: str) -> float:
-        nuevo = deepcopy(self) # usar copy propio
+        # nuevo = deepcopy(self) # usar copy propio
+        nuevo = self.copy()
 
         information_gain = nuevo._information_gain(atributo)
         nuevo._split(atributo)
@@ -108,7 +108,7 @@ class ArbolClasificadorC45(ArbolClasificador):
         atributos = self.data.columns
 
         for atributo in atributos:
-            if len(self.data[atributo].unique()) > 1:
+            if len(self.data[atributo].unique()) > 1: # para que no elija columna con un solo valor
                 gain_ratio = self._gain_ratio(atributo)
                 if gain_ratio > mejor_gain_ratio:
                     mejor_gain_ratio = gain_ratio
@@ -123,7 +123,6 @@ class ArbolClasificadorC45(ArbolClasificador):
             return self._information_gain_base(atributo, split_num) # clausura, se deberia llevar el umbral
     
     def _mejor_umbral_split(self, atributo: str) -> float:
-        
         self.data = self.data.sort_values(by=atributo)
         mejor_ig = -1
         valores_unicos = self.data[atributo].unique()
@@ -312,13 +311,11 @@ if __name__ == "__main__":
     print("pruebo con iris")
     probar(df, "target")
 
-    print("pruebo con tennis")
-    tennis = pd.read_csv("./datasets/PlayTennis.csv")
+    # print("pruebo con tennis")
+    # tennis = pd.read_csv("./datasets/PlayTennis.csv")
 
-    probar(tennis, "Play Tennis")
+    # probar(tennis, "Play Tennis")
 
-
-    # TODO: arreglar el predict, hay un issue
     # print("pruebo con patients") 
 
     # patients = pd.read_csv("./datasets/cancer_patients.csv", index_col=0)

@@ -27,10 +27,6 @@ class Arbol(ABC): # seria ArbolNario
         # moví los atributos que habia acá porque considero que no son propios de un arbol, sino de un modelo
         self.subs: list[Arbol]= []
     
-    @abstractmethod
-    def es_raiz(self):
-        raise NotImplementedError
-    
     def es_hoja(self):
         return self.subs == []
         
@@ -65,6 +61,11 @@ class Arbol(ABC): # seria ArbolNario
     @abstractmethod
     def copy(self):
         raise NotImplementedError
+    
+    @abstractmethod
+    def es_raiz(self):
+        raise NotImplementedError
+    
     
     # TODO: pasar a __str__()
     @abstractmethod
@@ -108,7 +109,7 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
     def _puede_splitearse(self, prof_acum) -> bool:
         return not (len(self.target.unique()) == 1 or len(self.data.columns) == 0
                     or (self.max_prof != -1 and self.max_prof <= prof_acum)
-                    or (self.min_obs_nodo != -1 and self.min_obs_nodo > self._total_samples()))
+                    or (self.min_obs_nodo != -1 and self.min_obs_nodo > self._total_samples())) # agregar hipers
     
     def _entropia(self) -> float:
         entropia = 0
@@ -138,34 +139,9 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
         raise NotImplementedError
     
 
-# Esto no lo toque porque aun no lo miré
-    
-# Habria que seguir la misma logica del ArbolClasificador
-# BosqueClasificador deberia ser el RandomForest
-# quizas la clase bosque no va, por ahora agrega solo dos comportamientos tipicos de un bosque: self.arboles, self.cantidad_arboles
-
-
-class BosqueClasificador(Clasificador, ABC):
-    def __init__(self,**kwargs) -> None:
-        hiperparametros_arbol = Hiperparametros(**kwargs)
-        for key, value in hiperparametros_arbol.__dict__.items():
-            setattr(self, key, value)
-
 class Bosque(ABC):
-    def __init__(self, clase_arbol: str = "id3", cantidad_arboles: int = 10, cantidad_atributos:str ='sqrt') -> None:
+    def __init__(self, cantidad_arboles: int = 10) -> None:
         self.arboles: list[Arbol] = []
         self.cantidad_arboles = cantidad_arboles
-        # estos atributos son propios de un modelo, deberian estar en BosqueClasificador
-        self.cantidad_atributos = cantidad_atributos
-        self.clase_arbol = clase_arbol
-
-    # estos metodos tambien
-    @staticmethod
-    def _bootstrap_samples(X: pd.DataFrame, y: pd.Series) -> tuple[pd.DataFrame, pd.Series]:
-        n_samples = X.shape[0]
-        atributos = np.random.choice(n_samples, n_samples, replace=True)
-        return X.iloc[atributos], y.iloc[atributos]
-    
-    @abstractmethod
-    def seleccionar_atributos(self, X: pd.DataFrame)-> list[int]:
-        raise NotImplementedError
+        
+        
