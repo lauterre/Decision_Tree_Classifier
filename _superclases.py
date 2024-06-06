@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from typing import Optional
 import pandas as pd
-import numpy as np
+from _impureza import Entropia, Gini
 
 class Clasificador(ABC):
     @abstractmethod
@@ -15,16 +15,14 @@ class Clasificador(ABC):
     
 class Hiperparametros:
     def __init__(self, **kwargs):
-        # No sería mas claro dejarlos en None si no estan definidos?
         self.max_prof: int = kwargs.get('max_prof', -1)
         self.min_obs_nodo: int = kwargs.get('min_obs_nodo', -1)
         self.min_infor_gain: float = kwargs.get('min_infor_gain', -1.0)
         self.min_obs_hoja: int = kwargs.get('min_obs_hoja', -1)
-        self.criterio: str = kwargs.get('criterio', 'entropia')
+        self.criterio_impureza: str = kwargs.get('criterio_impureza', 'Entropia')
 
 class Arbol(ABC): # seria ArbolNario
     def __init__(self) -> None:
-        # moví los atributos que habia acá porque considero que no son propios de un arbol, sino de un modelo
         self.subs: list[Arbol]= []
     
     def es_hoja(self):
@@ -65,7 +63,6 @@ class Arbol(ABC): # seria ArbolNario
     @abstractmethod
     def es_raiz(self):
         raise NotImplementedError
-    
     
     # TODO: pasar a __str__()
     @abstractmethod
@@ -111,20 +108,20 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
                     or (self.max_prof != -1 and self.max_prof <= prof_acum)
                     or (self.min_obs_nodo != -1 and self.min_obs_nodo > self._total_samples())) # agregar hipers
     
-    def _entropia(self) -> float:
-        entropia = 0
-        proporciones = self.target.value_counts(normalize=True)
-        target_categorias = self.target.unique()
-        for c in target_categorias:
-            proporcion = proporciones.get(c, 0)
-            entropia += proporcion * np.log2(proporcion)
-        return -entropia if entropia != 0 else 0
-    
     def agregar_subarbol(self, subarbol):
         for key, value in self.__dict__.items():
             if key in Hiperparametros().__dict__:  # Solo copiar los atributos que están en Hiperparametros
                 setattr(subarbol, key, value)
         self.subs.append(subarbol)
+
+    
+    def _impureza(self):
+        if self.criterio_impureza == 'Entropia':
+            return Entropia.calcular(self.target)
+        elif self.criterio_impureza == 'Gini':
+            return Gini.calcular(self.target)
+        else:
+            raise ValueError('Criterio de impureza no válido')
 
     @abstractmethod
     def _mejor_atributo_split(self) -> str | None:
@@ -137,11 +134,8 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
     @abstractmethod
     def _split(self, atributo: str) -> None:
         raise NotImplementedError
-    
 
 class Bosque(ABC):
     def __init__(self, cantidad_arboles: int = 10) -> None:
         self.arboles: list[Arbol] = []
         self.cantidad_arboles = cantidad_arboles
-        
-        

@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 from typing import Any, Callable, Optional
 from graficador import GraficadorArbol
+from _impureza import Entropia
 from _superclases import ArbolClasificador
 from metricas import Metricas
 
@@ -63,7 +64,7 @@ class ArbolClasificadorC45(ArbolClasificador):
         return pd.api.types.is_numeric_dtype(self.data[atributo])
     
     def _information_gain_base(self, atributo: str, split: Callable):
-        entropia_actual = self._entropia()
+        entropia_actual = Entropia.calcular(self.target)
         len_actual = self._total_samples()
         nuevo = self.copy()
 
@@ -71,7 +72,7 @@ class ArbolClasificadorC45(ArbolClasificador):
 
         entropias_subarboles = 0 
         for subarbol in nuevo.subs:
-            entropia = subarbol._entropia()
+            entropia = Entropia.calcular(subarbol.target)
             len_subarbol = subarbol._total_samples()
             entropias_subarboles += ((len_subarbol/len_actual) * entropia)
 
@@ -218,7 +219,6 @@ class ArbolClasificadorC45(ArbolClasificador):
 
             _interna_REP(self, x_test, y_test)
     
-    # TODO: arreglar las hojas, en lugar de usar atributo_split podriamos usar atributo_split_anterior
     def imprimir(self, prefijo: str = '  ', es_ultimo: bool = True) -> None:
         if self.atributo_split and self.es_atributo_numerico(self.atributo_split):
             simbolo_rama = '└─ NO ── ' if es_ultimo else '├─ SI ── '
@@ -227,13 +227,13 @@ class ArbolClasificadorC45(ArbolClasificador):
             simbolo_rama = '└─── ' if es_ultimo else '├─── '
             split = "Split: " + str(self.atributo_split)
         
-        entropia = f"Entropia: {self._entropia():.2f}"
+        impureza = f"{self.criterio_impureza}: {self._impureza()}"
         samples = f"Samples: {self._total_samples()}"
         values = f"Values: {self._values()}"
         clase = f"Clase: {self.clase}"
 
         if self.es_raiz():
-            print(entropia)
+            print(impureza)
             print(samples)
             print(values)
             print(clase)
@@ -247,7 +247,7 @@ class ArbolClasificadorC45(ArbolClasificador):
             print(prefijo + "│")
             
             if self.atributo_split and self.es_atributo_numerico(self.atributo_split):
-                print(prefijo + simbolo_rama + entropia)
+                print(prefijo + simbolo_rama + impureza)
                 prefijo2 = prefijo + " " * (len(simbolo_rama)) if es_ultimo else prefijo + "│" + " " * (len(simbolo_rama) - 1)
                 print(prefijo2 + samples)
                 print(prefijo2 + values)
@@ -257,7 +257,7 @@ class ArbolClasificadorC45(ArbolClasificador):
                 rta =  f"{self.atributo_split_anterior} = {self.valor_split_anterior}"
                 print(prefijo + simbolo_rama + rta)            
                 prefijo2 = prefijo + " " * (len(simbolo_rama)) if es_ultimo else prefijo + "│" + " " * (len(simbolo_rama) - 1)
-                print(prefijo2 + entropia)
+                print(prefijo2 + impureza)
                 print(prefijo2 + samples)
                 print(prefijo2 + values)
                 print(prefijo2 + clase)
@@ -269,18 +269,19 @@ class ArbolClasificadorC45(ArbolClasificador):
                 sub_arbol.imprimir(prefijo, ultimo)
 
         else: # es hoja
+            simbolo_rama = '└─ NO ── ' if es_ultimo else '├─ SI ── '
             prefijo_hoja = prefijo + " " * len(simbolo_rama) if es_ultimo else prefijo + "│" + " " * (len(simbolo_rama) - 1)
             print(prefijo + "│")
                         
-            if self.atributo_split and self.es_atributo_numerico(self.atributo_split): # nunca entra aca porque una hoja nunca hace split
-                print(prefijo + simbolo_rama + entropia)
+            if self.es_atributo_numerico(self.atributo_split_anterior): # nunca entra aca porque una hoja nunca hace split
+                print(prefijo + simbolo_rama + impureza)
                 print(prefijo_hoja + samples)
                 print(prefijo_hoja + values)
                 print(prefijo_hoja + clase)
             else:
                 rta =  f"{self.atributo_split_anterior} = {self.valor_split_anterior}"
                 print(prefijo + simbolo_rama + rta)            
-                print(prefijo_hoja + entropia)
+                print(prefijo_hoja + impureza)
                 print(prefijo_hoja + samples)
                 print(prefijo_hoja + values)
                 print(prefijo_hoja + clase)
