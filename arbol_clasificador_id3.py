@@ -3,6 +3,7 @@ from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
 from metricas import Metricas
+from _impureza import Entropia
 from _superclases import ArbolClasificador
 from graficador import GraficadorArbol
 
@@ -60,7 +61,9 @@ class ArbolClasificadorID3(ArbolClasificador):
             self.subs = temp.subs
     
     def _information_gain(self, atributo: str) -> float:
-        entropia_actual = self._entropia()
+        # entropia_actual = self._entropia()
+        entropia_actual = Entropia.calcular(self.target)
+
         len_actual = self._total_samples()
 
         nuevo = self.copy()
@@ -69,7 +72,8 @@ class ArbolClasificadorID3(ArbolClasificador):
 
         entropias_subarboles = 0 
         for subarbol in nuevo.subs:
-            entropia = subarbol._entropia()
+            # entropia = subarbol._entropia()
+            entropia = Entropia.calcular(subarbol.target)
             len_subarbol = subarbol._total_samples()
             entropias_subarboles += ((len_subarbol/len_actual) * entropia)
 
@@ -122,7 +126,7 @@ class ArbolClasificadorID3(ArbolClasificador):
         simbolo_rama = '└─── ' if es_ultimo else '├─── '
         split = "Split: " + str(self.atributo_split)
         rta =  f"{self.atributo_split_anterior} = {self.valor_split_anterior}"
-        entropia = f"Entropia: {round(self._entropia(), 2)}"
+        entropia = f"{self.criterio_impureza}: {self._impureza()}"
         samples = f"Samples: {str(self._total_samples())}"
         values = f"Values: {str(self._values())}"
         clase = 'Clase: ' + str(self.clase)

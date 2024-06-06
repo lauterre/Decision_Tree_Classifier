@@ -40,7 +40,7 @@ class GraficadorArbol:
             retorno.append(f"Categoría: {arbol.valor_split_anterior}")
         retorno.append(f"Muestras: {arbol._total_samples()}")
         retorno.append(f"Valores: {arbol._values()}")
-        retorno.append(f"Entropía: {arbol._entropia():.2f}")
+        retorno.append(f"{arbol.criterio_impureza}: {arbol._impureza()}")
         if arbol.atributo_split:
             retorno.append(f"Atributo: {arbol.atributo_split}")
         if not arbol.subs and arbol.clase:
