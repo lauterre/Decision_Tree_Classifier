@@ -66,7 +66,7 @@ class BosqueClasificador(Bosque, Clasificador): # Bosque
         
         return predicciones_finales
     
-def cross_validation(features, target, classifier, k_fold) :
+def cross_validation(features, target, classifier, k_fold) -> float:
 
     lista_indices = features.index
     k_fold
@@ -110,8 +110,8 @@ def cross_validation(features, target, classifier, k_fold) :
         k_score_total += k_score
         print ("Score individual:", k_score)
         
-    print (k_score_total/k_fold)
-    #return k_score_total/k_fold
+    #print (k_score_total/k_fold)
+    return k_score_total/k_fold
     
 if __name__ == "__main__":
     # Crea un conjunto de datos de ejemplo
@@ -129,7 +129,7 @@ if __name__ == "__main__":
     rf = BosqueClasificador(clase_arbol="id3", cantidad_arboles = 10, cantidad_atributos='sqrt', max_prof=10, min_obs_nodo=100)
     #rf.fit(x_train, y_train)
     #cross_validation(x_train, y_train, rf, 4)
-    cross_validation(X, y, rf, 10)
+    score_arbol = cross_validation(X, y, rf, 10)
 
     # Predice con el RandomForest
     predicciones = rf.predict(x_test)
