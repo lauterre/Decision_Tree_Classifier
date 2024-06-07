@@ -3,6 +3,7 @@ from collections import defaultdict
 from typing import Optional
 import pandas as pd
 from _impureza import Entropia, Gini
+from graficador import GraficadorArbol
 
 class Clasificador(ABC):
     @abstractmethod
@@ -64,11 +65,6 @@ class Arbol(ABC): # seria ArbolNario
     def es_raiz(self):
         raise NotImplementedError
     
-    # TODO: pasar a __str__()
-    @abstractmethod
-    def imprimir(self) -> None:
-        raise NotImplementedError
-    
 class ArbolClasificador(Arbol, Clasificador, ABC):
     def __init__(self, **kwargs):
         super().__init__()
@@ -123,6 +119,10 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
             return Gini.calcular(self.target)
         else:
             raise ValueError('Criterio de impureza no válido')
+    
+    def graficar(self):
+        plotter = GraficadorArbol(self)
+        plotter.plot()
 
     @abstractmethod
     def _mejor_atributo_split(self) -> str | None:
