@@ -38,7 +38,7 @@ class BosqueClasificador(Bosque, Clasificador): # Bosque
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> None:
         for _ in range(self.cantidad_arboles):
-            print(f"Contruyendo arbol nro: {_ + 1}")
+            #print(f"Contruyendo arbol nro: {_ + 1}")
             # Bootstrapping
             X_sample, y_sample = self._bootstrap_samples(X, y)
 
@@ -66,21 +66,52 @@ class BosqueClasificador(Bosque, Clasificador): # Bosque
         
         return predicciones_finales
     
-    def cross_validate(features, target, classifier, k_fold) :
+def cross_validation(features, target, classifier, k_fold) :
 
-        # derive a set of (random) training and testing indices
-        k_fold_indices = KFold(len(features), n_folds=k_fold,
-                            shuffle=True, random_state=0)
-        # for each training and testing slices run the classifier, and score the results
-        k_score_total = 0
-        for train_slice, test_slice in k_fold_indices :
-            model = classifier.fit(features[train_slice],
-                                target[train_slice])
-            k_score = model.score(features[test_slice],
-                                target[test_slice])
-            k_score_total += k_score
-        # return the average accuracy
-        return k_score_total/k_fold
+    lista_indices = features.index
+    k_fold
+    regist_grupos = len(lista_indices) // k_fold
+    groups = []
+    
+    for i in range (k_fold):
+        desde = i * regist_grupos
+        if i == k_fold-1:
+            hasta = len(lista_indices)
+        else:
+            hasta = desde + regist_grupos
+            
+        groups.append(lista_indices[desde:hasta])
+    
+    groups_X_train_CV = []
+    groups_Y_train_CV = []
+    groups_X_test_CV = []
+    groups_Y_test_CV = []
+    
+    for j in range (k_fold):
+        groups_X_test_CV.append ( features.loc[groups[j]] )
+        groups_Y_test_CV.append ( target.loc[groups[j]] )
+        _tempX = pd.DataFrame()
+        _tempY = pd.DataFrame()
+        for k in range (k_fold):
+            if k != j:
+                _tempX = features.loc[groups[k]] if _tempX.empty else pd.concat ([_tempX, features.loc[groups[k]]] )    
+                _tempY = target.loc[groups[k]]   if _tempY.empty else pd.concat ([_tempY, target.loc[groups[k]]] )    
+
+        groups_X_train_CV.append(_tempX)
+        groups_Y_train_CV.append(_tempY)     
+    
+    k_score_total = 0
+    
+    for x in range (k_fold) :
+        classifier.fit(groups_X_train_CV[x], groups_Y_train_CV[x])
+        predicciones = classifier.predict(groups_X_test_CV[x])
+        k_score = Metricas.accuracy_score(groups_Y_test_CV[x], predicciones)
+        
+        k_score_total += k_score
+        print ("Score individual:", k_score)
+        
+    print (k_score_total/k_fold)
+    #return k_score_total/k_fold
     
 if __name__ == "__main__":
     # Crea un conjunto de datos de ejemplo
@@ -89,27 +120,16 @@ if __name__ == "__main__":
     bins = [0, 15, 20, 30, 40, 50, 60, 70, float('inf')]
     labels = ['0-15', '15-20', '20-30', '30-40', '40-50', '50-60', '60-70', '70+']
     patients['Age'] = pd.cut(patients['Age'], bins=bins, labels=labels, right=False)
+    
     X = patients.drop('Level', axis=1)
     y = patients["Level"]
     x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    lista_indices = x_train.index
-    folds = 3
-    group_size = len(lista_indices) // folds
-    groups = []
-    for i in range (folds):
-        desde = i * group_size
-        hasta = desde + group_size
-        groups.append(lista_indices[i:hasta])
-
-    if len(groups[-1]) < group_size:  # Handle the case when the last group has fewer numbers
-        remaining_numbers: int = groups.pop()
-        groups.append(remaining_numbers[:group_size])
-        groups.append(remaining_numbers[group_size:])
-
     # fiteo el RandomForest con ArbolDecisionID3
     rf = BosqueClasificador(clase_arbol="id3", cantidad_arboles = 10, cantidad_atributos='sqrt', max_prof=10, min_obs_nodo=100)
-    rf.fit(x_train, y_train)
+    #rf.fit(x_train, y_train)
+    #cross_validation(x_train, y_train, rf, 4)
+    cross_validation(X, y, rf, 10)
 
     # Predice con el RandomForest
     predicciones = rf.predict(x_test)
