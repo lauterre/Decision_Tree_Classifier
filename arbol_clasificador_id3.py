@@ -50,6 +50,7 @@ class ArbolClasificadorID3(ArbolClasificador):
             nuevo_arbol.valor_split_anterior = categoria
             nuevo_arbol.atributo_split_anterior = atributo
             nuevo_arbol.set_clase()
+            nuevo_arbol.signo_split_anterior = '='
             temp.agregar_subarbol(nuevo_arbol)  # Agrego el nuevo arbol en el arbol temporal
 
         ok_min_obs_hoja = True

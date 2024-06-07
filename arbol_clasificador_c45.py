@@ -26,16 +26,19 @@ class ArbolClasificadorC45(ArbolClasificador):
         if operacion == "menor":
             nuevo.data = self.data[self.data[atributo] < valor]
             nuevo.target = self.target[self.data[atributo] < valor]
+            nuevo.signo_split_anterior = "<"
         
         elif operacion == "mayor":
             nuevo.data = self.data[self.data[atributo] > valor]
             nuevo.target = self.target[self.data[atributo] > valor]
+            nuevo.signo_split_anterior = ">"
         
         elif operacion == "igual":
             nueva_data = self.data[self.data[atributo] == valor]
             nueva_data = nueva_data.drop(atributo, axis=1)
             nuevo.data = nueva_data
             nuevo.target = self.target[self.data[atributo] == valor]
+            nuevo.signo_split_anterior = "="
         
         nuevo.set_clase()
         nuevo.atributo_split_anterior = atributo
@@ -273,7 +276,7 @@ class ArbolClasificadorC45(ArbolClasificador):
             prefijo_hoja = prefijo + " " * len(simbolo_rama) if es_ultimo else prefijo + "│" + " " * (len(simbolo_rama) - 1)
             print(prefijo + "│")
                         
-            if self.es_atributo_numerico(self.atributo_split_anterior): # nunca entra aca porque una hoja nunca hace split
+            if self.es_atributo_numerico(self.atributo_split_anterior): # CON EL SIGNO CAPAZ SE ARREGLA
                 print(prefijo + simbolo_rama + impureza)
                 print(prefijo_hoja + samples)
                 print(prefijo_hoja + values)
@@ -294,6 +297,7 @@ def probar(df, target: str):
     arbol = ArbolClasificadorC45()
     arbol.fit(x_train, y_train)
     arbol.imprimir()
+    arbol.graficar()
     y_pred = arbol.predict(x_test)
 
     #arbol.Reduced_Error_Pruning(x_test, y_test)
