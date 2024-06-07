@@ -37,14 +37,11 @@ class GraficadorArbol:
     def _crear_caja(self, arbol):
         retorno = []
         if not arbol.es_raiz():
-            retorno.append(f"Categoría: {arbol.valor_split_anterior}")
+            retorno.append(f"{arbol.atributo_split_anterior}{arbol.signo_split_anterior}{arbol.valor_split_anterior}")
         retorno.append(f"Muestras: {arbol._total_samples()}")
-        retorno.append(f"Valores: {arbol._values()}")
+        retorno.append(f"Conteo: {arbol._values()}")
         retorno.append(f"{arbol.criterio_impureza}: {arbol._impureza()}")
-        if arbol.atributo_split:
-            retorno.append(f"Atributo: {arbol.atributo_split}")
-        if not arbol.subs and arbol.clase:
-            retorno.append(f"Clase: {arbol.clase}")
+        retorno.append(f"Clase: {arbol.clase}")
         return "\n".join(retorno)
         
     def _annotate(self, text, xy, depth, bbox_args):

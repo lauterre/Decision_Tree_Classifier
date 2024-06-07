@@ -81,6 +81,7 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
         self.atributo_split: Optional[str] = None
         self.atributo_split_anterior: Optional[str] = None
         self.valor_split_anterior: Optional[str]= None
+        self.signo_split_anterior: Optional[str] = None
         self.clase: Optional[str] = None
     
     def es_raiz(self):
