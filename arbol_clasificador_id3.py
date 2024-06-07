@@ -122,53 +122,6 @@ class ArbolClasificadorID3(ArbolClasificador):
             _recorrer(self, fila)
 
         return predicciones
-
-    def imprimir(self, prefijo: str = '  ', es_ultimo: bool = True) -> None:
-        simbolo_rama = '└─── ' if es_ultimo else '├─── '
-        split = "Split: " + str(self.atributo_split)
-        rta =  f"{self.atributo_split_anterior} = {self.valor_split_anterior}"
-        entropia = f"{self.criterio_impureza}: {self._impureza()}"
-        samples = f"Samples: {str(self._total_samples())}"
-        values = f"Values: {str(self._values())}"
-        clase = 'Clase: ' + str(self.clase)
-        
-        if self.es_raiz():
-            print(entropia)
-            print(samples)
-            print(values)
-            print(clase)
-            print(split)
-
-            for i, sub_arbol in enumerate(self.subs):
-                ultimo: bool = i == len(self.subs) - 1
-                sub_arbol.imprimir(prefijo, ultimo)
-
-        elif not self.es_hoja():
-            print(prefijo + "│")
-            print(prefijo + simbolo_rama + rta)
-            prefijo2 = prefijo + " " * (len(simbolo_rama)) if es_ultimo else prefijo +"│" + " " * (len(simbolo_rama) - 1)
-            print(prefijo2 + entropia)
-            print(prefijo2 + samples)
-            print(prefijo2 + values)
-            print(prefijo2 + clase)
-            print(prefijo2 + split)
-
-            prefijo += ' ' * 10 if es_ultimo else '│' + ' ' * 9
-            for i, sub_arbol in enumerate(self.subs):
-                ultimo: bool = i == len(self.subs) - 1
-                sub_arbol.imprimir(prefijo, ultimo)
-        else:
-            prefijo_hoja = prefijo + " " * len(simbolo_rama) if es_ultimo else prefijo + "│" + " " * (len(simbolo_rama) - 1)
-            print(prefijo + "│")
-            print(prefijo + simbolo_rama + rta)
-            print(prefijo_hoja + entropia)
-            print(prefijo_hoja + samples)
-            print(prefijo_hoja + values)
-            print(prefijo_hoja + clase)
-        
-    def graficar(self):
-        plotter = GraficadorArbol(self)
-        plotter.plot()
         
     def _error_clasificacion(self, y, y_pred):
         x = []
@@ -176,13 +129,13 @@ class ArbolClasificadorID3(ArbolClasificador):
             x.append(y[i] != y_pred[i])
         return np.mean(x)
         
-    def Reduced_Error_Pruning(self, x_test: Any, y_test: Any):
-        def _interna_REP(arbol: ArbolClasificadorID3, x_test, y_test):
+    def reduced_error_pruning(self, x_test: Any, y_test: Any):
+        def _interna_rep(arbol: ArbolClasificadorID3, x_test, y_test):
             if arbol.es_hoja():
                 return
 
             for subarbol in arbol.subs:
-                _interna_REP(subarbol, x_test, y_test)
+                _interna_rep(subarbol, x_test, y_test)
 
                 pred_raiz: list[str] = arbol.predict(x_test)
                 accuracy_raiz = Metricas.accuracy_score(y_test.tolist(), pred_raiz)
@@ -203,22 +156,68 @@ class ArbolClasificadorID3(ArbolClasificador):
                 #else:
                     #print(" * No podar \n")
 
-        _interna_REP(self, x_test, y_test)
+        _interna_rep(self, x_test, y_test)
+
+    def __str__(self) -> str:
+        out = []
+        def _interna(self, prefijo: str = '  ', es_ultimo: bool = True) -> None:
+            simbolo_rama = '└─── ' if es_ultimo else '├─── '
+            split = "Split: " + str(self.atributo_split)
+            rta =  f"{self.atributo_split_anterior} = {self.valor_split_anterior}"
+            entropia = f"{self.criterio_impureza}: {self._impureza()}"
+            samples = f"Muestras: {str(self._total_samples())}"
+            values = f"Conteo: {str(self._values())}"
+            clase = 'Clase: ' + str(self.clase)
+            
+            if self.es_raiz():
+                out.append(entropia)
+                out.append(samples)
+                out.append(values)
+                out.append(clase)
+                out.append(split)
+
+                for i, sub_arbol in enumerate(self.subs):
+                    ultimo: bool = i == len(self.subs) - 1
+                    _interna(sub_arbol, prefijo, ultimo)
+
+            elif not self.es_hoja():
+                out.append(prefijo + "│")
+                out.append(prefijo + simbolo_rama + rta)
+                prefijo2 = prefijo + " " * (len(simbolo_rama)) if es_ultimo else prefijo +"│" + " " * (len(simbolo_rama) - 1)
+                out.append(prefijo2 + entropia)
+                out.append(prefijo2 + samples)
+                out.append(prefijo2 + values)
+                out.append(prefijo2 + clase)
+                out.append(prefijo2 + split)
+
+                prefijo += ' ' * 10 if es_ultimo else '│' + ' ' * 9
+                for i, sub_arbol in enumerate(self.subs):
+                    ultimo: bool = i == len(self.subs) - 1
+                    _interna(sub_arbol, prefijo, ultimo)
+            else:
+                prefijo_hoja = prefijo + " " * len(simbolo_rama) if es_ultimo else prefijo + "│" + " " * (len(simbolo_rama) - 1)
+                out.append(prefijo + "│")
+                out.append(prefijo + simbolo_rama + rta)
+                out.append(prefijo_hoja + entropia)
+                out.append(prefijo_hoja + samples)
+                out.append(prefijo_hoja + values)
+                out.append(prefijo_hoja + clase)
+        _interna(self)
+        return "\n".join(out)
+        
 
 def probar(df, target: str):
     X = df.drop(target, axis=1)
     y = df[target]
 
     x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    #arbol = ArbolClasificadorID3(min_obs_nodo=1)
-    #arbol = ArbolClasificadorID3(min_infor_gain=0.85)
     arbol = ArbolClasificadorID3()
     arbol.fit(x_train, y_train)
-    arbol.imprimir()
+    print(arbol)
     arbol.graficar()
     y_pred = arbol.predict(x_test)
 
-    #arbol.Reduced_Error_Pruning(x_test, y_test)
+    #arbol.reduced_error_pruning(x_test, y_test)
 
     print(f"\n accuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
     print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio='ponderado')}\n")

@@ -97,7 +97,6 @@ class ArbolClasificadorC45(ArbolClasificador):
         return -split_info
         
     def _gain_ratio(self, atributo: str) -> float:
-        # nuevo = deepcopy(self) # usar copy propio
         nuevo = self.copy()
 
         information_gain = nuevo._information_gain(atributo)
@@ -182,24 +181,22 @@ class ArbolClasificadorC45(ArbolClasificador):
         for _, fila in X.iterrows():
             _recorrer(self, fila)
         return predicciones
-    
-    def graficar(self):    
-        plotter = GraficadorArbol(self)
-        plotter.plot()
 
+    # TODO: creo qeu este esta en metricas
     def _error_clasificacion(self, y, y_pred):
         x = []
         for i in range(len(y)):
             x.append(y[i] != y_pred[i])
         return np.mean(x)
-        
-    def Reduced_Error_Pruning(self, x_test: Any, y_test: Any):
-            def _interna_REP(arbol: ArbolClasificadorC45, x_test, y_test):
+    
+    # TODO: es igual al de id3, salvo por la instanciadcion de los nuevos arboles    
+    def reduced_error_pruning(self, x_test: Any, y_test: Any):
+            def _interna_rep(arbol: ArbolClasificadorC45, x_test, y_test):
                 if arbol.es_hoja():
                     return
 
                 for subarbol in arbol.subs:
-                    _interna_REP(subarbol, x_test, y_test)
+                    _interna_rep(subarbol, x_test, y_test)
 
                     pred_raiz: list[str] = arbol.predict(x_test)
                     accuracy_raiz = Metricas.accuracy_score(y_test.tolist(), pred_raiz)
@@ -220,75 +217,82 @@ class ArbolClasificadorC45(ArbolClasificador):
                     #else:
                         #print(" * No podar \n")
 
-            _interna_REP(self, x_test, y_test)
+            _interna_rep(self, x_test, y_test)
     
-    def imprimir(self, prefijo: str = '  ', es_ultimo: bool = True) -> None:
-        if self.atributo_split and self.es_atributo_numerico(self.atributo_split):
-            simbolo_rama = '└─ NO ── ' if es_ultimo else '├─ SI ── '
-            split = f"{self.atributo_split} < {self.umbral_split:.2f} ?" if self.umbral_split else ""
-        else:
-            simbolo_rama = '└─── ' if es_ultimo else '├─── '
-            split = "Split: " + str(self.atributo_split)
-        
-        impureza = f"{self.criterio_impureza}: {self._impureza()}"
-        samples = f"Samples: {self._total_samples()}"
-        values = f"Values: {self._values()}"
-        clase = f"Clase: {self.clase}"
-
-        if self.es_raiz():
-            print(impureza)
-            print(samples)
-            print(values)
-            print(clase)
-            print(split)
-
-            for i, sub_arbol in enumerate(self.subs):
-                ultimo: bool = i == len(self.subs) - 1
-                sub_arbol.imprimir(prefijo, ultimo)
-
-        elif not self.es_hoja():
-            print(prefijo + "│")
+    def __str__(self) -> str:
+        out = []
+        def _interna(arbol, prefijo: str = '  ', es_ultimo: bool = True) -> None:
+            if arbol.signo_split_anterior != "=":
+                simbolo_rama = '└─ NO ── ' if es_ultimo else '├─ SI ── '
+            else:
+                simbolo_rama = '└─── ' if es_ultimo else '├─── '
             
-            if self.atributo_split and self.es_atributo_numerico(self.atributo_split):
-                print(prefijo + simbolo_rama + impureza)
-                prefijo2 = prefijo + " " * (len(simbolo_rama)) if es_ultimo else prefijo + "│" + " " * (len(simbolo_rama) - 1)
-                print(prefijo2 + samples)
-                print(prefijo2 + values)
-                print(prefijo2 + clase)
-                print(prefijo2 + split)
+            if arbol.atributo_split and arbol.es_atributo_numerico(arbol.atributo_split):
+                split = f"{arbol.atributo_split} < {arbol.umbral_split:.2f} ?" if arbol.umbral_split else ""
             else:
-                rta =  f"{self.atributo_split_anterior} = {self.valor_split_anterior}"
-                print(prefijo + simbolo_rama + rta)            
-                prefijo2 = prefijo + " " * (len(simbolo_rama)) if es_ultimo else prefijo + "│" + " " * (len(simbolo_rama) - 1)
-                print(prefijo2 + impureza)
-                print(prefijo2 + samples)
-                print(prefijo2 + values)
-                print(prefijo2 + clase)
-                print(prefijo2 + split)
+                split = "Split: " + str(arbol.atributo_split)
 
-            prefijo += ' ' * 10 if es_ultimo else '│' + ' ' * 9
-            for i, sub_arbol in enumerate(self.subs):
-                ultimo: bool = i == len(self.subs) - 1
-                sub_arbol.imprimir(prefijo, ultimo)
+            
+            impureza = f"{arbol.criterio_impureza}: {arbol._impureza()}"
+            samples = f"Muestras: {arbol._total_samples()}"
+            values = f"Conteo: {arbol._values()}"
+            clase = f"Clase: {arbol.clase}"
 
-        else: # es hoja
-            simbolo_rama = '└─ NO ── ' if es_ultimo else '├─ SI ── '
-            prefijo_hoja = prefijo + " " * len(simbolo_rama) if es_ultimo else prefijo + "│" + " " * (len(simbolo_rama) - 1)
-            print(prefijo + "│")
-                        
-            if self.es_atributo_numerico(self.atributo_split_anterior): # CON EL SIGNO CAPAZ SE ARREGLA
-                print(prefijo + simbolo_rama + impureza)
-                print(prefijo_hoja + samples)
-                print(prefijo_hoja + values)
-                print(prefijo_hoja + clase)
+            if arbol.es_raiz():
+                out.append(impureza)
+                out.append(samples)
+                out.append(values)
+                out.append(clase)
+                out.append(split)
+
+                for i, sub_arbol in enumerate(arbol.subs):
+                    ultimo: bool = i == len(arbol.subs) - 1
+                    _interna(sub_arbol, prefijo, ultimo)
+
+            elif arbol.es_hoja():
+                prefijo_hoja = prefijo + " " * len(simbolo_rama) if es_ultimo else prefijo + "│" + " " * (len(simbolo_rama) - 1)
+                out.append(prefijo + "│")
+                            
+                if arbol.signo_split_anterior != "=":
+                    out.append(prefijo + simbolo_rama + impureza)
+                    out.append(prefijo_hoja + samples)
+                    out.append(prefijo_hoja + values)
+                    out.append(prefijo_hoja + clase)
+                else:
+                    rta =  f"{arbol.atributo_split_anterior} = {arbol.valor_split_anterior}"
+                    out.append(prefijo + simbolo_rama + rta)            
+                    out.append(prefijo_hoja + impureza)
+                    out.append(prefijo_hoja + samples)
+                    out.append(prefijo_hoja + values)
+                    out.append(prefijo_hoja + clase)
+            
             else:
-                rta =  f"{self.atributo_split_anterior} = {self.valor_split_anterior}"
-                print(prefijo + simbolo_rama + rta)            
-                print(prefijo_hoja + impureza)
-                print(prefijo_hoja + samples)
-                print(prefijo_hoja + values)
-                print(prefijo_hoja + clase)
+                out.append(prefijo + "│")
                 
+                if arbol.atributo_split and arbol.es_atributo_numerico(arbol.atributo_split):
+                    out.append(prefijo + simbolo_rama + impureza)
+                    prefijo2 = prefijo + " " * (len(simbolo_rama)) if es_ultimo else prefijo + "│" + " " * (len(simbolo_rama) - 1)
+                    out.append(prefijo2 + samples)
+                    out.append(prefijo2 + values)
+                    out.append(prefijo2 + clase)
+                    out.append(prefijo2 + split)
+                else:
+                    rta =  f"{arbol.atributo_split_anterior} = {arbol.valor_split_anterior}"
+                    out.append(prefijo + simbolo_rama + rta)            
+                    prefijo2 = prefijo + " " * (len(simbolo_rama)) if es_ultimo else prefijo + "│" + " " * (len(simbolo_rama) - 1)
+                    out.append(prefijo2 + impureza)
+                    out.append(prefijo2 + samples)
+                    out.append(prefijo2 + values)
+                    out.append(prefijo2 + clase)
+                    out.append(prefijo2 + split)
+
+                prefijo += ' ' * 10 if es_ultimo else '│' + ' ' * 9
+                for i, sub_arbol in enumerate(arbol.subs):
+                    ultimo: bool = i == len(arbol.subs) - 1
+                    _interna(sub_arbol, prefijo, ultimo)
+        _interna(self)
+        return "\n".join(out)
+            
 def probar(df, target: str):
     X = df.drop(target, axis=1)
     y = df[target]
@@ -296,11 +300,11 @@ def probar(df, target: str):
     x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     arbol = ArbolClasificadorC45()
     arbol.fit(x_train, y_train)
-    arbol.imprimir()
-    arbol.graficar()
+    print(arbol)
+    #arbol.graficar()
     y_pred = arbol.predict(x_test)
 
-    #arbol.Reduced_Error_Pruning(x_test, y_test)
+    #arbol.reduced_error_pruning(x_test, y_test)
 
     print(f"\naccuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
     print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio='ponderado')}\n")
@@ -316,16 +320,16 @@ if __name__ == "__main__":
     print("pruebo con iris")
     probar(df, "target")
 
-    # print("pruebo con tennis")
-    # tennis = pd.read_csv("./datasets/PlayTennis.csv")
+    print("pruebo con tennis")
+    tennis = pd.read_csv("./datasets/PlayTennis.csv")
 
-    # probar(tennis, "Play Tennis")
+    probar(tennis, "Play Tennis")
 
-    # print("pruebo con patients") 
+    print("pruebo con patients") 
 
-    # patients = pd.read_csv("./datasets/cancer_patients.csv", index_col=0)
-    # patients = patients.drop("Patient Id", axis = 1)
-    # patients.loc[:, patients.columns != "Age"] = patients.loc[:, patients.columns != "Age"].astype(str) # para que sean categorias
+    patients = pd.read_csv("./datasets/cancer_patients.csv", index_col=0)
+    patients = patients.drop("Patient Id", axis = 1)
+    patients.loc[:, patients.columns != "Age"] = patients.loc[:, patients.columns != "Age"].astype(str) # para que sean categorias
     
-    # probar(patients, "Level")
+    probar(patients, "Level")
     
