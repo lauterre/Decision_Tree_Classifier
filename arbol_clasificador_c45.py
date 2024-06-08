@@ -13,7 +13,7 @@ class ArbolClasificadorC45(ArbolClasificador):
         super().__init__(**kwargs)
         self.umbral_split: Optional[float] = None
 
-    def copy(self):
+    def copy(self) -> "ArbolClasificadorC45":
         nuevo = ArbolClasificadorC45(**self.__dict__)
         nuevo.data = self.data.copy()
         nuevo.target = self.target.copy()
@@ -142,7 +142,32 @@ class ArbolClasificadorC45(ArbolClasificador):
 
         return mejor_umbral
     
+    def _imputar_valores_faltantes(self, X: pd.DataFrame, y: pd.Series) -> tuple[pd.DataFrame, pd.Series]:
+        data = pd.concat([X, y], axis=1)
+        class_col = y.name
+
+        # Recorrer cada columna en X
+        for col in X.columns:
+            # Dividir el DataFrame en grupos basados en la columna de clasificación
+            groups = data.groupby(class_col)
+
+            # Para cada grupo, encontrar el valor más común en la columna actual
+            most_common_values = groups[col].value_counts().idxmax()
+
+            # Imputar los valores faltantes en la columna actual con el valor más común
+            data[col] = data.apply(
+                lambda row: most_common_values if pd.isnull(row[col]) else row[col],
+                axis=1
+            )
+
+        # Separar X e y
+        X = data.drop(columns=[class_col])
+        y = data[class_col]
+
+        return X, y
+    
     def fit(self, X: pd.DataFrame, y: pd.Series):
+        X, y = self._imputar_valores_faltantes(X, y)
         self.target = y
         self.data = X
         self.set_clase()
@@ -301,7 +326,7 @@ def probar(df, target: str):
     arbol = ArbolClasificadorC45()
     arbol.fit(x_train, y_train)
     print(arbol)
-    #arbol.graficar()
+    arbol.graficar()
     y_pred = arbol.predict(x_test)
 
     #arbol.reduced_error_pruning(x_test, y_test)
