@@ -106,10 +106,19 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
     def _total_samples(self):
         return len(self.data)
     
-    def _puede_splitearse(self, prof_acum: int) -> bool:
+    def _puede_splitearse(self, prof_acum: int, mejor_atributo: str) -> bool:
+        copia = self.copy() # OJO
+        information_gain = self._information_gain(mejor_atributo)
+        # hacer el split hipotetico y ver si se supera min_obs_hoja
+        copia._split(mejor_atributo)
+        for subarbol in copia.subs:
+            if self.min_obs_hoja != -1 and subarbol._total_samples() < self.min_obs_hoja:
+                return False
+            
         return not (len(self.target.unique()) == 1 or len(self.data.columns) == 0
                     or (self.max_prof != -1 and self.max_prof <= prof_acum)
-                    or (self.min_obs_nodo != -1 and self.min_obs_nodo > self._total_samples())) #TODO agregar hipers
+                    or (self.min_obs_nodo != -1 and self.min_obs_nodo > self._total_samples())
+                    or (self.min_infor_gain != -1 and self.min_infor_gain > information_gain))
     
     def agregar_subarbol(self, subarbol):
         for key, value in self.__dict__.items():

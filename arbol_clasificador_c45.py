@@ -141,6 +141,7 @@ class ArbolClasificadorC45(ArbolClasificador):
 
         return mejor_umbral
     
+    # TODO: quedo igual al de id3
     def fit(self, X: pd.DataFrame, y: pd.Series):
         self.target = y
         self.data = X
@@ -150,7 +151,7 @@ class ArbolClasificadorC45(ArbolClasificador):
             arbol.set_target_categorias(y)
 
             mejor_atributo = arbol._mejor_atributo_split()
-            if mejor_atributo and arbol._puede_splitearse(prof_acum):
+            if mejor_atributo and arbol._puede_splitearse(prof_acum, mejor_atributo):
                 arbol._split(mejor_atributo) # el check de numerico ahora ocurre dentro de _split()
                 
                 for sub_arbol in arbol.subs:
@@ -291,7 +292,7 @@ def probar(df, target: str):
     y = df[target]
 
     x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    arbol = ArbolClasificadorC45(criterio_impureza="Entropia")
+    arbol = ArbolClasificadorC45()
     arbol.fit(x_train, y_train)
     print(arbol)
     arbol.graficar()
