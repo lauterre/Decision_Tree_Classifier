@@ -5,7 +5,6 @@ import numpy as np
 from metricas import Metricas
 from _impureza import Entropia
 from _superclases import ArbolClasificador
-from graficador import GraficadorArbol
 
 class ArbolClasificadorID3(ArbolClasificador):
     def __init__(self, **kwargs) -> None:
@@ -63,7 +62,7 @@ class ArbolClasificadorID3(ArbolClasificador):
     
     def _information_gain(self, atributo: str) -> float:
         # entropia_actual = self._entropia()
-        entropia_actual = Entropia.calcular(self.target)
+        entropia_actual = Entropia().calcular(self.target)
 
         len_actual = self._total_samples()
 
@@ -74,7 +73,7 @@ class ArbolClasificadorID3(ArbolClasificador):
         entropias_subarboles = 0 
         for subarbol in nuevo.subs:
             # entropia = subarbol._entropia()
-            entropia = Entropia.calcular(subarbol.target)
+            entropia = Entropia().calcular(subarbol.target)
             len_subarbol = subarbol._total_samples()
             entropias_subarboles += ((len_subarbol/len_actual) * entropia)
 
@@ -123,38 +122,34 @@ class ArbolClasificadorID3(ArbolClasificador):
 
         return predicciones
         
-    def _error_clasificacion(self, y, y_pred):
-        x = []
-        for i in range(len(y)):
-            x.append(y[i] != y_pred[i])
-        return np.mean(x)
+    # def _error_clasificacion(self, y, y_pred):
+    #     x = []
+    #     for i in range(len(y)):
+    #         x.append(y[i] != y_pred[i])
+    #     return np.mean(x)
         
     def reduced_error_pruning(self, x_test: Any, y_test: Any):
         def _interna_rep(arbol: ArbolClasificadorID3, x_test, y_test):
-            if arbol.es_hoja():
-                return
+            if not arbol.es_hoja():
+                for subarbol in arbol.subs:
+                    _interna_rep(subarbol, x_test, y_test)
 
-            for subarbol in arbol.subs:
-                _interna_rep(subarbol, x_test, y_test)
+                    pred_raiz: list[str] = arbol.predict(x_test)
+                    error_clasif_raiz = Metricas.error(y_test, pred_raiz)
 
-                pred_raiz: list[str] = arbol.predict(x_test)
-                accuracy_raiz = Metricas.accuracy_score(y_test.tolist(), pred_raiz)
-                error_clasif_raiz = arbol._error_clasificacion(y_test.tolist(), pred_raiz)
+                    error_clasif_ramas = 0.0
 
-                error_clasif_ramas = 0.0
+                    for rama in arbol.subs:
+                        new_arbol: ArbolClasificadorID3 = rama
+                        pred_podada = new_arbol.predict(x_test)
+                        error_clasif_podada = Metricas.error(y_test, pred_podada)
+                        error_clasif_ramas = error_clasif_ramas + error_clasif_podada
 
-                for rama in arbol.subs:
-                    new_arbol: ArbolClasificadorID3 = rama
-                    pred_podada = new_arbol.predict(x_test)
-                    accuracy_podada = Metricas.accuracy_score(y_test.tolist(), pred_podada)
-                    error_clasif_podada = new_arbol._error_clasificacion(y_test.tolist(), pred_podada)
-                    error_clasif_ramas = error_clasif_ramas + error_clasif_podada
-
-                if error_clasif_ramas < error_clasif_raiz:
-                    #print(" * Podar \n")
-                    arbol.subs = []
-                #else:
-                    #print(" * No podar \n")
+                    if error_clasif_ramas < error_clasif_raiz:
+                        #print(" * Podar \n")
+                        arbol.subs = []
+                    #else:
+                        #print(" * No podar \n")
 
         _interna_rep(self, x_test, y_test)
 
@@ -164,7 +159,7 @@ class ArbolClasificadorID3(ArbolClasificador):
             simbolo_rama = '└─── ' if es_ultimo else '├─── '
             split = "Split: " + str(self.atributo_split)
             rta =  f"{self.atributo_split_anterior} = {self.valor_split_anterior}"
-            entropia = f"{self.criterio_impureza}: {self._impureza()}"
+            entropia = f"{self.criterio_impureza}: {round(self._impureza(), 3)}"
             samples = f"Muestras: {str(self._total_samples())}"
             values = f"Conteo: {str(self._values())}"
             clase = 'Clase: ' + str(self.clase)
@@ -216,8 +211,16 @@ def probar(df, target: str):
     print(arbol)
     arbol.graficar()
     y_pred = arbol.predict(x_test)
+    
+    print(f"\n accuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
+    print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio='ponderado')}\n")
 
-    #arbol.reduced_error_pruning(x_test, y_test)
+    print("Podo el arbol\n")
+    arbol.reduced_error_pruning(x_test, y_test)
+    print(arbol)
+    arbol.graficar()
+    y_pred = arbol.predict(x_test)
+    
 
     print(f"\n accuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
     print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio='ponderado')}\n")
