@@ -2,7 +2,6 @@ from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
 from typing import Any, Callable, Optional
-from graficador import GraficadorArbol
 from _impureza import Entropia
 from _superclases import ArbolClasificador
 from metricas import Metricas
@@ -44,7 +43,7 @@ class ArbolClasificadorC45(ArbolClasificador):
         nuevo.atributo_split_anterior = atributo
         nuevo.valor_split_anterior = valor
         self.agregar_subarbol(nuevo)
-        
+
     def _split_numerico(self, atributo: str, umbral: float | int) -> None:
         self.atributo_split = atributo
         self.umbral_split = umbral
@@ -82,7 +81,7 @@ class ArbolClasificadorC45(ArbolClasificador):
         information_gain = entropia_actual - entropias_subarboles
         return information_gain
     
-    def _information_gain(self, atributo: str) -> float:  #IMPORTANTE: este information gain calcula el mejor umbral de ser necesario
+    def _information_gain(self, atributo: str) -> float:
         def split(arbol, atributo):
             arbol._split(atributo)
         
@@ -111,7 +110,7 @@ class ArbolClasificadorC45(ArbolClasificador):
         atributos = self.data.columns
 
         for atributo in atributos:
-            if len(self.data[atributo].unique()) > 1: # para que no elija columna con un solo valor
+            if len(self.data[atributo].unique()) > 1:
                 gain_ratio = self._gain_ratio(atributo)
                 if gain_ratio > mejor_gain_ratio:
                     mejor_gain_ratio = gain_ratio
@@ -119,11 +118,11 @@ class ArbolClasificadorC45(ArbolClasificador):
 
         return mejor_atributo
     
-    def __information_gain_numerico(self, atributo: str, umbral: float | int):  # helper de mejor_umbral_split, no calcula el mejor umbral
-            def split_num(arbol, atributo):
-                arbol._split_numerico(atributo, umbral)
-            
-            return self._information_gain_base(atributo, split_num) # clausura, se deberia llevar el umbral
+    def __information_gain_numerico(self, atributo: str, umbral: float | int):
+        def split_num(arbol, atributo):
+            arbol._split_numerico(atributo, umbral)
+        
+        return self._information_gain_base(atributo, split_num)
     
     def _mejor_umbral_split(self, atributo: str) -> float:
         self.data = self.data.sort_values(by=atributo)
@@ -134,40 +133,15 @@ class ArbolClasificadorC45(ArbolClasificador):
         i = 0
         while i < len(valores_unicos) - 1:
             umbral = (valores_unicos[i] + valores_unicos[i + 1]) / 2
-            ig = self.__information_gain_numerico(atributo, umbral) # uso information_gain, gain_ratio es para la seleccion de atributo
+            ig = self.__information_gain_numerico(atributo, umbral)
             if ig > mejor_ig:
                 mejor_ig = ig
                 mejor_umbral = umbral
             i += 1
 
         return mejor_umbral
-    
-    def _imputar_valores_faltantes(self, X: pd.DataFrame, y: pd.Series) -> tuple[pd.DataFrame, pd.Series]:
-        data = pd.concat([X, y], axis=1)
-        class_col = y.name
 
-        # Recorrer cada columna en X
-        for col in X.columns:
-            # Dividir el DataFrame en grupos basados en la columna de clasificación
-            groups = data.groupby(class_col)
-
-            # Para cada grupo, encontrar el valor más común en la columna actual
-            most_common_values = groups[col].value_counts().idxmax()
-
-            # Imputar los valores faltantes en la columna actual con el valor más común
-            data[col] = data.apply(
-                lambda row: most_common_values if pd.isnull(row[col]) else row[col],
-                axis=1
-            )
-
-        # Separar X e y
-        X = data.drop(columns=[class_col])
-        y = data[class_col]
-
-        return X, y
-    
     def fit(self, X: pd.DataFrame, y: pd.Series):
-        X, y = self._imputar_valores_faltantes(X, y)
         self.target = y
         self.data = X
         self.set_clase()
@@ -179,7 +153,7 @@ class ArbolClasificadorC45(ArbolClasificador):
                 mejor_atributo = arbol._mejor_atributo_split()
 
                 if mejor_atributo:
-                    arbol._split(mejor_atributo) # el check de numerico ahora ocurre dentro de _split()
+                    arbol._split(mejor_atributo)
                     
                     for sub_arbol in arbol.subs:
                         _interna(sub_arbol, prof_acum + 1)
@@ -188,23 +162,44 @@ class ArbolClasificadorC45(ArbolClasificador):
         
     def predict(self, X: pd.DataFrame) -> list:
         predicciones = []
+        
         def _recorrer(arbol, fila: pd.Series) -> None:
             if arbol.es_hoja():
                 predicciones.append(arbol.clase)
             else:
                 valor = fila[arbol.atributo_split]
-                if arbol.es_atributo_numerico(arbol.atributo_split):  # es split numerico
-                    if valor < arbol.umbral_split:
-                        _recorrer(arbol.subs[0], fila)
-                    elif valor > arbol.umbral_split:
-                        _recorrer(arbol.subs[1], fila)
-                else:
+                
+                if pd.isnull(valor):
+                    pred = {}
                     for subarbol in arbol.subs:
-                        if valor == subarbol.valor_split_anterior:
-                            _recorrer(subarbol, fila)
+                        if subarbol.es_hoja():
+                            if subarbol.clase not in pred:
+                                pred[subarbol.clase] = 0
+                            pred[subarbol.clase] += subarbol._total_samples() / arbol._total_samples()
+                        else:
+                            pred_sub = _recorrer(subarbol, fila)
+                            for k, v in pred_sub.items():
+                                if k not in pred:
+                                    pred[k] = 0
+                                pred[k] += v * subarbol._total_samples() / arbol._total_samples()
+                    return pred
+                else:
+                    if arbol.es_atributo_numerico(arbol.atributo_split):
+                        if valor < arbol.umbral_split:
+                            return _recorrer(arbol.subs[0], fila)
+                        else:
+                            return _recorrer(arbol.subs[1], fila)
+                    else:
+                        for subarbol in arbol.subs:
+                            if valor == subarbol.valor_split_anterior:
+                                return _recorrer(subarbol, fila)
         
         for _, fila in X.iterrows():
-            _recorrer(self, fila)
+            pred = _recorrer(self, fila)
+            if isinstance(pred, dict):
+                predicciones.append(max(pred, key=pred.get))
+            else:
+                predicciones.append(pred)
         return predicciones
 
     # TODO: creo qeu este esta en metricas
@@ -343,16 +338,16 @@ if __name__ == "__main__":
     df['target'] = iris.target
 
     print("pruebo con iris")
-    probar(df, "target")
+    #probar(df, "target")
 
     print("pruebo con tennis")
     tennis = pd.read_csv("./datasets/PlayTennis.csv")
 
-    probar(tennis, "Play Tennis")
+   # probar(tennis, "Play Tennis")
 
     print("pruebo con patients") 
 
-    patients = pd.read_csv("./datasets/cancer_patients.csv", index_col=0)
+    patients = pd.read_csv("./datasets/cancer_patients_con_NA.csv", index_col=0)
     patients = patients.drop("Patient Id", axis = 1)
     patients.loc[:, patients.columns != "Age"] = patients.loc[:, patients.columns != "Age"].astype(str) # para que sean categorias
     
