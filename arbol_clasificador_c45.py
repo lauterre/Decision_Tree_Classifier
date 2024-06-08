@@ -1,8 +1,9 @@
+from copy import deepcopy
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
 from typing import Any, Callable, Optional
-from _impureza import Entropia
+from _impureza import Entropia, ErrorClasificacion
 from _superclases import ArbolClasificador
 from metricas import Metricas
 
@@ -142,8 +143,8 @@ class ArbolClasificadorC45(ArbolClasificador):
         return mejor_umbral
     
     def fit(self, X: pd.DataFrame, y: pd.Series):
-        self.target = y
-        self.data = X
+        self.target = y.copy()
+        self.data = X.copy()
         self.set_clase()
 
         def _interna(arbol: ArbolClasificadorC45, prof_acum: int = 1):
@@ -178,39 +179,51 @@ class ArbolClasificadorC45(ArbolClasificador):
         for _, fila in X.iterrows():
             _recorrer(self, fila)
         return predicciones
+    # para debuggear
+    def __repr__(self) -> str:
+        return f"ArbolC45(Error: {round(ErrorClasificacion().calcular(self.target), 3)}, Samples: {self._total_samples()})"
 
-    # TODO: creo que este esta en metricas
-    # def _error_clasificacion(self, y, y_pred):
-    #     x = []
-    #     for i in range(len(y)):
-    #         x.append(y[i] != y_pred[i])
-    #     return np.mean(x)
-    
     # TODO: es igual al de id3, salvo por la instanciacion de los nuevos arboles    
-    def reduced_error_pruning(self, x_test: pd.DataFrame, y_test: pd.Series):
+    def reduced_error_pruning(self, x_test: pd.DataFrame, y_test: pd.Series) -> "ArbolClasificadorC45":
+        nuevo = deepcopy(self) # si uso copy salta otro error
         def _interna_rep(arbol: ArbolClasificadorC45, x_test, y_test):
             if not arbol.es_hoja():
                 for subarbol in arbol.subs:
                     _interna_rep(subarbol, x_test, y_test)
 
-                    pred_raiz: list[str] = arbol.predict(x_test)
-                    error_clasif_raiz = Metricas.error(y_test, pred_raiz)
+                pred_raiz = arbol.predict(x_test)
+                # # para debuggear
+                # print(repr(arbol))
+                # print(f"y: {len(y_test)}, pred: {len(pred_raiz)}")
+                error_clasif_raiz = Metricas.error(y_test, pred_raiz)
 
-                    error_clasif_ramas = 0.0
+                # por lo que estube viendo no se hace con la suma de los errores, sino con el error de cada hoja
+                
+                error_clasif_subs = 0
+                for subarbol in arbol.subs:
+                    pred_podada = subarbol.predict(x_test)
+                    error_clasif_podada = Metricas.error(y_test, pred_podada)
+                    error_clasif_subs += error_clasif_podada
 
-                    for rama in arbol.subs:
-                        new_arbol: ArbolClasificadorC45 = rama
-                        pred_podada = new_arbol.predict(x_test)
-                        error_clasif_podada = Metricas.error(y_test, pred_podada)
-                        error_clasif_ramas = error_clasif_ramas + error_clasif_podada
+                if error_clasif_subs <= error_clasif_raiz:
+                    arbol.subs = []
 
-                    if error_clasif_ramas < error_clasif_raiz:
-                        #print(" * Podar \n")
-                        arbol.subs = []
-                    #else:
-                        #print(" * No podar \n")
+                # pred_hoja = [arbol.clase] * len(x_test)
+                # error_clasif_hoja = Metricas.error(y_test, pred_hoja)
+                # if error_clasif_hoja <= error_clasif_raiz:
+                #     arbol.subs = []
+                
+        _interna_rep(nuevo, x_test, y_test)
+        return nuevo
+    
+    def reduced_error_pruning2(self) -> "ArbolClasificadorC45":
+        # TODO: check si esta entrenado
+        nuevo = deepcopy(self)
+        # Se comienza desde las hojas del árbol entrenado original y se evalúa el efecto de eliminar cada nodo
+        # seguro hay que hacer backtracking
+        pass
 
-        _interna_rep(self, x_test, y_test)
+
     
     def __str__(self) -> str:
         out = []
@@ -291,26 +304,26 @@ def probar(df, target: str):
     y = df[target]
 
     x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    arbol = ArbolClasificadorC45(criterio_impureza="Entropia")
+    arbol = ArbolClasificadorC45(criterio_impureza="ErrorClasificacion")
     arbol.fit(x_train, y_train)
     print(arbol)
-    arbol.graficar()
+    #arbol.graficar()
     y_pred = arbol.predict(x_test)
     
     print(f"\naccuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
     print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio='ponderado')}\n")
 
-    # print("Podo el arbol\n")
+    print("Podo el arbol\n")
 
-    # arbol.reduced_error_pruning(x_test, y_test)
+    podado = arbol.reduced_error_pruning(x_test, y_test)
 
-    # print(arbol)
-    # arbol.graficar()
+    print(podado)
+    #podado.graficar()
 
-    # y_pred = arbol.predict(x_test)
+    y_pred = podado.predict(x_test)
 
-    # print(f"\naccuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
-    # print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio='ponderado')}\n")
+    print(f"\naccuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
+    print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio='ponderado')}\n")
 
 
 if __name__ == "__main__":
@@ -320,19 +333,19 @@ if __name__ == "__main__":
     df = pd.DataFrame(data=iris.data, columns=iris.feature_names)
     df['target'] = iris.target
 
-    # print("pruebo con iris")
-    # probar(df, "target")
+    print("pruebo con iris")
+    probar(df, "target")
 
     # print("pruebo con tennis")
     # tennis = pd.read_csv("./datasets/PlayTennis.csv")
 
     # probar(tennis, "Play Tennis")
 
-    print("pruebo con patients") 
+    # print("pruebo con patients") 
 
-    patients = pd.read_csv("./datasets/cancer_patients.csv", index_col=0)
-    patients = patients.drop("Patient Id", axis = 1)
-    patients.loc[:, patients.columns != "Age"] = patients.loc[:, patients.columns != "Age"].astype(str) # para que sean categorias
+    # patients = pd.read_csv("./datasets/cancer_patients.csv", index_col=0)
+    # patients = patients.drop("Patient Id", axis = 1)
+    # patients.loc[:, patients.columns != "Age"] = patients.loc[:, patients.columns != "Age"].astype(str) # para que sean categorias
     
-    probar(patients, "Level")
+    # probar(patients, "Level")
     
