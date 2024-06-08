@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from typing import Optional
 import pandas as pd
-from _impureza import Entropia, Gini
+import _impureza
 from graficador import GraficadorArbol
 
 class Clasificador(ABC):
@@ -21,6 +21,12 @@ class Hiperparametros:
         self.min_infor_gain: float = kwargs.get('min_infor_gain', -1.0)
         self.min_obs_hoja: int = kwargs.get('min_obs_hoja', -1)
         self.criterio_impureza: str = kwargs.get('criterio_impureza', 'Entropia')
+        criterios_posibles = {name: cls for name, cls in vars(_impureza).items() if isinstance(cls, type)}
+        try:
+            Impureza = getattr(_impureza, self.criterio_impureza)
+        except AttributeError:
+            raise ValueError(f"Criterio de impureza no válido, criterios válidos: {list(criterios_posibles.keys())[1:]}")
+        self.impureza = Impureza()
 
 class Arbol(ABC): # seria ArbolNario
     def __init__(self) -> None:
@@ -100,10 +106,10 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
     def _total_samples(self):
         return len(self.data)
     
-    def _puede_splitearse(self, prof_acum) -> bool:
+    def _puede_splitearse(self, prof_acum: int) -> bool:
         return not (len(self.target.unique()) == 1 or len(self.data.columns) == 0
                     or (self.max_prof != -1 and self.max_prof <= prof_acum)
-                    or (self.min_obs_nodo != -1 and self.min_obs_nodo > self._total_samples())) # agregar hipers
+                    or (self.min_obs_nodo != -1 and self.min_obs_nodo > self._total_samples())) #TODO agregar hipers
     
     def agregar_subarbol(self, subarbol):
         for key, value in self.__dict__.items():
@@ -113,12 +119,7 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
 
     
     def _impureza(self):
-        if self.criterio_impureza == 'Entropia':
-            return Entropia.calcular(self.target)
-        elif self.criterio_impureza == 'Gini':
-            return Gini.calcular(self.target)
-        else:
-            raise ValueError('Criterio de impureza no válido')
+        return self.impureza.calcular(self.target)
     
     def graficar(self):
         plotter = GraficadorArbol(self)
