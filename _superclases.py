@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from typing import Optional
 import pandas as pd
-from _impureza import Entropia, Gini
+import _impureza
 from graficador import GraficadorArbol
 
 class Clasificador(ABC):
@@ -21,12 +21,12 @@ class Hiperparametros:
         self.min_infor_gain: float = kwargs.get('min_infor_gain', -1.0)
         self.min_obs_hoja: int = kwargs.get('min_obs_hoja', -1)
         self.criterio_impureza: str = kwargs.get('criterio_impureza', 'Entropia')
-        if self.criterio_impureza.lower() == 'entropia':
-            self.impureza = Entropia()
-        elif self.criterio_impureza.lower() == 'gini':
-            self.impureza = Gini()
-        else:
-            raise ValueError('Criterio de impureza no válido')
+        criterios_posibles = {name: cls for name, cls in vars(_impureza).items() if isinstance(cls, type)}
+        try:
+            Impureza = getattr(_impureza, self.criterio_impureza)
+        except AttributeError:
+            raise ValueError(f"Criterio de impureza no válido, criterios válidos: {list(criterios_posibles.keys())[1:]}")
+        self.impureza = Impureza()
 
 class Arbol(ABC): # seria ArbolNario
     def __init__(self) -> None:
