@@ -159,13 +159,13 @@ class ArbolClasificadorID3(ArbolClasificador):
             simbolo_rama = '└─── ' if es_ultimo else '├─── '
             split = "Split: " + str(self.atributo_split)
             rta =  f"{self.atributo_split_anterior} = {self.valor_split_anterior}"
-            entropia = f"{self.criterio_impureza}: {round(self._impureza(), 3)}"
+            impureza = f"{self.criterio_impureza}: {round(self._impureza(), 3)}"
             samples = f"Muestras: {str(self._total_samples())}"
             values = f"Conteo: {str(self._values())}"
             clase = 'Clase: ' + str(self.clase)
             
             if self.es_raiz():
-                out.append(entropia)
+                out.append(impureza)
                 out.append(samples)
                 out.append(values)
                 out.append(clase)
@@ -179,7 +179,7 @@ class ArbolClasificadorID3(ArbolClasificador):
                 out.append(prefijo + "│")
                 out.append(prefijo + simbolo_rama + rta)
                 prefijo2 = prefijo + " " * (len(simbolo_rama)) if es_ultimo else prefijo +"│" + " " * (len(simbolo_rama) - 1)
-                out.append(prefijo2 + entropia)
+                out.append(prefijo2 + impureza)
                 out.append(prefijo2 + samples)
                 out.append(prefijo2 + values)
                 out.append(prefijo2 + clase)
@@ -193,7 +193,7 @@ class ArbolClasificadorID3(ArbolClasificador):
                 prefijo_hoja = prefijo + " " * len(simbolo_rama) if es_ultimo else prefijo + "│" + " " * (len(simbolo_rama) - 1)
                 out.append(prefijo + "│")
                 out.append(prefijo + simbolo_rama + rta)
-                out.append(prefijo_hoja + entropia)
+                out.append(prefijo_hoja + impureza)
                 out.append(prefijo_hoja + samples)
                 out.append(prefijo_hoja + values)
                 out.append(prefijo_hoja + clase)

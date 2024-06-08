@@ -17,9 +17,6 @@ class Entropia(Impureza):
             entropia -= proporcion * np.log2(proporcion)
         return entropia
 
-    def __str__(self) -> str:
-        return 'Entropia'
-
 class Gini(Impureza):
     def calcular(self, target: pd.Series) -> float:
         gini = 1
@@ -30,6 +27,9 @@ class Gini(Impureza):
             gini -= proporcion ** 2
         return gini
     
-    def __str__(self) -> str:
-        return 'Gini'
+class ErrorClasificacion(Impureza):
+    def calcular(self, target: pd.Series) -> float:
+        proporciones = target.value_counts(normalize=True)
+        max_proporcion = proporciones.max()
+        return 1 - max_proporcion
     

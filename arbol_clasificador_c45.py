@@ -226,7 +226,7 @@ class ArbolClasificadorC45(ArbolClasificador):
                 split = "Split: " + str(arbol.atributo_split)
 
             
-            impureza = f"{arbol.impureza}: {round(arbol._impureza(), 3)}"
+            impureza = f"{arbol.criterio_impureza}: {round(arbol._impureza(), 3)}"
             samples = f"Muestras: {arbol._total_samples()}"
             values = f"Conteo: {arbol._values()}"
             clase = f"Clase: {arbol.clase}"
@@ -291,7 +291,7 @@ def probar(df, target: str):
     y = df[target]
 
     x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    arbol = ArbolClasificadorC45(criterio_impureza="gini")
+    arbol = ArbolClasificadorC45(criterio_impureza="Entropia")
     arbol.fit(x_train, y_train)
     print(arbol)
     arbol.graficar()
@@ -300,17 +300,17 @@ def probar(df, target: str):
     print(f"\naccuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
     print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio='ponderado')}\n")
 
-    print("Podo el arbol\n")
+    # print("Podo el arbol\n")
 
-    arbol.reduced_error_pruning(x_test, y_test)
+    # arbol.reduced_error_pruning(x_test, y_test)
 
-    print(arbol)
-    arbol.graficar()
+    # print(arbol)
+    # arbol.graficar()
 
-    y_pred = arbol.predict(x_test)
+    # y_pred = arbol.predict(x_test)
 
-    print(f"\naccuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
-    print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio='ponderado')}\n")
+    # print(f"\naccuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
+    # print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio='ponderado')}\n")
 
 
 if __name__ == "__main__":
