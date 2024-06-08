@@ -2,7 +2,6 @@ from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
 from typing import Any, Callable, Optional
-from graficador import GraficadorArbol
 from _impureza import Entropia
 from _superclases import ArbolClasificador
 from metricas import Metricas
@@ -67,7 +66,7 @@ class ArbolClasificadorC45(ArbolClasificador):
         return pd.api.types.is_numeric_dtype(self.data[atributo])
     
     def _information_gain_base(self, atributo: str, split: Callable):
-        entropia_actual = Entropia.calcular(self.target)
+        entropia_actual = Entropia().calcular(self.target)
         len_actual = self._total_samples()
         nuevo = self.copy()
 
@@ -75,7 +74,7 @@ class ArbolClasificadorC45(ArbolClasificador):
 
         entropias_subarboles = 0 
         for subarbol in nuevo.subs:
-            entropia = Entropia.calcular(subarbol.target)
+            entropia = Entropia().calcular(subarbol.target)
             len_subarbol = subarbol._total_samples()
             entropias_subarboles += ((len_subarbol/len_actual) * entropia)
 
@@ -150,14 +149,12 @@ class ArbolClasificadorC45(ArbolClasificador):
         def _interna(arbol: ArbolClasificadorC45, prof_acum: int = 1):
             arbol.set_target_categorias(y)
 
-            if arbol._puede_splitearse(prof_acum):
-                mejor_atributo = arbol._mejor_atributo_split()
-
-                if mejor_atributo:
-                    arbol._split(mejor_atributo) # el check de numerico ahora ocurre dentro de _split()
-                    
-                    for sub_arbol in arbol.subs:
-                        _interna(sub_arbol, prof_acum + 1)
+            mejor_atributo = arbol._mejor_atributo_split()
+            if mejor_atributo and arbol._puede_splitearse(prof_acum):
+                arbol._split(mejor_atributo) # el check de numerico ahora ocurre dentro de _split()
+                
+                for sub_arbol in arbol.subs:
+                    _interna(sub_arbol, prof_acum + 1)
         
         _interna(self)
         
@@ -182,33 +179,29 @@ class ArbolClasificadorC45(ArbolClasificador):
             _recorrer(self, fila)
         return predicciones
 
-    # TODO: creo qeu este esta en metricas
-    def _error_clasificacion(self, y, y_pred):
-        x = []
-        for i in range(len(y)):
-            x.append(y[i] != y_pred[i])
-        return np.mean(x)
+    # TODO: creo que este esta en metricas
+    # def _error_clasificacion(self, y, y_pred):
+    #     x = []
+    #     for i in range(len(y)):
+    #         x.append(y[i] != y_pred[i])
+    #     return np.mean(x)
     
-    # TODO: es igual al de id3, salvo por la instanciadcion de los nuevos arboles    
-    def reduced_error_pruning(self, x_test: Any, y_test: Any):
-            def _interna_rep(arbol: ArbolClasificadorC45, x_test, y_test):
-                if arbol.es_hoja():
-                    return
-
+    # TODO: es igual al de id3, salvo por la instanciacion de los nuevos arboles    
+    def reduced_error_pruning(self, x_test: pd.DataFrame, y_test: pd.Series):
+        def _interna_rep(arbol: ArbolClasificadorC45, x_test, y_test):
+            if not arbol.es_hoja():
                 for subarbol in arbol.subs:
                     _interna_rep(subarbol, x_test, y_test)
 
                     pred_raiz: list[str] = arbol.predict(x_test)
-                    accuracy_raiz = Metricas.accuracy_score(y_test.tolist(), pred_raiz)
-                    error_clasif_raiz = arbol._error_clasificacion(y_test.tolist(), pred_raiz)
+                    error_clasif_raiz = Metricas.error(y_test, pred_raiz)
 
                     error_clasif_ramas = 0.0
 
                     for rama in arbol.subs:
                         new_arbol: ArbolClasificadorC45 = rama
                         pred_podada = new_arbol.predict(x_test)
-                        accuracy_podada = Metricas.accuracy_score(y_test.tolist(), pred_podada)
-                        error_clasif_podada = new_arbol._error_clasificacion(y_test.tolist(), pred_podada)
+                        error_clasif_podada = Metricas.error(y_test, pred_podada)
                         error_clasif_ramas = error_clasif_ramas + error_clasif_podada
 
                     if error_clasif_ramas < error_clasif_raiz:
@@ -217,7 +210,7 @@ class ArbolClasificadorC45(ArbolClasificador):
                     #else:
                         #print(" * No podar \n")
 
-            _interna_rep(self, x_test, y_test)
+        _interna_rep(self, x_test, y_test)
     
     def __str__(self) -> str:
         out = []
@@ -233,7 +226,7 @@ class ArbolClasificadorC45(ArbolClasificador):
                 split = "Split: " + str(arbol.atributo_split)
 
             
-            impureza = f"{arbol.criterio_impureza}: {arbol._impureza()}"
+            impureza = f"{arbol.impureza}: {round(arbol._impureza(), 3)}"
             samples = f"Muestras: {arbol._total_samples()}"
             values = f"Conteo: {arbol._values()}"
             clase = f"Clase: {arbol.clase}"
@@ -298,13 +291,23 @@ def probar(df, target: str):
     y = df[target]
 
     x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    arbol = ArbolClasificadorC45()
+    arbol = ArbolClasificadorC45(criterio_impureza="gini")
     arbol.fit(x_train, y_train)
     print(arbol)
-    #arbol.graficar()
+    arbol.graficar()
     y_pred = arbol.predict(x_test)
+    
+    print(f"\naccuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
+    print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio='ponderado')}\n")
 
-    #arbol.reduced_error_pruning(x_test, y_test)
+    print("Podo el arbol\n")
+
+    arbol.reduced_error_pruning(x_test, y_test)
+
+    print(arbol)
+    arbol.graficar()
+
+    y_pred = arbol.predict(x_test)
 
     print(f"\naccuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
     print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio='ponderado')}\n")
@@ -317,13 +320,13 @@ if __name__ == "__main__":
     df = pd.DataFrame(data=iris.data, columns=iris.feature_names)
     df['target'] = iris.target
 
-    print("pruebo con iris")
-    probar(df, "target")
+    # print("pruebo con iris")
+    # probar(df, "target")
 
-    print("pruebo con tennis")
-    tennis = pd.read_csv("./datasets/PlayTennis.csv")
+    # print("pruebo con tennis")
+    # tennis = pd.read_csv("./datasets/PlayTennis.csv")
 
-    probar(tennis, "Play Tennis")
+    # probar(tennis, "Play Tennis")
 
     print("pruebo con patients") 
 
