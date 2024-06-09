@@ -142,17 +142,17 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
         return self.impureza.calcular(self.target)
     
     def graficar(self):
-        plotter = GraficadorArbol(self)
-        plotter.plot()
+        graficador = GraficadorArbol(self)
+        graficador.graficar()
 
-    def podar(self, nodo: "ArbolClasificador") -> "ArbolClasificador":
+    def _podar(self, nodo: "ArbolClasificador") -> "ArbolClasificador":
         arbol_podado = deepcopy(self)
         def _interna(arbol, nodo):
             if arbol == nodo:
                 arbol.subs = []
             else:
                 for sub in arbol_podado.subs:
-                    sub.podar(nodo)
+                    sub._podar(nodo)
         _interna(arbol_podado, nodo)
         return arbol_podado
     
@@ -163,7 +163,7 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
         nodos = arbol_completo.posorden()
         for nodo in nodos:
             if not nodo.es_hoja():
-                arbol_podado = arbol_completo.podar(nodo)
+                arbol_podado = arbol_completo._podar(nodo)
                 nuevo_error = Metricas.error(y_val, arbol_podado.predict(x_val))
                 if nuevo_error < error_inicial:
                     arbol_completo = arbol_podado

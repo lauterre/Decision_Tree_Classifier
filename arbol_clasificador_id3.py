@@ -191,20 +191,20 @@ def probar(df, target: str):
     y = df[target]
 
     x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    arbol = ArbolClasificadorID3(min_infor_gain = 0.8)
+    arbol = ArbolClasificadorID3()
     arbol.fit(x_train, y_train)
     print(arbol)
     arbol.graficar()
-    y_pred = arbol.predict(x_test)
+    # y_pred = arbol.predict(x_test)
     
-    print(f"\n accuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
-    print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio='ponderado')}\n")
+    # print(f"\n accuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
+    # print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio='ponderado')}\n")
 
-    print("Podo el arbol\n")
-    podado = arbol.reduced_error_pruning2(x_test, y_test)
-    print(podado)
-    podado.graficar()
-    y_pred = podado.predict(x_test)    
+    # print("Podo el arbol\n")
+    # podado = arbol.reduced_error_pruning2(x_test, y_test)
+    # print(podado)
+    # podado.graficar()
+    # y_pred = podado.predict(x_test)    
 
     # print(f"\n accuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
     # print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio='ponderado')}\n")
@@ -220,5 +220,5 @@ if __name__ == "__main__":
 
     print("Pruebo con patients")
     probar(patients, "Level")
-    # print("Pruebo con Play Tennis")
-    # probar(tennis, "Play Tennis")
+    print("Pruebo con Play Tennis")
+    probar(tennis, "Play Tennis")
