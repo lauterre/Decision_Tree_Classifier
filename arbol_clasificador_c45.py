@@ -142,6 +142,7 @@ class ArbolClasificadorC45(ArbolClasificador):
 
         return mejor_umbral
     
+    # TODO: quedo igual al de id3
     def fit(self, X: pd.DataFrame, y: pd.Series):
         self.target = y.copy()
         self.data = X.copy()
@@ -151,7 +152,7 @@ class ArbolClasificadorC45(ArbolClasificador):
             arbol.set_target_categorias(y)
 
             mejor_atributo = arbol._mejor_atributo_split()
-            if mejor_atributo and arbol._puede_splitearse(prof_acum):
+            if mejor_atributo and arbol._puede_splitearse(prof_acum, mejor_atributo):
                 arbol._split(mejor_atributo) # el check de numerico ahora ocurre dentro de _split()
                 
                 for sub_arbol in arbol.subs:
