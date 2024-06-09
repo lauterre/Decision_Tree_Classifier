@@ -181,50 +181,33 @@ class ArbolClasificadorC45(ArbolClasificador):
         return predicciones
     # para debuggear
     def __repr__(self) -> str:
-        return f"ArbolC45(Error: {round(ErrorClasificacion().calcular(self.target), 3)}, Samples: {self._total_samples()})"
+        return f"ArbolC45(Error: {round(ErrorClasificacion().calcular(self.target), 3)})"
 
-    # TODO: es igual al de id3, salvo por la instanciacion de los nuevos arboles    
-    def reduced_error_pruning(self, x_test: pd.DataFrame, y_test: pd.Series) -> "ArbolClasificadorC45":
-        nuevo = deepcopy(self) # si uso copy salta otro error
+    def reduced_error_pruning(self, x_test: Any, y_test: Any):
         def _interna_rep(arbol: ArbolClasificadorC45, x_test, y_test):
             if not arbol.es_hoja():
                 for subarbol in arbol.subs:
                     _interna_rep(subarbol, x_test, y_test)
 
-                pred_raiz = arbol.predict(x_test)
-                # # para debuggear
-                # print(repr(arbol))
-                # print(f"y: {len(y_test)}, pred: {len(pred_raiz)}")
-                error_clasif_raiz = Metricas.error(y_test, pred_raiz)
+                    pred_raiz: list[str] = arbol.predict(x_test)
+                    error_clasif_raiz = Metricas.error(y_test, pred_raiz)
 
-                # por lo que estube viendo no se hace con la suma de los errores, sino con el error de cada hoja
-                
-                error_clasif_subs = 0
-                for subarbol in arbol.subs:
-                    pred_podada = subarbol.predict(x_test)
-                    error_clasif_podada = Metricas.error(y_test, pred_podada)
-                    error_clasif_subs += error_clasif_podada
+                    error_clasif_ramas = 0.0
 
-                if error_clasif_subs <= error_clasif_raiz:
-                    arbol.subs = []
+                    for rama in arbol.subs:
+                        new_arbol: ArbolClasificadorC45 = rama
+                        pred_podada = new_arbol.predict(x_test)
+                        error_clasif_podada = Metricas.error(y_test, pred_podada)
+                        error_clasif_ramas = error_clasif_ramas + error_clasif_podada
 
-                # pred_hoja = [arbol.clase] * len(x_test)
-                # error_clasif_hoja = Metricas.error(y_test, pred_hoja)
-                # if error_clasif_hoja <= error_clasif_raiz:
-                #     arbol.subs = []
-                
-        _interna_rep(nuevo, x_test, y_test)
-        return nuevo
-    
-    def reduced_error_pruning2(self) -> "ArbolClasificadorC45":
-        # TODO: check si esta entrenado
-        nuevo = deepcopy(self)
-        # Se comienza desde las hojas del árbol entrenado original y se evalúa el efecto de eliminar cada nodo
-        # seguro hay que hacer backtracking
-        pass
+                    if error_clasif_ramas < error_clasif_raiz:
+                        #print(" * Podar \n")
+                        arbol.subs = []
+                    #else:
+                        #print(" * No podar \n")
 
+        _interna_rep(self, x_test, y_test)
 
-    
     def __str__(self) -> str:
         out = []
         def _interna(arbol, prefijo: str = '  ', es_ultimo: bool = True) -> None:
@@ -304,21 +287,22 @@ def probar(df, target: str):
     y = df[target]
 
     x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    arbol = ArbolClasificadorC45(criterio_impureza="ErrorClasificacion")
+    x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=0.2, random_state=42)
+    arbol = ArbolClasificadorC45()
     arbol.fit(x_train, y_train)
     print(arbol)
-    #arbol.graficar()
-    y_pred = arbol.predict(x_test)
+    arbol.graficar()
+    # y_pred = arbol.predict(x_val)
     
-    print(f"\naccuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
-    print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio='ponderado')}\n")
+    # print(f"\naccuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
+    # print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio='ponderado')}\n")
 
     print("Podo el arbol\n")
 
-    podado = arbol.reduced_error_pruning(x_test, y_test)
+    podado = arbol.reduced_error_pruning2(x_val, y_val)
 
     print(podado)
-    #podado.graficar()
+    podado.graficar()
 
     y_pred = podado.predict(x_test)
 

@@ -216,7 +216,7 @@ def probar(df, target: str):
     print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio='ponderado')}\n")
 
     print("Podo el arbol\n")
-    arbol.reduced_error_pruning(x_test, y_test)
+    arbol.reduced_error_pruning2(x_test, y_test)
     print(arbol)
     arbol.graficar()
     y_pred = arbol.predict(x_test)

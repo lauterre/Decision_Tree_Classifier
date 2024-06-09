@@ -1,9 +1,11 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
+from copy import deepcopy
 from typing import Optional
 import pandas as pd
 import _impureza
 from graficador import GraficadorArbol
+from metricas import Metricas
 
 class Clasificador(ABC):
     @abstractmethod
@@ -58,6 +60,16 @@ class Arbol(ABC): # seria ArbolNario
         for subarbol in self.subs:
             subarbol.ancho_nivel(nivel + 1, nodos)
         return nodos[nivel]
+    
+    def posorden(self) -> list["Arbol"]:
+        recorrido = []
+        for subarbol in self.subs:
+            recorrido += subarbol.posorden()
+        recorrido.append(self)
+        return recorrido
+    
+    def __eq__(self, __value: object) -> bool:
+        return isinstance(__value, ArbolClasificador) and self.__dict__ == __value.__dict__
     
     @abstractmethod
     def agregar_subarbol(self, subarbol):
@@ -116,7 +128,6 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
             if key in Hiperparametros().__dict__:  # Solo copiar los atributos que están en Hiperparametros
                 setattr(subarbol, key, value)
         self.subs.append(subarbol)
-
     
     def _impureza(self):
         return self.impureza.calcular(self.target)
@@ -124,6 +135,32 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
     def graficar(self):
         plotter = GraficadorArbol(self)
         plotter.plot()
+
+    def podar(self, nodo: "ArbolClasificador") -> "ArbolClasificador":
+        arbol_podado = deepcopy(self)
+        def _interna(arbol, nodo):
+            if arbol == nodo:
+                arbol.subs = []
+            else:
+                for sub in arbol_podado.subs:
+                    sub.podar(nodo)
+        _interna(arbol_podado, nodo)
+        return arbol_podado
+    
+    def reduced_error_pruning2(self, x_val, y_val) -> "ArbolClasificador":
+        # TODO: check si esta entrenado
+        arbol_completo = deepcopy(self)
+        error_inicial = Metricas.error(y_val, arbol_completo.predict(x_val))
+        nodos = arbol_completo.posorden()
+        for nodo in nodos:
+            if not nodo.es_hoja():
+                arbol_podado = arbol_completo.podar(nodo)
+                nuevo_error = Metricas.error(y_val, arbol_podado.predict(x_val))
+                if nuevo_error < error_inicial:
+                    arbol_completo = arbol_podado
+                    error_inicial = nuevo_error
+        return arbol_completo
+
 
     @abstractmethod
     def _mejor_atributo_split(self) -> str | None:
