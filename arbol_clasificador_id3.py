@@ -200,12 +200,11 @@ def probar(df, target: str):
     print(f"\n accuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
     print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio='ponderado')}\n")
 
-    # print("Podo el arbol\n")
-    # arbol.reduced_error_pruning(x_test, y_test)
-    # print(arbol)
-    # arbol.graficar()
-    # y_pred = arbol.predict(x_test)
-    
+    print("Podo el arbol\n")
+    podado = arbol.reduced_error_pruning2(x_test, y_test)
+    print(podado)
+    podado.graficar()
+    y_pred = podado.predict(x_test)    
 
     # print(f"\n accuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
     # print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio='ponderado')}\n")
