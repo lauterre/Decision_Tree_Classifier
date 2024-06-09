@@ -1,9 +1,8 @@
-from copy import deepcopy
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
 from typing import Any, Callable, Optional
-from _impureza import Entropia, ErrorClasificacion
+from _impureza import Entropia
 from _superclases import ArbolClasificador
 from metricas import Metricas
 
@@ -29,9 +28,9 @@ class ArbolClasificadorC45(ArbolClasificador):
             nuevo.signo_split_anterior = "<"
         
         elif operacion == "mayor":
-            nuevo.data = self.data[self.data[atributo] > valor]
-            nuevo.target = self.target[self.data[atributo] > valor]
-            nuevo.signo_split_anterior = ">"
+            nuevo.data = self.data[self.data[atributo] >= valor]
+            nuevo.target = self.target[self.data[atributo] >= valor]
+            nuevo.signo_split_anterior = ">="
         
         elif operacion == "igual":
             nueva_data = self.data[self.data[atributo] == valor]
@@ -334,8 +333,8 @@ if __name__ == "__main__":
     df = pd.DataFrame(data=iris.data, columns=iris.feature_names)
     df['target'] = iris.target
 
-    # print("pruebo con iris")
-    # probar(df, "target")
+    print("pruebo con iris")
+    probar(df, "target")
 
     # print("pruebo con tennis")
     # tennis = pd.read_csv("./datasets/PlayTennis.csv")
@@ -350,5 +349,6 @@ if __name__ == "__main__":
     
     # probar(patients, "Level")
     
-    titanic = pd.read_csv("./datasets/titanic.csv")
-    probar(titanic, "Survived")
+    # titanic = pd.read_csv("./datasets/titanic.csv")
+    # print("pruebo con titanic")
+    # probar(titanic, "Survived")
