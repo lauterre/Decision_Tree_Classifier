@@ -161,27 +161,27 @@ class ArbolClasificadorC45(ArbolClasificador):
         
     def predict(self, X: pd.DataFrame) -> list:
         predicciones = []
-        def _recorrer(arbol, fila: pd.Series) -> None:
+        def _recorrer(arbol, fila: pd.Series):
             if arbol.es_hoja():
-                predicciones.append(arbol.clase)
+                return arbol.clase
             else:
                 valor = fila[arbol.atributo_split]
                 if arbol.es_atributo_numerico(arbol.atributo_split):  # es split numerico
                     if valor < arbol.umbral_split:
-                        _recorrer(arbol.subs[0], fila)
-                    elif valor > arbol.umbral_split:
-                        _recorrer(arbol.subs[1], fila)
+                        return _recorrer(arbol.subs[0], fila)
+                    else:
+                        return _recorrer(arbol.subs[1], fila)
                 else:
                     for subarbol in arbol.subs:
                         if valor == subarbol.valor_split_anterior:
-                            _recorrer(subarbol, fila)
-        
+                            return _recorrer(subarbol, fila)
+                    raise ValueError(f"No se encontró un subárbol para el valor {valor} del atributo {arbol.atributo_split}")
+    
         for _, fila in X.iterrows():
-            _recorrer(self, fila)
+            prediccion = _recorrer(self, fila)
+            predicciones.append(prediccion)
+
         return predicciones
-    # para debuggear
-    def __repr__(self) -> str:
-        return f"ArbolC45(Error: {round(ErrorClasificacion().calcular(self.target), 3)})"
 
     def reduced_error_pruning(self, x_test: Any, y_test: Any):
         def _interna_rep(arbol: ArbolClasificadorC45, x_test, y_test):
@@ -288,15 +288,23 @@ def probar(df, target: str):
 
     x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=0.2, random_state=42)
-    arbol = ArbolClasificadorC45()
+    arbol = ArbolClasificadorC45(max_prof = 4)
     arbol.fit(x_train, y_train)
     print(arbol)
     arbol.graficar()
-    # y_pred = arbol.predict(x_val)
+    y_pred_train = arbol.predict(x_train)
+    y_pred_test = arbol.predict(x_test)
+    y_pred_val = arbol.predict(x_val)
     
-    # print(f"\naccuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
-    # print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio='ponderado')}\n")
+    print(f"accuracy en set de entrenamiento: {Metricas.accuracy_score(y_train, y_pred_train):.2f}")
+    print(f"f1-score en set de entrenamiento: {Metricas.f1_score(y_train, y_pred_train, promedio='ponderado')}\n")
 
+    print(f"accuracy en set de validacion: {Metricas.accuracy_score(y_val, y_pred_val):.2f}")
+    print(f"f1-score en set de validacion: {Metricas.f1_score(y_val, y_pred_val, promedio='ponderado')}\n")
+    
+    print(f"accuracy en set de prueba: {Metricas.accuracy_score(y_test, y_pred_test):.2f}")
+    print(f"f1-score en set de prueba: {Metricas.f1_score(y_test, y_pred_test, promedio='ponderado')}\n")
+    
     print("Podo el arbol\n")
 
     podado = arbol.reduced_error_pruning2(x_val, y_val)
@@ -304,11 +312,19 @@ def probar(df, target: str):
     print(podado)
     podado.graficar()
 
-    y_pred = podado.predict(x_test)
+    y_pred_train = podado.predict(x_train)
+    y_pred_test = podado.predict(x_test)
+    y_pred_val = podado.predict(x_val)
+    
+    print(f"accuracy en set de entrenamiento: {Metricas.accuracy_score(y_train, y_pred_train):.2f}")
+    print(f"f1-score en set de entrenamiento: {Metricas.f1_score(y_train, y_pred_train, promedio='ponderado')}\n")
 
-    print(f"\naccuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
-    print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio='ponderado')}\n")
-
+    print(f"accuracy en set de validacion: {Metricas.accuracy_score(y_val, y_pred_val):.2f}")
+    print(f"f1-score en set de validacion: {Metricas.f1_score(y_val, y_pred_val, promedio='ponderado')}\n")
+    
+    print(f"accuracy en set de prueba: {Metricas.accuracy_score(y_test, y_pred_test):.2f}")
+    print(f"f1-score en set de prueba: {Metricas.f1_score(y_test, y_pred_test, promedio='ponderado')}\n")
+    
 
 if __name__ == "__main__":
     import sklearn.datasets
@@ -317,8 +333,8 @@ if __name__ == "__main__":
     df = pd.DataFrame(data=iris.data, columns=iris.feature_names)
     df['target'] = iris.target
 
-    print("pruebo con iris")
-    probar(df, "target")
+    # print("pruebo con iris")
+    # probar(df, "target")
 
     # print("pruebo con tennis")
     # tennis = pd.read_csv("./datasets/PlayTennis.csv")
@@ -333,3 +349,5 @@ if __name__ == "__main__":
     
     # probar(patients, "Level")
     
+    titanic = pd.read_csv("./datasets/titanic.csv")
+    probar(titanic, "Survived")
