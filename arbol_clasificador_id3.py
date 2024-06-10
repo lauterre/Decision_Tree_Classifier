@@ -9,8 +9,21 @@ class ArbolClasificadorID3(ArbolClasificador):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self.impureza = Entropia()
+
+    def copy(self):
+        nuevo = ArbolClasificadorID3(**self.__dict__) # no funciona bien, solo pasa los hipers?
+        nuevo.data = self.data.copy()
+        nuevo.target = self.target.copy()
+        nuevo.target_categorias = self.target_categorias.copy()
+        nuevo.set_clase()
+        nuevo.atributo_split = self.atributo_split
+        nuevo.atributo_split_anterior = self.atributo_split_anterior
+        nuevo.valor_split_anterior = self.valor_split_anterior
+        nuevo.signo_split_anterior = self.signo_split_anterior
+        nuevo.impureza = self.impureza
+        nuevo.subs = [sub.copy() for sub in self.subs]
+        return nuevo
     
-    # Lo podemos pasar a ArbolClasificador, usar clausura?
     def _mejor_atributo_split(self) -> str | None:
         mejor_ig = -1
         mejor_atributo = None
@@ -24,14 +37,6 @@ class ArbolClasificadorID3(ArbolClasificador):
                     mejor_atributo = atributo
 
         return mejor_atributo
-    
-    def copy(self):
-        nuevo = ArbolClasificadorID3(**self.__dict__)
-        nuevo.data = self.data.copy()
-        nuevo.target = self.target.copy()
-        nuevo.target_categorias = self.target_categorias.copy()
-        nuevo.subs = [sub.copy() for sub in self.subs]
-        return nuevo
         
     def _split(self, atributo: str) -> None:
         self.atributo_split = atributo  # guardo el atributo por el cual spliteo
@@ -54,14 +59,27 @@ class ArbolClasificadorID3(ArbolClasificador):
         def split(arbol, atributo):
             arbol._split(atributo)
 
-        return self.impureza._information_gain_base(self, atributo, split)
+        return self.impureza._information_gain_base(self, atributo, split) # quizas renombrar a ganancia (o evaluar_split) en impureza
+    
+    def _puede_splitearse(self, prof_acum: int, mejor_atributo: str) -> bool:
+        copia = self.copy()
+        information_gain = self._information_gain(mejor_atributo)
+        copia._split(mejor_atributo)
+        for subarbol in copia.subs:
+            if self.min_obs_hoja != -1 and subarbol._total_samples() < self.min_obs_hoja:
+                return False
+            
+        return not (len(self.target.unique()) == 1 or len(self.data.columns) == 0
+                    or (self.max_prof != -1 and self.max_prof <= prof_acum)
+                    or (self.min_obs_nodo != -1 and self.min_obs_nodo > self._total_samples())
+                    or (self.min_infor_gain != -1 and self.min_infor_gain > information_gain))
         
     def fit(self, X: pd.DataFrame, y: pd.Series):
         self.target = y
         self.data = X
         self.set_clase()
 
-        def _interna(arbol: ArbolClasificadorID3, prof_acum: int = 1):
+        def _interna(arbol, prof_acum: int = 1):
             arbol.set_target_categorias(y)
 
             mejor_atributo = arbol._mejor_atributo_split()
@@ -139,7 +157,6 @@ class ArbolClasificadorID3(ArbolClasificador):
                 out.append(prefijo_hoja + clase)
         _interna(self)
         return "\n".join(out)
-        
 
 def probar(df, target: str):
     X = df.drop(target, axis=1)

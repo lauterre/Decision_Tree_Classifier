@@ -13,12 +13,19 @@ class ArbolClasificadorC45(ArbolClasificador):
         super().__init__(**kwargs)
         self.umbral_split: Optional[float] = None
         self.impureza = Entropia()
-
+    
     def copy(self):
-        nuevo = ArbolClasificadorC45(**self.__dict__)
+        nuevo = ArbolClasificadorC45(**self.__dict__) # solo pasa los hipers?
         nuevo.data = self.data.copy()
         nuevo.target = self.target.copy()
         nuevo.target_categorias = self.target_categorias.copy()
+        nuevo.set_clase()
+        nuevo.atributo_split = self.atributo_split
+        nuevo.atributo_split_anterior = self.atributo_split_anterior
+        nuevo.valor_split_anterior = self.valor_split_anterior
+        nuevo.signo_split_anterior = self.signo_split_anterior
+        nuevo.impureza = self.impureza
+        nuevo.umbral_split = self.umbral_split # por esto es distinto a id3
         nuevo.subs = [sub.copy() for sub in self.subs]
         return nuevo
         
@@ -67,7 +74,7 @@ class ArbolClasificadorC45(ArbolClasificador):
     def es_atributo_numerico(self, atributo: str) -> bool:
         return pd.api.types.is_numeric_dtype(self.data[atributo])
     
-    def _information_gain(self, atributo: str) -> float:  #IMPORTANTE: este information gain calcula el mejor umbral de ser necesario
+    def _information_gain(self, atributo: str) -> float:  #calcula el mejor umbral de ser necesario
         def split(arbol, atributo):
             arbol._split(atributo)
         
@@ -108,7 +115,7 @@ class ArbolClasificadorC45(ArbolClasificador):
             def split_num(arbol, atributo):
                 arbol._split_numerico(atributo, umbral)
             
-            return self.impureza._information_gain_base(self, atributo, split_num) # clausura, se deberia llevar el umbral
+            return self.impureza._information_gain_base(self, atributo, split_num)
     
     def _mejor_umbral_split(self, atributo: str) -> float:
         self.data = self.data.sort_values(by=atributo)
@@ -119,7 +126,7 @@ class ArbolClasificadorC45(ArbolClasificador):
         i = 0
         while i < len(valores_unicos) - 1:
             umbral = (valores_unicos[i] + valores_unicos[i + 1]) / 2
-            ig = self.__information_gain_numerico(atributo, umbral) # uso information_gain, gain_ratio es para la seleccion de atributo
+            ig = self.__information_gain_numerico(atributo, umbral)
             if ig > mejor_ig:
                 mejor_ig = ig
                 mejor_umbral = umbral
@@ -128,12 +135,27 @@ class ArbolClasificadorC45(ArbolClasificador):
         return mejor_umbral
     
     # TODO: quedo igual al de id3
+    def _puede_splitearse(self, prof_acum: int, mejor_atributo: str) -> bool:
+        copia = self.copy()
+        information_gain = self._information_gain(mejor_atributo)
+        copia._split(mejor_atributo)
+        for subarbol in copia.subs:
+            if self.min_obs_hoja != -1 and subarbol._total_samples() < self.min_obs_hoja:
+                return False
+            
+        return not (len(self.target.unique()) == 1 or len(self.data.columns) == 0
+                    or (self.max_prof != -1 and self.max_prof <= prof_acum)
+                    or (self.min_obs_nodo != -1 and self.min_obs_nodo > self._total_samples())
+                    or (self.min_infor_gain != -1 and self.min_infor_gain > information_gain))
+    
+    # TODO: quedo igual al de id3
     def fit(self, X: pd.DataFrame, y: pd.Series):
+        # Check no fiteado
         self.target = y.copy()
         self.data = X.copy()
         self.set_clase()
 
-        def _interna(arbol: ArbolClasificadorC45, prof_acum: int = 1):
+        def _interna(arbol, prof_acum: int = 1):
             arbol.set_target_categorias(y)
 
             mejor_atributo = arbol._mejor_atributo_split()
@@ -303,13 +325,13 @@ if __name__ == "__main__":
 
     probar(tennis, "Play Tennis")
 
-    print("pruebo con patients") 
+    # print("pruebo con patients") 
 
-    patients = pd.read_csv("./datasets/cancer_patients.csv", index_col=0)
-    patients = patients.drop("Patient Id", axis = 1)
-    patients.loc[:, patients.columns != "Age"] = patients.loc[:, patients.columns != "Age"].astype(str) # para que sean categorias
+    # patients = pd.read_csv("./datasets/cancer_patients.csv", index_col=0)
+    # patients = patients.drop("Patient Id", axis = 1)
+    # patients.loc[:, patients.columns != "Age"] = patients.loc[:, patients.columns != "Age"].astype(str) # para que sean categorias
     
-    probar(patients, "Level")
+    # probar(patients, "Level")
     
     titanic = pd.read_csv("./datasets/titanic.csv")
     print("pruebo con titanic")
