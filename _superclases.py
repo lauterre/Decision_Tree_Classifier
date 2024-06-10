@@ -61,9 +61,6 @@ class Arbol(ABC): # seria ArbolNario
         recorrido.append(self)
         return recorrido
     
-    def __eq__(self, __value: object) -> bool:
-        return isinstance(__value, ArbolClasificador) and self.__dict__ == __value.__dict__
-    
     @abstractmethod
     def agregar_subarbol(self, subarbol):
         raise NotImplementedError
@@ -135,6 +132,40 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
         graficador = GraficadorArbol(self)
         graficador.graficar()
 
+    def reduced_error_pruning(self, x_test: pd.DataFrame, y_test: pd.Series):
+        def _interna_rep(arbol: ArbolClasificador, x_test, y_test):
+            if not arbol.es_hoja():
+                for subarbol in arbol.subs:
+                    _interna_rep(subarbol, x_test, y_test)
+
+                pred_raiz: list[str] = arbol.predict(x_test)
+                error_clasif_raiz = Metricas.error(y_test, pred_raiz)
+
+                error_clasif_ramas = 0.0
+
+                for subarbol in arbol.subs:
+                    pred_podada = subarbol.predict(x_test) # type: ignore
+                    error_clasif_podada = Metricas.error(y_test, pred_podada)
+                    error_clasif_ramas = error_clasif_ramas + error_clasif_podada
+
+                if error_clasif_ramas < error_clasif_raiz:
+                    print(" * Podar \n")
+                    arbol.subs = []
+                else:
+                    print(" * No podar \n")
+
+        _interna_rep(self, x_test, y_test)
+
+    
+    def __eq__(self, __value: object) -> bool:
+        return isinstance(__value, ArbolClasificador) and (self.data.equals(__value.data)
+                                                           and self.target.equals(__value.target) 
+                                                           and self.atributo_split == __value.atributo_split 
+                                                           and self.atributo_split_anterior == __value.atributo_split_anterior 
+                                                           and self.valor_split_anterior == __value.valor_split_anterior 
+                                                           and self.signo_split_anterior == __value.signo_split_anterior 
+                                                           and self.clase == __value.clase)
+
     def _podar(self, nodo: "ArbolClasificador") -> "ArbolClasificador":
         arbol_podado = deepcopy(self)
         def _interna(arbol, nodo):
@@ -146,7 +177,7 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
         _interna(arbol_podado, nodo)
         return arbol_podado
     
-    def reduced_error_pruning2(self, x_val, y_val) -> "ArbolClasificador":
+    def reduced_error_pruning2(self, x_val, y_val, margen: float = 0) -> "ArbolClasificador":
         # TODO: check si esta entrenado
         arbol_completo = deepcopy(self)
         error_inicial = Metricas.error(y_val, arbol_completo.predict(x_val))
@@ -155,17 +186,13 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
             if not nodo.es_hoja():
                 arbol_podado = arbol_completo._podar(nodo)
                 nuevo_error = Metricas.error(y_val, arbol_podado.predict(x_val))
-                if nuevo_error < error_inicial:
+                if nuevo_error - margen < error_inicial:
                     arbol_completo = arbol_podado
                     error_inicial = nuevo_error
         return arbol_completo
 
     @abstractmethod
     def _mejor_atributo_split(self) -> str | None:
-        raise NotImplementedError
-    
-    @abstractmethod
-    def _information_gain(self, atributo: str) -> float:
         raise NotImplementedError
     
     @abstractmethod
