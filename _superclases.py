@@ -61,9 +61,6 @@ class Arbol(ABC): # seria ArbolNario
         recorrido.append(self)
         return recorrido
     
-    def __eq__(self, __value: object) -> bool:
-        return isinstance(__value, ArbolClasificador) and self.__dict__ == __value.__dict__
-    
     @abstractmethod
     def agregar_subarbol(self, subarbol):
         raise NotImplementedError
@@ -134,6 +131,15 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
     def graficar(self):
         graficador = GraficadorArbol(self)
         graficador.graficar()
+    
+    def __eq__(self, __value: object) -> bool:
+        return isinstance(__value, ArbolClasificador) and (self.data.equals(__value.data)
+                                                           and self.target.equals(__value.target) 
+                                                           and self.atributo_split == __value.atributo_split 
+                                                           and self.atributo_split_anterior == __value.atributo_split_anterior 
+                                                           and self.valor_split_anterior == __value.valor_split_anterior 
+                                                           and self.signo_split_anterior == __value.signo_split_anterior 
+                                                           and self.clase == __value.clase)
 
     def _podar(self, nodo: "ArbolClasificador") -> "ArbolClasificador":
         arbol_podado = deepcopy(self)
@@ -146,7 +152,7 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
         _interna(arbol_podado, nodo)
         return arbol_podado
     
-    def reduced_error_pruning2(self, x_val, y_val) -> "ArbolClasificador":
+    def reduced_error_pruning2(self, x_val, y_val, margen: float = 0) -> "ArbolClasificador":
         # TODO: check si esta entrenado
         arbol_completo = deepcopy(self)
         error_inicial = Metricas.error(y_val, arbol_completo.predict(x_val))
@@ -155,17 +161,13 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
             if not nodo.es_hoja():
                 arbol_podado = arbol_completo._podar(nodo)
                 nuevo_error = Metricas.error(y_val, arbol_podado.predict(x_val))
-                if nuevo_error < error_inicial:
+                if nuevo_error - margen < error_inicial:
                     arbol_completo = arbol_podado
                     error_inicial = nuevo_error
         return arbol_completo
 
     @abstractmethod
     def _mejor_atributo_split(self) -> str | None:
-        raise NotImplementedError
-    
-    @abstractmethod
-    def _information_gain(self, atributo: str) -> float:
         raise NotImplementedError
     
     @abstractmethod

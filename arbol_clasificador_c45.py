@@ -160,7 +160,7 @@ class ArbolClasificadorC45(ArbolClasificador):
                     for subarbol in arbol.subs:
                         if valor == subarbol.valor_split_anterior:
                             return _recorrer(subarbol, fila)
-                    raise ValueError(f"No se encontró un subárbol para el valor {valor} del atributo {arbol.atributo_split}")
+                    #raise ValueError(f"No se encontró un subárbol para el valor {valor} del atributo {arbol.atributo_split}")
     
         for _, fila in X.iterrows():
             prediccion = _recorrer(self, fila)
@@ -275,40 +275,40 @@ def probar(df, target: str):
     x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=0.2, random_state=42)
     arbol = ArbolClasificadorC45(max_prof = 5)
     arbol.fit(x_train, y_train)
-    print(arbol)
+    #print(arbol)
     arbol.graficar()
     y_pred_train = arbol.predict(x_train)
     y_pred_test = arbol.predict(x_test)
     y_pred_val = arbol.predict(x_val)
     
-    print(f"accuracy en set de entrenamiento: {Metricas.accuracy_score(y_train, y_pred_train):.2f}")
-    print(f"f1-score en set de entrenamiento: {Metricas.f1_score(y_train, y_pred_train, promedio='ponderado')}\n")
+    # print(f"accuracy en set de entrenamiento: {Metricas.accuracy_score(y_train, y_pred_train)}")
+    # print(f"f1-score en set de entrenamiento: {Metricas.f1_score(y_train, y_pred_train, promedio='ponderado')}\n")
 
-    print(f"accuracy en set de validacion: {Metricas.accuracy_score(y_val, y_pred_val):.2f}")
-    print(f"f1-score en set de validacion: {Metricas.f1_score(y_val, y_pred_val, promedio='ponderado')}\n")
+    # print(f"accuracy en set de validacion: {Metricas.accuracy_score(y_val, y_pred_val)}")
+    # print(f"f1-score en set de validacion: {Metricas.f1_score(y_val, y_pred_val, promedio='ponderado')}\n")
     
-    print(f"accuracy en set de prueba: {Metricas.accuracy_score(y_test, y_pred_test):.2f}")
+    print(f"accuracy en set de prueba: {Metricas.accuracy_score(y_test, y_pred_test)}")
     print(f"f1-score en set de prueba: {Metricas.f1_score(y_test, y_pred_test, promedio='ponderado')}\n")
     
-    # print("Podo el arbol\n")
+    print("Podo el arbol\n")
 
-    # podado = arbol.reduced_error_pruning2(x_val, y_val)
+    podado = arbol.reduced_error_pruning2(x_val, y_val, margen=0.2)
 
-    # print(podado)
-    # podado.graficar()
+    #print(podado)
+    podado.graficar()
 
-    # y_pred_train = podado.predict(x_train)
-    # y_pred_test = podado.predict(x_test)
-    # y_pred_val = podado.predict(x_val)
+    y_pred_train = podado.predict(x_train)
+    y_pred_test = podado.predict(x_test)
+    y_pred_val = podado.predict(x_val)
     
     # print(f"accuracy en set de entrenamiento: {Metricas.accuracy_score(y_train, y_pred_train):.2f}")
     # print(f"f1-score en set de entrenamiento: {Metricas.f1_score(y_train, y_pred_train, promedio='ponderado')}\n")
 
-    # print(f"accuracy en set de validacion: {Metricas.accuracy_score(y_val, y_pred_val):.2f}")
+    # print(f"accuracy en set de validacion: {Metricas.accuracy_score(y_val, y_pred_val)}")
     # print(f"f1-score en set de validacion: {Metricas.f1_score(y_val, y_pred_val, promedio='ponderado')}\n")
     
-    # print(f"accuracy en set de prueba: {Metricas.accuracy_score(y_test, y_pred_test):.2f}")
-    # print(f"f1-score en set de prueba: {Metricas.f1_score(y_test, y_pred_test, promedio='ponderado')}\n")
+    print(f"accuracy en set de prueba: {Metricas.accuracy_score(y_test, y_pred_test)}")
+    print(f"f1-score en set de prueba: {Metricas.f1_score(y_test, y_pred_test, promedio='ponderado')}\n")
     
 
 if __name__ == "__main__":
@@ -318,21 +318,21 @@ if __name__ == "__main__":
     df = pd.DataFrame(data=iris.data, columns=iris.feature_names)
     df['target'] = iris.target
 
-    # print("pruebo con iris")
-    # probar(df, "target")
+    print("pruebo con iris")
+    probar(df, "target")
 
-    # print("pruebo con tennis")
-    # tennis = pd.read_csv("./datasets/PlayTennis.csv")
+    print("pruebo con tennis")
+    tennis = pd.read_csv("./datasets/PlayTennis.csv")
 
-    # probar(tennis, "Play Tennis")
+    probar(tennis, "Play Tennis")
 
-    # print("pruebo con patients") 
+    print("pruebo con patients") 
 
-    # patients = pd.read_csv("./datasets/cancer_patients.csv", index_col=0)
-    # patients = patients.drop("Patient Id", axis = 1)
-    # patients.loc[:, patients.columns != "Age"] = patients.loc[:, patients.columns != "Age"].astype(str) # para que sean categorias
+    patients = pd.read_csv("./datasets/cancer_patients.csv", index_col=0)
+    patients = patients.drop("Patient Id", axis = 1)
+    patients.loc[:, patients.columns != "Age"] = patients.loc[:, patients.columns != "Age"].astype(str) # para que sean categorias
     
-    # probar(patients, "Level")
+    probar(patients, "Level")
     
     titanic = pd.read_csv("./datasets/titanic.csv")
     print("pruebo con titanic")
