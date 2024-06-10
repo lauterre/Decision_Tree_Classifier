@@ -1,15 +1,12 @@
 import pandas as pd
+import numpy as np
 from _superclases import Clasificador
 from metricas import Metricas
 
 class Herramientas:
-        
     @staticmethod
-    
     def cross_validation(features: pd.DataFrame, target: pd.Series, classifier: Clasificador, k_fold:int) -> float:
-
         lista_indices = features.index
-        k_fold
         regist_grupos = len(lista_indices) // k_fold
         groups = []
         
@@ -52,3 +49,28 @@ class Herramientas:
             
         #print (k_score_total/k_fold)
         return k_score_total/k_fold
+
+    @staticmethod
+
+    def dividir_set(X, y, test_size=0.2, val_size=0.2, val=False, random_state=None):
+        if random_state is not None:
+            np.random.seed(random_state)
+        
+        indices = np.arange(len(X))
+        np.random.shuffle(indices)
+        
+        X = X.iloc[indices]
+        y = y.iloc[indices]
+        
+        n_total = len(X)
+        n_test = int(n_total * test_size)
+        n_val = int(n_total * val_size) if val else 0
+        
+        X_test, y_test = X.iloc[:n_test], y.iloc[:n_test]
+        X_val, y_val = X.iloc[n_test:n_test+n_val], y.iloc[n_test:n_test+n_val]
+        X_train, y_train = X.iloc[n_test+n_val:], y.iloc[n_test+n_val:]
+        
+        if val:
+            return X_train, X_val, X_test, y_train, y_val, y_test
+        else:
+            return X_train, X_test, y_train, y_test

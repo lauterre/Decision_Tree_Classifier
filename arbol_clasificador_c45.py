@@ -4,6 +4,7 @@ import numpy as np
 from typing import Any, Optional
 from _impureza import Entropia
 from _superclases import ArbolClasificador
+from herramientas import Herramientas
 from metricas import Metricas
 
 
@@ -246,8 +247,9 @@ def probar(df, target: str):
     X = df.drop(target, axis=1)
     y = df[target]
 
-    x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state=42)
     x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=0.2, random_state=42)
+    #x_train, x_val, x_test, y_train, y_val, y_test = Herramientas.dividir_set(X, y, test_size=0.2, val_size=0.2, val=True, random_state=42)
     arbol = ArbolClasificadorC45(max_prof = 5)
     arbol.fit(x_train, y_train)
     #print(arbol)
@@ -256,25 +258,25 @@ def probar(df, target: str):
     y_pred_test = arbol.predict(x_test)
     y_pred_val = arbol.predict(x_val)
     
-    # print(f"accuracy en set de entrenamiento: {Metricas.accuracy_score(y_train, y_pred_train)}")
-    # print(f"f1-score en set de entrenamiento: {Metricas.f1_score(y_train, y_pred_train, promedio='ponderado')}\n")
+    print(f"accuracy en set de entrenamiento: {Metricas.accuracy_score(y_train, y_pred_train)}")
+    print(f"f1-score en set de entrenamiento: {Metricas.f1_score(y_train, y_pred_train, promedio='ponderado')}\n")
 
-    # print(f"accuracy en set de validacion: {Metricas.accuracy_score(y_val, y_pred_val)}")
-    # print(f"f1-score en set de validacion: {Metricas.f1_score(y_val, y_pred_val, promedio='ponderado')}\n")
+    print(f"accuracy en set de validacion: {Metricas.accuracy_score(y_val, y_pred_val)}")
+    print(f"f1-score en set de validacion: {Metricas.f1_score(y_val, y_pred_val, promedio='ponderado')}\n")
     
     print(f"accuracy en set de prueba: {Metricas.accuracy_score(y_test, y_pred_test)}")
     print(f"f1-score en set de prueba: {Metricas.f1_score(y_test, y_pred_test, promedio='ponderado')}\n")
     
-    print("Podo el arbol\n")
+    # print("Podo el arbol\n")
 
-    arbol.reduced_error_pruning(x_val, y_val)
+    # arbol.reduced_error_pruning(x_val, y_val)
 
-    #print(podado)
-    arbol.graficar()
+    # #print(podado)
+    # arbol.graficar()
 
-    y_pred_train = arbol.predict(x_train)
-    y_pred_test = arbol.predict(x_test)
-    y_pred_val = arbol.predict(x_val)
+    # y_pred_train = arbol.predict(x_train)
+    # y_pred_test = arbol.predict(x_test)
+    # y_pred_val = arbol.predict(x_val)
     
     # print(f"accuracy en set de entrenamiento: {Metricas.accuracy_score(y_train, y_pred_train):.2f}")
     # print(f"f1-score en set de entrenamiento: {Metricas.f1_score(y_train, y_pred_train, promedio='ponderado')}\n")
@@ -282,8 +284,8 @@ def probar(df, target: str):
     # print(f"accuracy en set de validacion: {Metricas.accuracy_score(y_val, y_pred_val)}")
     # print(f"f1-score en set de validacion: {Metricas.f1_score(y_val, y_pred_val, promedio='ponderado')}\n")
     
-    print(f"accuracy en set de prueba: {Metricas.accuracy_score(y_test, y_pred_test)}")
-    print(f"f1-score en set de prueba: {Metricas.f1_score(y_test, y_pred_test, promedio='ponderado')}\n")
+    # print(f"accuracy en set de prueba: {Metricas.accuracy_score(y_test, y_pred_test)}")
+    # print(f"f1-score en set de prueba: {Metricas.f1_score(y_test, y_pred_test, promedio='ponderado')}\n")
     
 
 if __name__ == "__main__":
