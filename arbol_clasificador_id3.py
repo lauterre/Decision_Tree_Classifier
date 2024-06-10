@@ -93,37 +93,6 @@ class ArbolClasificadorID3(ArbolClasificador):
 
         return predicciones
         
-    # def _error_clasificacion(self, y, y_pred):
-    #     x = []
-    #     for i in range(len(y)):
-    #         x.append(y[i] != y_pred[i])
-    #     return np.mean(x)
-        
-    def reduced_error_pruning(self, x_test: Any, y_test: Any):
-        def _interna_rep(arbol: ArbolClasificadorID3, x_test, y_test):
-            if not arbol.es_hoja():
-                for subarbol in arbol.subs:
-                    _interna_rep(subarbol, x_test, y_test)
-
-                    pred_raiz: list[str] = arbol.predict(x_test)
-                    error_clasif_raiz = Metricas.error(y_test, pred_raiz)
-
-                    error_clasif_ramas = 0.0
-
-                    for rama in arbol.subs:
-                        new_arbol: ArbolClasificadorID3 = rama
-                        pred_podada = new_arbol.predict(x_test)
-                        error_clasif_podada = Metricas.error(y_test, pred_podada)
-                        error_clasif_ramas = error_clasif_ramas + error_clasif_podada
-
-                    if error_clasif_ramas < error_clasif_raiz:
-                        #print(" * Podar \n")
-                        arbol.subs = []
-                    #else:
-                        #print(" * No podar \n")
-
-        _interna_rep(self, x_test, y_test)
-
     def __str__(self) -> str:
         out = []
         def _interna(self, prefijo: str = '  ', es_ultimo: bool = True) -> None:

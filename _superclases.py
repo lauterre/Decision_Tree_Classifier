@@ -131,6 +131,31 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
     def graficar(self):
         graficador = GraficadorArbol(self)
         graficador.graficar()
+
+    def reduced_error_pruning(self, x_test: pd.DataFrame, y_test: pd.Series):
+        def _interna_rep(arbol: ArbolClasificador, x_test, y_test):
+            if not arbol.es_hoja():
+                for subarbol in arbol.subs:
+                    _interna_rep(subarbol, x_test, y_test)
+
+                pred_raiz: list[str] = arbol.predict(x_test)
+                error_clasif_raiz = Metricas.error(y_test, pred_raiz)
+
+                error_clasif_ramas = 0.0
+
+                for subarbol in arbol.subs:
+                    pred_podada = subarbol.predict(x_test) # type: ignore
+                    error_clasif_podada = Metricas.error(y_test, pred_podada)
+                    error_clasif_ramas = error_clasif_ramas + error_clasif_podada
+
+                if error_clasif_ramas < error_clasif_raiz:
+                    print(" * Podar \n")
+                    arbol.subs = []
+                else:
+                    print(" * No podar \n")
+
+        _interna_rep(self, x_test, y_test)
+
     
     def __eq__(self, __value: object) -> bool:
         return isinstance(__value, ArbolClasificador) and (self.data.equals(__value.data)

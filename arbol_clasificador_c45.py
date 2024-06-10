@@ -151,7 +151,7 @@ class ArbolClasificadorC45(ArbolClasificador):
                 return arbol.clase
             else:
                 valor = fila[arbol.atributo_split]
-                if arbol.es_atributo_numerico(arbol.atributo_split):  # es split numerico
+                if arbol.es_atributo_numerico(arbol.atributo_split):  # es split numerico, TODO: lo podes ver con el signo
                     if valor < arbol.umbral_split:
                         return _recorrer(arbol.subs[0], fila)
                     else:
@@ -167,31 +167,6 @@ class ArbolClasificadorC45(ArbolClasificador):
             predicciones.append(prediccion)
 
         return predicciones
-
-    def reduced_error_pruning(self, x_test: Any, y_test: Any):
-        def _interna_rep(arbol: ArbolClasificadorC45, x_test, y_test):
-            if not arbol.es_hoja():
-                for subarbol in arbol.subs:
-                    _interna_rep(subarbol, x_test, y_test)
-
-                    pred_raiz: list[str] = arbol.predict(x_test)
-                    error_clasif_raiz = Metricas.error(y_test, pred_raiz)
-
-                    error_clasif_ramas = 0.0
-
-                    for rama in arbol.subs:
-                        new_arbol: ArbolClasificadorC45 = rama
-                        pred_podada = new_arbol.predict(x_test)
-                        error_clasif_podada = Metricas.error(y_test, pred_podada)
-                        error_clasif_ramas = error_clasif_ramas + error_clasif_podada
-
-                    if error_clasif_ramas < error_clasif_raiz:
-                        #print(" * Podar \n")
-                        arbol.subs = []
-                    #else:
-                        #print(" * No podar \n")
-
-        _interna_rep(self, x_test, y_test)
 
     def __str__(self) -> str:
         out = []
@@ -292,14 +267,14 @@ def probar(df, target: str):
     
     print("Podo el arbol\n")
 
-    podado = arbol.reduced_error_pruning2(x_val, y_val, margen=0.2)
+    arbol.reduced_error_pruning(x_val, y_val)
 
     #print(podado)
-    podado.graficar()
+    arbol.graficar()
 
-    y_pred_train = podado.predict(x_train)
-    y_pred_test = podado.predict(x_test)
-    y_pred_val = podado.predict(x_val)
+    y_pred_train = arbol.predict(x_train)
+    y_pred_test = arbol.predict(x_test)
+    y_pred_val = arbol.predict(x_val)
     
     # print(f"accuracy en set de entrenamiento: {Metricas.accuracy_score(y_train, y_pred_train):.2f}")
     # print(f"f1-score en set de entrenamiento: {Metricas.f1_score(y_train, y_pred_train, promedio='ponderado')}\n")
