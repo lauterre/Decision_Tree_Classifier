@@ -3,7 +3,7 @@ from collections import defaultdict
 from copy import deepcopy
 from typing import Optional
 import pandas as pd
-import _impureza
+from _impureza import Impureza
 from graficador import GraficadorArbol
 from metricas import Metricas
 
@@ -20,7 +20,7 @@ class Hiperparametros:
     def __init__(self, **kwargs):
         self.max_prof: int = kwargs.get('max_prof', -1)
         self.min_obs_nodo: int = kwargs.get('min_obs_nodo', -1)
-        self.min_infor_gain: float = kwargs.get('min_infor_gain', -1.0)
+        self.min_infor_gain: float = kwargs.get('min_infor_gain', -1.0) # me hace ruido que este aca, esta atado a la entropia CART no lo usaria
         self.min_obs_hoja: int = kwargs.get('min_obs_hoja', -1)
 
 class Arbol(ABC): # seria ArbolNario
@@ -87,11 +87,12 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
         self.valor_split_anterior: Optional[str]= None
         self.signo_split_anterior: Optional[str] = None
         self.clase: Optional[str] = None
+        self.impureza: Optional[Impureza] = None
     
-    def es_raiz(self):
+    def es_raiz(self) -> bool:
         return self.valor_split_anterior is None
     
-    def _values(self):
+    def _values(self) -> list[int]:
         recuento_values = self.target.value_counts()
         values = []
         for valor in self.target_categorias:
@@ -105,34 +106,20 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
     def set_target_categorias(self, y) -> None:
         self.target_categorias = y.unique()
     
-    def _total_samples(self):
+    def _total_samples(self) -> int:
         return len(self.data)
     
-    def _puede_splitearse(self, prof_acum: int, mejor_atributo: str) -> bool:
-        copia = self.copy() # OJO
-        information_gain = self._information_gain(mejor_atributo)
-        # hacer el split hipotetico y ver si se supera min_obs_hoja
-        copia._split(mejor_atributo)
-        for subarbol in copia.subs:
-            if self.min_obs_hoja != -1 and subarbol._total_samples() < self.min_obs_hoja:
-                return False
-            
-        return not (len(self.target.unique()) == 1 or len(self.data.columns) == 0
-                    or (self.max_prof != -1 and self.max_prof <= prof_acum)
-                    or (self.min_obs_nodo != -1 and self.min_obs_nodo > self._total_samples())
-                    or (self.min_infor_gain != -1 and self.min_infor_gain > information_gain))
-    
-    def agregar_subarbol(self, subarbol):
+    def agregar_subarbol(self, subarbol) -> None:
         for key, value in self.__dict__.items():
             if key in Hiperparametros().__dict__:  # Solo copiar los atributos que están en Hiperparametros
                 setattr(subarbol, key, value)
         self.subs.append(subarbol)
     
-    def graficar(self):
+    def graficar(self) -> None:
         graficador = GraficadorArbol(self)
         graficador.graficar()
 
-    def reduced_error_pruning(self, x_test: pd.DataFrame, y_test: pd.Series):
+    def reduced_error_pruning(self, x_test: pd.DataFrame, y_test: pd.Series) -> None:
         def _interna_rep(arbol: ArbolClasificador, x_test, y_test):
             if not arbol.es_hoja():
                 for subarbol in arbol.subs:

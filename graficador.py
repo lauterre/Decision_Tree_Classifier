@@ -29,7 +29,7 @@ class GraficadorArbol():
         retorno.append(f"Clase: {arbol.clase}")
         return "\n".join(retorno)
 
-    def _agregar_nodos(self, arbol, padre_id: str = "") -> None:
+    def _agregar_nodos(self, arbol) -> None:
         nodo_id = str(id(arbol))
         atributos_nodo = {
             "label": self._crear_caja(arbol),
@@ -44,7 +44,7 @@ class GraficadorArbol():
             atributos_nodo["fillcolor"] = "white"
         self.dot.add_node(pydot.Node(nodo_id, **atributos_nodo))
         for subarbol in arbol.subs:
-            self._agregar_nodos(subarbol, nodo_id)
+            self._agregar_nodos(subarbol)
 
     def _agregar_aristas(self, arbol, padre_id: str = "") -> None:
         nodo_id = str(id(arbol))
