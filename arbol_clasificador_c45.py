@@ -193,6 +193,24 @@ class ArbolClasificadorC45(ArbolClasificador):
 
         _interna_rep(self, x_test, y_test)
 
+    def _accurary_regla(self, regla, x_val, y_val):
+        prediccion = []
+        for _, fila in x_val.iterrows():
+            cumple = True
+            for pregunta in regla[:-1]:
+                atributo, signo, valor = pregunta[0], pregunta[1], pregunta[2]
+                if signo == "=":
+                    cumple = cumple and fila[atributo] == valor
+                elif signo == "<":
+                    cumple = cumple and fila[atributo] < valor
+                else:
+                    cumple = cumple and fila[atributo] >= valor
+            if cumple:
+                prediccion.append(regla[-1])
+            else:
+                prediccion.append(None)
+        return Metricas.accuracy_score(y_val, prediccion)
+
     
     def _reglas(self) -> list[list]:
         reglas = []
@@ -213,23 +231,10 @@ class ArbolClasificadorC45(ArbolClasificador):
         reglas = self._reglas()
         accuracy_reglas = []
         for regla in reglas:
-            prediccion = []
-            for _, fila in x_val.iterrows():
-                cumple = True
-                for pregunta in regla[:-1]:
-                    atributo, signo, valor = pregunta[0], pregunta[1], pregunta[2]
-                    if signo == "=":
-                        cumple = cumple and fila[atributo] == valor
-                    elif signo == "<":
-                        cumple = cumple and fila[atributo] < valor
-                    else:
-                        cumple = cumple and fila[atributo] >= valor
-                if cumple:
-                    prediccion.append(regla[-1])
-                else:
-                    prediccion.append(None)
-            accuracy_reglas.append(Metricas.accuracy_score(y_val, prediccion))
+            accuracy = self._accurary_regla(regla, x_val, y_val)
+            accuracy_reglas.append(accuracy)
         # tengo las accuracy de cada regla, ahora que?
+        # no entiendo como eliminar una regla y que el arbol siga siendo valido
         pass
 
 
@@ -315,20 +320,20 @@ def probar(df, target: str):
     x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=0.2, random_state=42)
     arbol = ArbolClasificadorC45(max_prof = 3)
     arbol.fit(x_train, y_train)
-    print(arbol)
+    #print(arbol)
     arbol.graficar()
-    y_pred_train = arbol.predict(x_train)
-    y_pred_test = arbol.predict(x_test)
-    y_pred_val = arbol.predict(x_val)
+    # y_pred_train = arbol.predict(x_train)
+    # y_pred_test = arbol.predict(x_test)
+    # y_pred_val = arbol.predict(x_val)
     
-    print(f"accuracy en set de entrenamiento: {Metricas.accuracy_score(y_train, y_pred_train):.2f}")
-    print(f"f1-score en set de entrenamiento: {Metricas.f1_score(y_train, y_pred_train, promedio='ponderado')}\n")
+    # print(f"accuracy en set de entrenamiento: {Metricas.accuracy_score(y_train, y_pred_train):.2f}")
+    # print(f"f1-score en set de entrenamiento: {Metricas.f1_score(y_train, y_pred_train, promedio='ponderado')}\n")
 
-    print(f"accuracy en set de validacion: {Metricas.accuracy_score(y_val, y_pred_val):.2f}")
-    print(f"f1-score en set de validacion: {Metricas.f1_score(y_val, y_pred_val, promedio='ponderado')}\n")
+    # print(f"accuracy en set de validacion: {Metricas.accuracy_score(y_val, y_pred_val):.2f}")
+    # print(f"f1-score en set de validacion: {Metricas.f1_score(y_val, y_pred_val, promedio='ponderado')}\n")
     
-    print(f"accuracy en set de prueba: {Metricas.accuracy_score(y_test, y_pred_test):.2f}")
-    print(f"f1-score en set de prueba: {Metricas.f1_score(y_test, y_pred_test, promedio='ponderado')}\n")
+    # print(f"accuracy en set de prueba: {Metricas.accuracy_score(y_test, y_pred_test):.2f}")
+    # print(f"f1-score en set de prueba: {Metricas.f1_score(y_test, y_pred_test, promedio='ponderado')}\n")
 
     arbol.rule_post_pruning(x_val, y_val)
     
