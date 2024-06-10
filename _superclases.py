@@ -61,9 +61,6 @@ class Arbol(ABC): # seria ArbolNario
         recorrido.append(self)
         return recorrido
     
-    def __eq__(self, __value: object) -> bool:
-        return isinstance(__value, ArbolClasificador) and self.__dict__ == __value.__dict__
-    
     @abstractmethod
     def agregar_subarbol(self, subarbol):
         raise NotImplementedError
@@ -134,6 +131,9 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
     def graficar(self):
         graficador = GraficadorArbol(self)
         graficador.graficar()
+    
+    def __eq__(self, __value: object) -> bool:
+        return isinstance(__value, ArbolClasificador) and self.__dict__ == __value.__dict__
 
     def _podar(self, nodo: "ArbolClasificador") -> "ArbolClasificador":
         arbol_podado = deepcopy(self)
@@ -159,13 +159,9 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
                     arbol_completo = arbol_podado
                     error_inicial = nuevo_error
         return arbol_completo
-
-    @abstractmethod
-    def _mejor_atributo_split(self) -> str | None:
-        raise NotImplementedError
     
     @abstractmethod
-    def _information_gain(self, atributo: str) -> float:
+    def _mejor_atributo_split(self) -> str | None:
         raise NotImplementedError
     
     @abstractmethod

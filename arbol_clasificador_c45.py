@@ -193,6 +193,46 @@ class ArbolClasificadorC45(ArbolClasificador):
 
         _interna_rep(self, x_test, y_test)
 
+    
+    def _reglas(self) -> list[list]:
+        reglas = []
+        def _backtrack(arbol, rama:list[tuple]) -> None:
+            if not arbol.es_raiz():
+                rama.append((arbol.atributo_split_anterior, arbol.signo_split_anterior, arbol.valor_split_anterior))
+
+            if arbol.es_hoja():
+                reglas.append(rama.copy()[1:] + [arbol.clase])
+            else:
+                for subarbol in arbol.subs:
+                    _backtrack(subarbol, rama)
+            rama.pop()
+        _backtrack(self, [(self.atributo_split_anterior, self.signo_split_anterior, self.valor_split_anterior)])
+        return reglas
+    
+    def rule_post_pruning(self, x_val, y_val) -> "ArbolClasificador":
+        reglas = self._reglas()
+        accuracy_reglas = []
+        for regla in reglas:
+            prediccion = []
+            for _, fila in x_val.iterrows():
+                cumple = True
+                for pregunta in regla[:-1]:
+                    atributo, signo, valor = pregunta[0], pregunta[1], pregunta[2]
+                    if signo == "=":
+                        cumple = cumple and fila[atributo] == valor
+                    elif signo == "<":
+                        cumple = cumple and fila[atributo] < valor
+                    else:
+                        cumple = cumple and fila[atributo] >= valor
+                if cumple:
+                    prediccion.append(regla[-1])
+                else:
+                    prediccion.append(None)
+            accuracy_reglas.append(Metricas.accuracy_score(y_val, prediccion))
+        # tengo las accuracy de cada regla, ahora que?
+        pass
+
+
     def __str__(self) -> str:
         out = []
         def _interna(arbol, prefijo: str = '  ', es_ultimo: bool = True) -> None:
@@ -273,7 +313,7 @@ def probar(df, target: str):
 
     x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=0.2, random_state=42)
-    arbol = ArbolClasificadorC45(max_prof = 5)
+    arbol = ArbolClasificadorC45(max_prof = 3)
     arbol.fit(x_train, y_train)
     print(arbol)
     arbol.graficar()
@@ -289,6 +329,8 @@ def probar(df, target: str):
     
     print(f"accuracy en set de prueba: {Metricas.accuracy_score(y_test, y_pred_test):.2f}")
     print(f"f1-score en set de prueba: {Metricas.f1_score(y_test, y_pred_test, promedio='ponderado')}\n")
+
+    arbol.rule_post_pruning(x_val, y_val)
     
     # print("Podo el arbol\n")
 
