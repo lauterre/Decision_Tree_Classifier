@@ -1,7 +1,7 @@
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
-from typing import Any, Callable, Optional
+from typing import Any, Optional
 from _impureza import Entropia
 from _superclases import ArbolClasificador
 from metricas import Metricas
@@ -11,6 +11,7 @@ class ArbolClasificadorC45(ArbolClasificador):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self.umbral_split: Optional[float] = None
+        self.impureza = Entropia()
 
     def copy(self):
         nuevo = ArbolClasificadorC45(**self.__dict__)
@@ -65,27 +66,11 @@ class ArbolClasificadorC45(ArbolClasificador):
     def es_atributo_numerico(self, atributo: str) -> bool:
         return pd.api.types.is_numeric_dtype(self.data[atributo])
     
-    def _information_gain_base(self, atributo: str, split: Callable):
-        entropia_actual = Entropia().calcular(self.target)
-        len_actual = self._total_samples()
-        nuevo = self.copy()
-
-        split(nuevo, atributo)
-
-        entropias_subarboles = 0 
-        for subarbol in nuevo.subs:
-            entropia = Entropia().calcular(subarbol.target)
-            len_subarbol = subarbol._total_samples()
-            entropias_subarboles += ((len_subarbol/len_actual) * entropia)
-
-        information_gain = entropia_actual - entropias_subarboles
-        return information_gain
-    
     def _information_gain(self, atributo: str) -> float:  #IMPORTANTE: este information gain calcula el mejor umbral de ser necesario
         def split(arbol, atributo):
             arbol._split(atributo)
         
-        return self._information_gain_base(atributo, split)
+        return self.impureza._information_gain_base(self, atributo, split)
     
     def _split_info(self):
         split_info = 0
@@ -122,7 +107,7 @@ class ArbolClasificadorC45(ArbolClasificador):
             def split_num(arbol, atributo):
                 arbol._split_numerico(atributo, umbral)
             
-            return self._information_gain_base(atributo, split_num) # clausura, se deberia llevar el umbral
+            return self.impureza._information_gain_base(self, atributo, split_num) # clausura, se deberia llevar el umbral
     
     def _mejor_umbral_split(self, atributo: str) -> float:
         self.data = self.data.sort_values(by=atributo)
@@ -222,7 +207,7 @@ class ArbolClasificadorC45(ArbolClasificador):
                 split = "Split: " + str(arbol.atributo_split)
 
             
-            impureza = f"{arbol.criterio_impureza}: {round(arbol._impureza(), 3)}"
+            impureza = f"{arbol.impureza}: {round(arbol.impureza.calcular(arbol.target), 3)}"
             samples = f"Muestras: {arbol._total_samples()}"
             values = f"Conteo: {arbol._values()}"
             clase = f"Clase: {arbol.clase}"
@@ -288,7 +273,7 @@ def probar(df, target: str):
 
     x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=0.2, random_state=42)
-    arbol = ArbolClasificadorC45(max_prof = 4)
+    arbol = ArbolClasificadorC45(max_prof = 5)
     arbol.fit(x_train, y_train)
     print(arbol)
     arbol.graficar()
@@ -305,25 +290,25 @@ def probar(df, target: str):
     print(f"accuracy en set de prueba: {Metricas.accuracy_score(y_test, y_pred_test):.2f}")
     print(f"f1-score en set de prueba: {Metricas.f1_score(y_test, y_pred_test, promedio='ponderado')}\n")
     
-    print("Podo el arbol\n")
+    # print("Podo el arbol\n")
 
-    podado = arbol.reduced_error_pruning2(x_val, y_val)
+    # podado = arbol.reduced_error_pruning2(x_val, y_val)
 
-    print(podado)
-    podado.graficar()
+    # print(podado)
+    # podado.graficar()
 
-    y_pred_train = podado.predict(x_train)
-    y_pred_test = podado.predict(x_test)
-    y_pred_val = podado.predict(x_val)
+    # y_pred_train = podado.predict(x_train)
+    # y_pred_test = podado.predict(x_test)
+    # y_pred_val = podado.predict(x_val)
     
-    print(f"accuracy en set de entrenamiento: {Metricas.accuracy_score(y_train, y_pred_train):.2f}")
-    print(f"f1-score en set de entrenamiento: {Metricas.f1_score(y_train, y_pred_train, promedio='ponderado')}\n")
+    # print(f"accuracy en set de entrenamiento: {Metricas.accuracy_score(y_train, y_pred_train):.2f}")
+    # print(f"f1-score en set de entrenamiento: {Metricas.f1_score(y_train, y_pred_train, promedio='ponderado')}\n")
 
-    print(f"accuracy en set de validacion: {Metricas.accuracy_score(y_val, y_pred_val):.2f}")
-    print(f"f1-score en set de validacion: {Metricas.f1_score(y_val, y_pred_val, promedio='ponderado')}\n")
+    # print(f"accuracy en set de validacion: {Metricas.accuracy_score(y_val, y_pred_val):.2f}")
+    # print(f"f1-score en set de validacion: {Metricas.f1_score(y_val, y_pred_val, promedio='ponderado')}\n")
     
-    print(f"accuracy en set de prueba: {Metricas.accuracy_score(y_test, y_pred_test):.2f}")
-    print(f"f1-score en set de prueba: {Metricas.f1_score(y_test, y_pred_test, promedio='ponderado')}\n")
+    # print(f"accuracy en set de prueba: {Metricas.accuracy_score(y_test, y_pred_test):.2f}")
+    # print(f"f1-score en set de prueba: {Metricas.f1_score(y_test, y_pred_test, promedio='ponderado')}\n")
     
 
 if __name__ == "__main__":
@@ -333,8 +318,8 @@ if __name__ == "__main__":
     df = pd.DataFrame(data=iris.data, columns=iris.feature_names)
     df['target'] = iris.target
 
-    print("pruebo con iris")
-    probar(df, "target")
+    # print("pruebo con iris")
+    # probar(df, "target")
 
     # print("pruebo con tennis")
     # tennis = pd.read_csv("./datasets/PlayTennis.csv")
@@ -349,6 +334,6 @@ if __name__ == "__main__":
     
     # probar(patients, "Level")
     
-    # titanic = pd.read_csv("./datasets/titanic.csv")
-    # print("pruebo con titanic")
-    # probar(titanic, "Survived")
+    titanic = pd.read_csv("./datasets/titanic.csv")
+    print("pruebo con titanic")
+    probar(titanic, "Survived")

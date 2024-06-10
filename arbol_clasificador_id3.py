@@ -1,7 +1,6 @@
 from typing import Any
 from sklearn.model_selection import train_test_split
 import pandas as pd
-import numpy as np
 from metricas import Metricas
 from _impureza import Entropia
 from _superclases import ArbolClasificador
@@ -9,8 +8,9 @@ from _superclases import ArbolClasificador
 class ArbolClasificadorID3(ArbolClasificador):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
+        self.impureza = Entropia()
     
-    # Lo podemos pasar a ArbolClasificador, usar clausura
+    # Lo podemos pasar a ArbolClasificador, usar clausura?
     def _mejor_atributo_split(self) -> str | None:
         mejor_ig = -1
         mejor_atributo = None
@@ -49,26 +49,12 @@ class ArbolClasificadorID3(ArbolClasificador):
             nuevo_arbol.set_clase()
             nuevo_arbol.signo_split_anterior = '='
             self.agregar_subarbol(nuevo_arbol)
-
+            
     def _information_gain(self, atributo: str) -> float:
-        # entropia_actual = self._entropia()
-        entropia_actual = Entropia().calcular(self.target)
+        def split(arbol, atributo):
+            arbol._split(atributo)
 
-        len_actual = self._total_samples()
-
-        nuevo = self.copy()
-
-        nuevo._split(atributo)
-
-        entropias_subarboles = 0 
-        for subarbol in nuevo.subs:
-            # entropia = subarbol._entropia()
-            entropia = Entropia().calcular(subarbol.target)
-            len_subarbol = subarbol._total_samples()
-            entropias_subarboles += ((len_subarbol/len_actual) * entropia)
-
-        information_gain = entropia_actual - entropias_subarboles
-        return information_gain
+        return self.impureza._information_gain_base(self, atributo, split)
         
     def fit(self, X: pd.DataFrame, y: pd.Series):
         self.target = y
@@ -144,7 +130,7 @@ class ArbolClasificadorID3(ArbolClasificador):
             simbolo_rama = '└─── ' if es_ultimo else '├─── '
             split = "Split: " + str(self.atributo_split)
             rta =  f"{self.atributo_split_anterior} = {self.valor_split_anterior}"
-            impureza = f"{self.criterio_impureza}: {round(self._impureza(), 3)}"
+            impureza = f"{self.impureza}: {round(self.impureza.calcular(self.target), 3)}"
             samples = f"Muestras: {str(self._total_samples())}"
             values = f"Conteo: {str(self._values())}"
             clase = 'Clase: ' + str(self.clase)
@@ -195,10 +181,10 @@ def probar(df, target: str):
     arbol.fit(x_train, y_train)
     print(arbol)
     arbol.graficar()
-    # y_pred = arbol.predict(x_test)
+    y_pred = arbol.predict(x_test)
     
-    # print(f"\n accuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
-    # print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio='ponderado')}\n")
+    print(f"\n accuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
+    print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio='ponderado')}\n")
 
     # print("Podo el arbol\n")
     # podado = arbol.reduced_error_pruning2(x_test, y_test)

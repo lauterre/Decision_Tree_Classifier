@@ -25,7 +25,7 @@ class GraficadorArbol():
             retorno.append(f"{arbol.atributo_split_anterior}{arbol.signo_split_anterior}{arbol.valor_split_anterior}")
         retorno.append(f"Muestras: {arbol._total_samples()}")
         retorno.append(f"Conteo: {arbol._values()}")
-        retorno.append(f"{arbol.criterio_impureza}: {round(arbol._impureza(), 3)}")
+        retorno.append(f"{arbol.impureza}: {round(arbol.impureza.calcular(arbol.target), 3)}")
         retorno.append(f"Clase: {arbol.clase}")
         return "\n".join(retorno)
 
