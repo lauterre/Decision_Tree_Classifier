@@ -1,6 +1,7 @@
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
+import random
 from typing import Any, Optional
 from _impureza import Entropia
 from _superclases import ArbolClasificador
@@ -148,11 +149,23 @@ class ArbolClasificadorC45(ArbolClasificador):
                     or (self.min_obs_nodo != -1 and self.min_obs_nodo > self._total_samples())
                     or (self.min_infor_gain != -1 and self.min_infor_gain > information_gain))
     
+    def _fill_missing_values(self):
+        for column in self.data.columns:
+            if self.es_atributo_numerico(column):
+                # Reemplazar valores faltantes con la media de la columna
+                mean_value = self.data[column].mean()
+                self.data.fillna({column: mean_value}, inplace=True)
+            else:
+                # Reemplazar valores faltantes con la moda de la columna
+                mode_value = self.data[column].mode()[0]
+                self.data.fillna({column: mode_value}, inplace=True)
+    
     # TODO: quedo igual al de id3
     def fit(self, X: pd.DataFrame, y: pd.Series):
         # Check no fiteado
         self.target = y.copy()
         self.data = X.copy()
+        self._fill_missing_values()
         self.set_clase()
 
         def _interna(arbol, prof_acum: int = 1):
@@ -169,11 +182,15 @@ class ArbolClasificadorC45(ArbolClasificador):
         
     def predict(self, X: pd.DataFrame) -> list:
         predicciones = []
+        
         def _recorrer(arbol, fila: pd.Series):
             if arbol.es_hoja():
                 return arbol.clase
             else:
                 valor = fila[arbol.atributo_split]
+                if pd.isna(valor):  # Manejar valores faltantes en la predicción
+                    dist_probabilidades = _predict_valor_faltante(arbol, fila)
+                    return obtener_clase_aleatoria(dist_probabilidades)          
                 if arbol.es_atributo_numerico(arbol.atributo_split):  # es split numerico, TODO: lo podes ver con el signo
                     if valor < arbol.umbral_split:
                         return _recorrer(arbol.subs[0], fila)
@@ -184,9 +201,35 @@ class ArbolClasificadorC45(ArbolClasificador):
                         if valor == subarbol.valor_split_anterior:
                             return _recorrer(subarbol, fila)
                     #raise ValueError(f"No se encontró un subárbol para el valor {valor} del atributo {arbol.atributo_split}")
-    
+
+        def _predict_valor_faltante(arbol, fila):
+            total_samples = sum(sub._total_samples() for sub in arbol.subs)
+            probabilidades = {clase: 0 for clase in arbol.target_categorias}
+
+            for subarbol in arbol.subs:
+                sub_samples = subarbol._total_samples()
+                sub_prob = sub_samples / total_samples
+                if subarbol.es_hoja():
+                    for i, clase in enumerate(arbol.target_categorias):
+                        probabilidades[clase] += subarbol._values()[i] * sub_prob
+                else:
+                    sub_probs = _predict_valor_faltante(subarbol, fila) 
+                    for i, clase in enumerate(arbol.target_categorias):
+                        probabilidades[clase] += sub_probs[clase] * sub_prob
+            return probabilidades
+        
+        def obtener_clase_aleatoria(diccionario_probabilidades):
+                total_valores = sum(diccionario_probabilidades.values())
+                probabilidades = [valor / total_valores for valor in diccionario_probabilidades.values()]
+                clases = list(diccionario_probabilidades.keys())
+                
+                clase_aleatoria = random.choices(clases, weights=probabilidades, k=1)[0]
+                print(diccionario_probabilidades,clase_aleatoria)
+                return clase_aleatoria
+
         for _, fila in X.iterrows():
             prediccion = _recorrer(self, fila)
+            print(prediccion)
             predicciones.append(prediccion)
 
         return predicciones
@@ -269,13 +312,13 @@ def probar(df, target: str):
     X = df.drop(target, axis=1)
     y = df[target]
 
-    x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state=42)
-    x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=0.2, random_state=42)
+    x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.15)
+    x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=0.2)
     #x_train, x_val, x_test, y_train, y_val, y_test = Herramientas.dividir_set(X, y, test_size=0.2, val_size=0.2, val=True, random_state=42)
     arbol = ArbolClasificadorC45(max_prof = 5)
     arbol.fit(x_train, y_train)
-    #print(arbol)
-    arbol.graficar()
+    print(arbol)
+    #arbol.graficar()
     y_pred_train = arbol.predict(x_train)
     y_pred_test = arbol.predict(x_test)
     y_pred_val = arbol.predict(x_val)
@@ -317,22 +360,28 @@ if __name__ == "__main__":
     df = pd.DataFrame(data=iris.data, columns=iris.feature_names)
     df['target'] = iris.target
 
-    print("pruebo con iris")
-    probar(df, "target")
+  #  print("pruebo con iris")
+  #  probar(df, "target")
 
-    print("pruebo con tennis")
+  #  print("pruebo con tennis")
     tennis = pd.read_csv("./datasets/PlayTennis.csv")
 
-    probar(tennis, "Play Tennis")
+  #  probar(tennis, "Play Tennis")
 
-    # print("pruebo con patients") 
+    print("pruebo con patients") 
 
-    # patients = pd.read_csv("./datasets/cancer_patients.csv", index_col=0)
-    # patients = patients.drop("Patient Id", axis = 1)
-    # patients.loc[:, patients.columns != "Age"] = patients.loc[:, patients.columns != "Age"].astype(str) # para que sean categorias
+    patients = pd.read_csv("./datasets/cancer_patients.csv", index_col=0)
+    patients = patients.drop("Patient Id", axis = 1)
+    #patients.loc[:, patients.columns != "Age"] = patients.loc[:, patients.columns != "Age"].astype(str) # para que sean categorias
     
-    # probar(patients, "Level")
+    probar(patients, "Level")
     
     titanic = pd.read_csv("./datasets/titanic.csv")
-    print("pruebo con titanic")
-    probar(titanic, "Survived")
+  #  print("pruebo con titanic")
+  #  probar(titanic, "Survived")
+
+    patients_na = pd.read_csv("./datasets/cancer_patients_con_NA.csv", index_col=0)
+    patients = patients_na.drop("Patient Id", axis = 1)
+    #patients_na.loc[:, patients_na.columns != "Age"] = patients_na.loc[:, patients_na.columns != "Age"].astype(str) # para que sean categorias
+    print("pruebo con patients_na")
+    probar(patients_na, "Level")
