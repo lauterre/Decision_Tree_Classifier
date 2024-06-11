@@ -59,37 +59,8 @@ class ArbolClasificadorID3(ArbolClasificador):
         def split(arbol, atributo):
             arbol._split(atributo)
 
-        return self.impureza._information_gain_base(self, atributo, split) # quizas renombrar a ganancia (o evaluar_split) en impureza
+        return self.impureza._information_gain_base(self, atributo, split) # quizas renombrar a ganancia (o evaluar_split) en impureza     
     
-    def _puede_splitearse(self, prof_acum: int, mejor_atributo: str) -> bool:
-        copia = self.copy()
-        information_gain = self._information_gain(mejor_atributo)
-        copia._split(mejor_atributo)
-        for subarbol in copia.subs:
-            if self.min_obs_hoja != -1 and subarbol._total_samples() < self.min_obs_hoja:
-                return False
-            
-        return not (len(self.target.unique()) == 1 or len(self.data.columns) == 0
-                    or (self.max_prof != -1 and self.max_prof <= prof_acum)
-                    or (self.min_obs_nodo != -1 and self.min_obs_nodo > self._total_samples())
-                    or (self.min_infor_gain != -1 and self.min_infor_gain > information_gain))
-        
-    def fit(self, X: pd.DataFrame, y: pd.Series):
-        self.target = y
-        self.data = X
-        self.set_clase()
-
-        def _interna(arbol, prof_acum: int = 1):
-            arbol.set_target_categorias(y)
-
-            mejor_atributo = arbol._mejor_atributo_split()
-            if mejor_atributo and arbol._puede_splitearse(prof_acum, mejor_atributo):
-                arbol._split(mejor_atributo)
-
-                for sub_arbol in arbol.subs:
-                    _interna(sub_arbol, prof_acum + 1)
-                    
-        _interna(self)
         
     def predict(self, X: pd.DataFrame) -> list[str]:
         predicciones = []

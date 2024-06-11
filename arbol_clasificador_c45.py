@@ -4,7 +4,7 @@ import numpy as np
 from typing import Any, Optional
 from _impureza import Entropia
 from _superclases import ArbolClasificador
-from herramientas import Herramientas
+from herramientas import GridSearch, Herramientas
 from metricas import Metricas
 
 
@@ -15,7 +15,7 @@ class ArbolClasificadorC45(ArbolClasificador):
         self.impureza = Entropia()
     
     def copy(self):
-        nuevo = ArbolClasificadorC45(**self.__dict__) # solo pasa los hipers?
+        nuevo = ArbolClasificadorC45(**self.__dict__) 
         nuevo.data = self.data.copy()
         nuevo.target = self.target.copy()
         nuevo.target_categorias = self.target_categorias.copy()
@@ -25,7 +25,7 @@ class ArbolClasificadorC45(ArbolClasificador):
         nuevo.valor_split_anterior = self.valor_split_anterior
         nuevo.signo_split_anterior = self.signo_split_anterior
         nuevo.impureza = self.impureza
-        nuevo.umbral_split = self.umbral_split # por esto es distinto a id3
+        nuevo.umbral_split = self.umbral_split 
         nuevo.subs = [sub.copy() for sub in self.subs]
         return nuevo
         
@@ -132,40 +132,7 @@ class ArbolClasificadorC45(ArbolClasificador):
                 mejor_umbral = umbral
             i += 1
 
-        return mejor_umbral
-    
-    # TODO: quedo igual al de id3
-    def _puede_splitearse(self, prof_acum: int, mejor_atributo: str) -> bool:
-        copia = self.copy()
-        information_gain = self._information_gain(mejor_atributo)
-        copia._split(mejor_atributo)
-        for subarbol in copia.subs:
-            if self.min_obs_hoja != -1 and subarbol._total_samples() < self.min_obs_hoja:
-                return False
-            
-        return not (len(self.target.unique()) == 1 or len(self.data.columns) == 0
-                    or (self.max_prof != -1 and self.max_prof <= prof_acum)
-                    or (self.min_obs_nodo != -1 and self.min_obs_nodo > self._total_samples())
-                    or (self.min_infor_gain != -1 and self.min_infor_gain > information_gain))
-    
-    # TODO: quedo igual al de id3
-    def fit(self, X: pd.DataFrame, y: pd.Series):
-        # Check no fiteado
-        self.target = y.copy()
-        self.data = X.copy()
-        self.set_clase()
-
-        def _interna(arbol, prof_acum: int = 1):
-            arbol.set_target_categorias(y)
-
-            mejor_atributo = arbol._mejor_atributo_split()
-            if mejor_atributo and arbol._puede_splitearse(prof_acum, mejor_atributo):
-                arbol._split(mejor_atributo) # el check de numerico ahora ocurre dentro de _split()
-                
-                for sub_arbol in arbol.subs:
-                    _interna(sub_arbol, prof_acum + 1)
-        
-        _interna(self)
+        return mejor_umbral  
         
     def predict(self, X: pd.DataFrame) -> list:
         predicciones = []
@@ -264,7 +231,9 @@ class ArbolClasificadorC45(ArbolClasificador):
                     _interna(sub_arbol, prefijo, ultimo)
         _interna(self)
         return "\n".join(out)
-            
+    def __repr__(self) -> str:
+        return f'{self._total_samples()}\n{self.clase}\n{self.atributo_split_anterior}'
+    
 def probar(df, target: str):
     X = df.drop(target, axis=1)
     y = df[target]
@@ -272,7 +241,8 @@ def probar(df, target: str):
     x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state=42)
     x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=0.2, random_state=42)
     #x_train, x_val, x_test, y_train, y_val, y_test = Herramientas.dividir_set(X, y, test_size=0.2, val_size=0.2, val=True, random_state=42)
-    arbol = ArbolClasificadorC45(max_prof = 5)
+    arbol = ArbolClasificadorC45(max_prof = 5, min_obs_hoja=5, min_obs_nodo=5)
+
     arbol.fit(x_train, y_train)
     #print(arbol)
     arbol.graficar()
@@ -308,7 +278,34 @@ def probar(df, target: str):
     
     # print(f"accuracy en set de prueba: {Metricas.accuracy_score(y_test, y_pred_test)}")
     # print(f"f1-score en set de prueba: {Metricas.f1_score(y_test, y_pred_test, promedio='ponderado')}\n")
-    
+
+def probar_cv(df, target: str):
+    X = df.drop(target, axis=1)
+    y = df[target]
+
+    x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state=42)
+    arbol = ArbolClasificadorC45(max_prof = 5, min_obs_hoja=5, min_obs_nodo=5)
+    print(Herramientas.cross_validation(x_train, y_train, arbol, 5))
+
+def probar_grid_search(df, target: str):
+    X = df.drop(target, axis=1)
+    y = df[target]
+
+    x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state=42)
+    arbol = ArbolClasificadorC45()
+    grid_search = GridSearch(arbol, {"max_prof": [2, 3], "min_obs_hoja": [3, 8]}, k_fold=3)
+
+    grid_search.fit(x_train, y_train)
+    print(grid_search.mejores_params)
+    print(grid_search.mejor_score)
+    print(grid_search.mostrar_resultados())
+    mejor_arbol = ArbolClasificadorC45(**grid_search.mejores_params)
+    mejor_arbol.fit(x_train, y_train)
+    mejor_arbol.graficar()
+
+    y_pred = mejor_arbol.predict(x_test)
+    print(f"accuracy en set de prueba: {Metricas.accuracy_score(y_test, y_pred)}")
+    print(f"f1-score en set de prueba: {Metricas.f1_score(y_test, y_pred, promedio='ponderado')}\n")
 
 if __name__ == "__main__":
     import sklearn.datasets
@@ -317,22 +314,28 @@ if __name__ == "__main__":
     df = pd.DataFrame(data=iris.data, columns=iris.feature_names)
     df['target'] = iris.target
 
-    print("pruebo con iris")
-    probar(df, "target")
+    # print("pruebo con iris")
+    # #probar(df, "target")
+    # probar_cv(df, "target")
+    # probar_grid_search(df, "target")
 
-    print("pruebo con tennis")
-    tennis = pd.read_csv("./datasets/PlayTennis.csv")
+    # print("pruebo con tennis")
+    # tennis = pd.read_csv("./datasets/PlayTennis.csv")
+    # probar_grid_search(tennis, "Play Tennis")
+    # probar_cv(df, "Play Tennis")
+    # probar(tennis, "Play Tennis")
 
-    probar(tennis, "Play Tennis")
+    print("pruebo con patients") 
 
-    # print("pruebo con patients") 
-
-    # patients = pd.read_csv("./datasets/cancer_patients.csv", index_col=0)
-    # patients = patients.drop("Patient Id", axis = 1)
-    # patients.loc[:, patients.columns != "Age"] = patients.loc[:, patients.columns != "Age"].astype(str) # para que sean categorias
+    patients = pd.read_csv("./datasets/cancer_patients.csv", index_col=0)
+    patients = patients.drop("Patient Id", axis = 1)
+    patients.loc[:, patients.columns != "Age"] = patients.loc[:, patients.columns != "Age"].astype(str) # para que sean categorias
     
-    # probar(patients, "Level")
+    #probar_cv(patients, "Level")
+    probar_grid_search(patients, "Level")
     
-    titanic = pd.read_csv("./datasets/titanic.csv")
-    print("pruebo con titanic")
-    probar(titanic, "Survived")
+    #titanic = pd.read_csv("./datasets/titanic.csv")
+    #print("pruebo con titanic")
+    #probar_cv(df, "target")
+    #probar(titanic, "Survived")
+    #probar_grid_search(df, "target")
