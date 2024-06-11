@@ -1,6 +1,7 @@
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
+from arbol_clasificador_c45 import ArbolClasificadorC45
 from metricas import Metricas
 from herramientas import Herramientas
 from _superclases import Clasificador, Bosque, Hiperparametros
@@ -10,8 +11,8 @@ from arbol_clasificador_id3 import ArbolClasificadorID3
 class BosqueClasificador(Bosque, Clasificador): # Bosque
     def __init__(self, clase_arbol: str = "id3", cantidad_arboles: int = 10, cantidad_atributos:str ='sqrt',**kwargs) -> None:
         super().__init__(cantidad_arboles)
-        hiperparametros_arbol = Hiperparametros(**kwargs)
-        for key, value in hiperparametros_arbol.__dict__.items():
+        self.hiperparametros_arbol = Hiperparametros(**kwargs)
+        for key, value in self.hiperparametros_arbol.__dict__.items():
             setattr(self, key, value)
         self.cantidad_atributos = cantidad_atributos
         self.clase_arbol = clase_arbol
@@ -39,7 +40,7 @@ class BosqueClasificador(Bosque, Clasificador): # Bosque
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> None:
         for _ in range(self.cantidad_arboles):
-            #print(f"Contruyendo arbol nro: {_ + 1}")
+            print(f"Contruyendo arbol nro: {_ + 1}")
             # Bootstrapping
             X_sample, y_sample = self._bootstrap_samples(X, y)
 
@@ -49,11 +50,15 @@ class BosqueClasificador(Bosque, Clasificador): # Bosque
 
             # Crear y entrenar un nuevo árbol
             if self.clase_arbol == 'id3':
-                arbol = ArbolClasificadorID3(max_prof=self.max_prof, min_obs_nodo=self.min_obs_nodo)
+                arbol = ArbolClasificadorID3(**self.hiperparametros_arbol.__dict__)
+                arbol.fit(pd.DataFrame(X_sample), pd.Series(y_sample))
+                self.arboles.append(arbol)
+            elif self.clase_arbol == 'c45':
+                arbol = ArbolClasificadorC45(**self.hiperparametros_arbol.__dict__)
                 arbol.fit(pd.DataFrame(X_sample), pd.Series(y_sample))
                 self.arboles.append(arbol)
             else:
-                raise ValueError("Clase de arbol soportado por el bosque: 'id3'")
+                raise ValueError("Clase de arbol soportado por el bosque: 'id3', 'c45'")
             #arbol.imprimir()
 
     def predict(self, X: pd.DataFrame) -> pd.Series:
@@ -81,10 +86,10 @@ if __name__ == "__main__":
     x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     # fiteo el RandomForest con ArbolDecisionID3
-    rf = BosqueClasificador(clase_arbol="id3", cantidad_arboles = 10, cantidad_atributos='sqrt', max_prof=10, min_obs_nodo=100)
-    #rf.fit(x_train, y_train)
+    rf = BosqueClasificador(clase_arbol="c45", cantidad_arboles = 10, cantidad_atributos='sqrt', max_prof=10, min_obs_nodo=10)
+    rf.fit(x_train, y_train)
     #cross_validation(x_train, y_train, rf, 4)
-    score_arbol = Herramientas.cross_validation(X, y, rf, 10)
+    #score_arbol = Herramientas.cross_validation(X, y, rf, 10)
 
     # Predice con el RandomForest
     predicciones = rf.predict(x_test)
