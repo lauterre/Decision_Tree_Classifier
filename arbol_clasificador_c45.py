@@ -149,7 +149,7 @@ class ArbolClasificadorC45(ArbolClasificador):
                     or (self.min_obs_nodo != -1 and self.min_obs_nodo > self._total_samples())
                     or (self.min_infor_gain != -1 and self.min_infor_gain > information_gain))
     
-    def _fill_missing_values(self):
+    def _rellenar_missing_values(self):
         for column in self.data.columns:
             if self.es_atributo_numerico(column):
                 # Reemplazar valores faltantes con la media de la columna
@@ -165,7 +165,7 @@ class ArbolClasificadorC45(ArbolClasificador):
         # Check no fiteado
         self.target = y.copy()
         self.data = X.copy()
-        self._fill_missing_values()
+        self._rellenar_missing_values()
         self.set_clase()
 
         def _interna(arbol, prof_acum: int = 1):
@@ -203,22 +203,24 @@ class ArbolClasificadorC45(ArbolClasificador):
                     #raise ValueError(f"No se encontró un subárbol para el valor {valor} del atributo {arbol.atributo_split}")
 
         def _predict_valor_faltante(arbol, fila):
-            total_samples = sum(sub._total_samples() for sub in arbol.subs)
+            total_samples = arbol._total_samples()
             probabilidades = {clase: 0 for clase in arbol.target_categorias}
-
             for subarbol in arbol.subs:
                 sub_samples = subarbol._total_samples()
                 sub_prob = sub_samples / total_samples
                 if subarbol.es_hoja():
                     for i, clase in enumerate(arbol.target_categorias):
-                        probabilidades[clase] += subarbol._values()[i] * sub_prob
+                        probabilidades[clase] += subarbol._values()[i] 
                 else:
                     sub_probs = _predict_valor_faltante(subarbol, fila) 
                     for i, clase in enumerate(arbol.target_categorias):
-                        probabilidades[clase] += sub_probs[clase] * sub_prob
+                        probabilidades[clase] += sub_probs[clase] 
             return probabilidades
         
         def obtener_clase_aleatoria(diccionario_probabilidades):
+                cantidad_total = sum(diccionario_probabilidades.values())
+                for key in diccionario_probabilidades:
+                    diccionario_probabilidades[key] = round(diccionario_probabilidades[key] / cantidad_total,2) #Redondeado para que se entienda mas
                 total_valores = sum(diccionario_probabilidades.values())
                 probabilidades = [valor / total_valores for valor in diccionario_probabilidades.values()]
                 clases = list(diccionario_probabilidades.keys())
@@ -229,7 +231,7 @@ class ArbolClasificadorC45(ArbolClasificador):
 
         for _, fila in X.iterrows():
             prediccion = _recorrer(self, fila)
-            print(prediccion)
+            #print(prediccion)
             predicciones.append(prediccion)
 
         return predicciones
@@ -318,7 +320,7 @@ def probar(df, target: str):
     arbol = ArbolClasificadorC45(max_prof = 5)
     arbol.fit(x_train, y_train)
     print(arbol)
-    #arbol.graficar()
+    arbol.graficar()
     y_pred_train = arbol.predict(x_train)
     y_pred_test = arbol.predict(x_test)
     y_pred_val = arbol.predict(x_val)
@@ -363,18 +365,23 @@ if __name__ == "__main__":
   #  print("pruebo con iris")
   #  probar(df, "target")
 
-  #  print("pruebo con tennis")
+    print("pruebo con tennis")
     tennis = pd.read_csv("./datasets/PlayTennis.csv")
 
-  #  probar(tennis, "Play Tennis")
+    probar(tennis, "Play Tennis")
+    print("pruebo con tennis_na")
+    tennisna = pd.read_csv("./datasets/PlayTennis copy.csv")
 
-    print("pruebo con patients") 
+    probar(tennisna, "Play Tennis")
+
+    #print("pruebo con patients") 
 
     patients = pd.read_csv("./datasets/cancer_patients.csv", index_col=0)
     patients = patients.drop("Patient Id", axis = 1)
     #patients.loc[:, patients.columns != "Age"] = patients.loc[:, patients.columns != "Age"].astype(str) # para que sean categorias
     
-    probar(patients, "Level")
+    
+    #probar(patients, "Level")
     
     titanic = pd.read_csv("./datasets/titanic.csv")
   #  print("pruebo con titanic")

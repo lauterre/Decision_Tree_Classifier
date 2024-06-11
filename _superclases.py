@@ -4,7 +4,7 @@ from copy import deepcopy
 from typing import Optional
 import pandas as pd
 from _impureza import Impureza
-from graficador import GraficadorArbol
+from graficador import GraficadorArbol, GraficadorArbolFeo
 from metricas import Metricas
 
 class Clasificador(ABC):
@@ -117,6 +117,10 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
     
     def graficar(self) -> None:
         graficador = GraficadorArbol(self)
+        graficador.graficar()
+    
+    def graficar_feo(self) -> None:
+        graficador = GraficadorArbolFeo(self)
         graficador.graficar()
 
     def reduced_error_pruning(self, x_test: pd.DataFrame, y_test: pd.Series) -> None:
