@@ -4,7 +4,7 @@ import numpy as np
 from typing import Any, Optional
 from _impureza import Entropia
 from _superclases import ArbolClasificador
-from herramientas import Herramientas
+from herramientas import GridSearch, Herramientas
 from metricas import Metricas
 
 
@@ -318,6 +318,23 @@ def probar_cv(df, target: str):
     arbol = ArbolClasificadorC45(max_prof = 5, min_obs_hoja=5, min_obs_nodo=5)
     print(Herramientas.cross_validation(x_train, y_train, arbol, 5))
 
+def probar_grid_search(df, target: str):
+    X = df.drop(target, axis=1)
+    y = df[target]
+
+    x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state=42)
+    arbol = ArbolClasificadorC45()
+    grid_search = GridSearch(arbol, {"max_prof": [2, 3, 4], "min_obs_hoja": [3, 8, 10]})
+
+    grid_search.fit(x_train, y_train)
+    print(grid_search.mejores_params)
+    print(grid_search.mejor_score)
+    mejor_arbol = grid_search.mejor_modelo
+    mejor_arbol.graficar()
+
+    y_pred = mejor_arbol.predict(x_test)
+    print(f"accuracy en set de prueba: {Metricas.accuracy_score(y_test, y_pred)}")
+    print(f"f1-score en set de prueba: {Metricas.f1_score(y_test, y_pred, promedio='ponderado')}\n")
 
 if __name__ == "__main__":
     import sklearn.datasets
@@ -328,11 +345,13 @@ if __name__ == "__main__":
 
     print("pruebo con iris")
     #probar(df, "target")
-    probar_cv(df, "target")
+    #probar_cv(df, "target")
+    probar_grid_search(df, "target")
 
     print("pruebo con tennis")
     tennis = pd.read_csv("./datasets/PlayTennis.csv")
-    probar_cv(df, "target")
+    probar_grid_search(tennis, "target")
+    #probar_cv(df, "target")
     #probar(tennis, "Play Tennis")
 
     # print("pruebo con patients") 
@@ -343,7 +362,8 @@ if __name__ == "__main__":
     
     # probar(patients, "Level")
     
-    titanic = pd.read_csv("./datasets/titanic.csv")
-    print("pruebo con titanic")
-    probar_cv(df, "target")
+    #titanic = pd.read_csv("./datasets/titanic.csv")
+    #print("pruebo con titanic")
+    #probar_cv(df, "target")
     #probar(titanic, "Survived")
+    #probar_grid_search(df, "target")

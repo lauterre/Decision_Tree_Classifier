@@ -2,12 +2,20 @@ import itertools
 from typing import Optional
 import pandas as pd
 import numpy as np
+from sklearn.model_selection import train_test_split
 from _superclases import Clasificador
 from metricas import Metricas
 
 class Herramientas:
     @staticmethod
-    def cross_validation(features: pd.DataFrame, target: pd.Series, classifier: Clasificador, k_fold:int) -> float:
+    def cross_validation(features: pd.DataFrame, target: pd.Series, classifier: Clasificador, k_fold:int, metrica: str = "accuracy", promedio: str = "binario") -> float:
+        if metrica == "accuracy":
+            score = Metricas.accuracy_score
+        elif metrica == "f1":
+            score = lambda y_true, y_pred: Metricas.f1_score(y_true, y_pred, promedio)
+        else:
+            raise ValueError("Métrica no soportada")
+            
         
         lista_indices = features.index
         regist_grupos = len(lista_indices) // k_fold
@@ -45,12 +53,11 @@ class Herramientas:
         for x in range (k_fold) :
             classifier.fit(groups_X_train_CV[x], groups_Y_train_CV[x])
             predicciones = classifier.predict(groups_X_test_CV[x])
-            k_score = Metricas.accuracy_score(groups_Y_test_CV[x], predicciones) # TODO: ver como agregar metricas
+            k_score = score(groups_Y_test_CV[x], predicciones)
             
             k_score_total += k_score
-            #print ("Score individual:", k_score)
+            print ("Score individual:", k_score)
             
-        #print (k_score_total/k_fold)
         return k_score_total/k_fold
 
     @staticmethod
@@ -77,7 +84,7 @@ class Herramientas:
         else:
             return X_train, X_test, y_train, y_test
 
-class GridSearch: # solo para clasificadores
+class GridSearch:
     def __init__(self, clasificador: Clasificador, params: dict[str, list], cv: int = 5):
         self._clasificador: Clasificador = clasificador
         self._params: dict[str, list] = params
@@ -93,10 +100,14 @@ class GridSearch: # solo para clasificadores
         for combinacion in itertools.product(*valores):
             parametros = dict(zip(params, combinacion))
             clasificador = self._clasificador.__class__()
-            # clasificador = self.clasificador.__class__(**parametros)
+            # clasificador = self._clasificador.__class__(**parametros)
             for p in parametros:
                 setattr(clasificador, p, parametros[p])
-            score = Herramientas.cross_validation(X, y, clasificador, self._cv)
+            # solo para proabarlo
+            x_train, x_val, y_train, y_val = train_test_split(X, y, test_size=0.2)
+            clasificador.fit(x_train, y_train)
+            score = Metricas.accuracy_score(y_val, clasificador.predict(x_val))
+            #score = Herramientas.cross_validation(X, y, clasificador, self._cv) # no funciona
             if score > self.mejor_score:
                 self.mejor_score = score
                 self.mejores_params = parametros
