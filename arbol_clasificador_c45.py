@@ -272,7 +272,8 @@ def probar(df, target: str):
     x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state=42)
     x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=0.2, random_state=42)
     #x_train, x_val, x_test, y_train, y_val, y_test = Herramientas.dividir_set(X, y, test_size=0.2, val_size=0.2, val=True, random_state=42)
-    arbol = ArbolClasificadorC45(max_prof = 5)
+    arbol = ArbolClasificadorC45(max_prof = 5, min_obs_hoja=5, min_obs_nodo=5)
+
     arbol.fit(x_train, y_train)
     #print(arbol)
     arbol.graficar()
@@ -308,7 +309,15 @@ def probar(df, target: str):
     
     # print(f"accuracy en set de prueba: {Metricas.accuracy_score(y_test, y_pred_test)}")
     # print(f"f1-score en set de prueba: {Metricas.f1_score(y_test, y_pred_test, promedio='ponderado')}\n")
-    
+
+def probar_cv(df, target: str):
+    X = df.drop(target, axis=1)
+    y = df[target]
+
+    x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state=42)
+    arbol = ArbolClasificadorC45(max_prof = 5, min_obs_hoja=5, min_obs_nodo=5)
+    print(Herramientas.cross_validation(x_train, y_train, arbol, 5))
+
 
 if __name__ == "__main__":
     import sklearn.datasets
@@ -318,12 +327,13 @@ if __name__ == "__main__":
     df['target'] = iris.target
 
     print("pruebo con iris")
-    probar(df, "target")
+    #probar(df, "target")
+    probar_cv(df, "target")
 
     print("pruebo con tennis")
     tennis = pd.read_csv("./datasets/PlayTennis.csv")
-
-    probar(tennis, "Play Tennis")
+    probar_cv(df, "target")
+    #probar(tennis, "Play Tennis")
 
     # print("pruebo con patients") 
 
@@ -335,4 +345,5 @@ if __name__ == "__main__":
     
     titanic = pd.read_csv("./datasets/titanic.csv")
     print("pruebo con titanic")
-    probar(titanic, "Survived")
+    probar_cv(df, "target")
+    #probar(titanic, "Survived")

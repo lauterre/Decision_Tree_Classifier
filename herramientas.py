@@ -1,3 +1,5 @@
+import itertools
+from typing import Optional
 import pandas as pd
 import numpy as np
 from _superclases import Clasificador
@@ -6,6 +8,7 @@ from metricas import Metricas
 class Herramientas:
     @staticmethod
     def cross_validation(features: pd.DataFrame, target: pd.Series, classifier: Clasificador, k_fold:int) -> float:
+        
         lista_indices = features.index
         regist_grupos = len(lista_indices) // k_fold
         groups = []
@@ -42,7 +45,7 @@ class Herramientas:
         for x in range (k_fold) :
             classifier.fit(groups_X_train_CV[x], groups_Y_train_CV[x])
             predicciones = classifier.predict(groups_X_test_CV[x])
-            k_score = Metricas.accuracy_score(groups_Y_test_CV[x], predicciones)
+            k_score = Metricas.accuracy_score(groups_Y_test_CV[x], predicciones) # TODO: ver como agregar metricas
             
             k_score_total += k_score
             #print ("Score individual:", k_score)
@@ -51,7 +54,6 @@ class Herramientas:
         return k_score_total/k_fold
 
     @staticmethod
-
     def dividir_set(X, y, test_size=0.2, val_size=0.2, val=False, random_state=None):
         if random_state is not None:
             np.random.seed(random_state)
@@ -74,3 +76,28 @@ class Herramientas:
             return X_train, X_val, X_test, y_train, y_val, y_test
         else:
             return X_train, X_test, y_train, y_test
+
+class GridSearch: # solo para clasificadores
+    def __init__(self, clasificador: Clasificador, params: dict[str, list], cv: int = 5):
+        self._clasificador: Clasificador = clasificador
+        self._params: dict[str, list] = params
+        self._cv: int = cv
+        self.mejores_params: Optional[dict] = None
+        self.mejor_score: float = 0
+        self.mejor_modelo: Optional[Clasificador] = None
+    
+    def fit(self, X, y):
+        params = list(self._params.keys())
+        valores = list(self._params.values())
+
+        for combinacion in itertools.product(*valores):
+            parametros = dict(zip(params, combinacion))
+            clasificador = self._clasificador.__class__()
+            # clasificador = self.clasificador.__class__(**parametros)
+            for p in parametros:
+                setattr(clasificador, p, parametros[p])
+            score = Herramientas.cross_validation(X, y, clasificador, self._cv)
+            if score > self.mejor_score:
+                self.mejor_score = score
+                self.mejores_params = parametros
+                self.mejor_modelo = clasificador
