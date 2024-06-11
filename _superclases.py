@@ -1,9 +1,11 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
+from copy import deepcopy
 from typing import Optional
 import pandas as pd
-import _impureza
+from _impureza import Impureza
 from graficador import GraficadorArbol
+from metricas import Metricas
 
 class Clasificador(ABC):
     @abstractmethod
@@ -18,15 +20,8 @@ class Hiperparametros:
     def __init__(self, **kwargs):
         self.max_prof: int = kwargs.get('max_prof', -1)
         self.min_obs_nodo: int = kwargs.get('min_obs_nodo', -1)
-        self.min_infor_gain: float = kwargs.get('min_infor_gain', -1.0)
+        self.min_infor_gain: float = kwargs.get('min_infor_gain', -1.0) # me hace ruido que este aca, esta atado a la entropia CART no lo usaria
         self.min_obs_hoja: int = kwargs.get('min_obs_hoja', -1)
-        self.criterio_impureza: str = kwargs.get('criterio_impureza', 'Entropia')
-        criterios_posibles = {name: cls for name, cls in vars(_impureza).items() if isinstance(cls, type)}
-        try:
-            Impureza = getattr(_impureza, self.criterio_impureza)
-        except AttributeError:
-            raise ValueError(f"Criterio de impureza no válido, criterios válidos: {list(criterios_posibles.keys())[1:]}")
-        self.impureza = Impureza()
 
 class Arbol(ABC): # seria ArbolNario
     def __init__(self) -> None:
@@ -59,6 +54,13 @@ class Arbol(ABC): # seria ArbolNario
             subarbol.ancho_nivel(nivel + 1, nodos)
         return nodos[nivel]
     
+    def posorden(self) -> list["Arbol"]:
+        recorrido = []
+        for subarbol in self.subs:
+            recorrido += subarbol.posorden()
+        recorrido.append(self)
+        return recorrido
+    
     @abstractmethod
     def agregar_subarbol(self, subarbol):
         raise NotImplementedError
@@ -85,11 +87,12 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
         self.valor_split_anterior: Optional[str]= None
         self.signo_split_anterior: Optional[str] = None
         self.clase: Optional[str] = None
+        self.impureza: Optional[Impureza] = None
     
-    def es_raiz(self):
+    def es_raiz(self) -> bool:
         return self.valor_split_anterior is None
     
-    def _values(self):
+    def _values(self) -> list[int]:
         recuento_values = self.target.value_counts()
         values = []
         for valor in self.target_categorias:
@@ -103,34 +106,80 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
     def set_target_categorias(self, y) -> None:
         self.target_categorias = y.unique()
     
-    def _total_samples(self):
+    def _total_samples(self) -> int:
         return len(self.data)
     
-    def _puede_splitearse(self, prof_acum: int) -> bool:
-        return not (len(self.target.unique()) == 1 or len(self.data.columns) == 0
-                    or (self.max_prof != -1 and self.max_prof <= prof_acum)
-                    or (self.min_obs_nodo != -1 and self.min_obs_nodo > self._total_samples())) #TODO agregar hipers
-    
-    def agregar_subarbol(self, subarbol):
+    def agregar_subarbol(self, subarbol) -> None:
         for key, value in self.__dict__.items():
             if key in Hiperparametros().__dict__:  # Solo copiar los atributos que están en Hiperparametros
                 setattr(subarbol, key, value)
         self.subs.append(subarbol)
+    
+    def graficar(self) -> None:
+        graficador = GraficadorArbol(self)
+        graficador.graficar()
+
+    def reduced_error_pruning(self, x_test: pd.DataFrame, y_test: pd.Series) -> None:
+        def _interna_rep(arbol: ArbolClasificador, x_test, y_test):
+            if not arbol.es_hoja():
+                for subarbol in arbol.subs:
+                    _interna_rep(subarbol, x_test, y_test)
+
+                pred_raiz: list[str] = arbol.predict(x_test)
+                error_clasif_raiz = Metricas.error(y_test, pred_raiz)
+
+                error_clasif_ramas = 0.0
+
+                for subarbol in arbol.subs:
+                    pred_podada = subarbol.predict(x_test) # type: ignore
+                    error_clasif_podada = Metricas.error(y_test, pred_podada)
+                    error_clasif_ramas = error_clasif_ramas + error_clasif_podada
+
+                if error_clasif_ramas < error_clasif_raiz:
+                    print(" * Podar \n")
+                    arbol.subs = []
+                else:
+                    print(" * No podar \n")
+
+        _interna_rep(self, x_test, y_test)
 
     
-    def _impureza(self):
-        return self.impureza.calcular(self.target)
+    def __eq__(self, __value: object) -> bool:
+        return isinstance(__value, ArbolClasificador) and (self.data.equals(__value.data)
+                                                           and self.target.equals(__value.target) 
+                                                           and self.atributo_split == __value.atributo_split 
+                                                           and self.atributo_split_anterior == __value.atributo_split_anterior 
+                                                           and self.valor_split_anterior == __value.valor_split_anterior 
+                                                           and self.signo_split_anterior == __value.signo_split_anterior 
+                                                           and self.clase == __value.clase)
+
+    def _podar(self, nodo: "ArbolClasificador") -> "ArbolClasificador":
+        arbol_podado = deepcopy(self)
+        def _interna(arbol, nodo):
+            if arbol == nodo:
+                arbol.subs = []
+            else:
+                for sub in arbol_podado.subs:
+                    sub._podar(nodo)
+        _interna(arbol_podado, nodo)
+        return arbol_podado
     
-    def graficar(self):
-        plotter = GraficadorArbol(self)
-        plotter.plot()
+    def reduced_error_pruning2(self, x_val, y_val, margen: float = 0) -> "ArbolClasificador":
+        # TODO: check si esta entrenado
+        arbol_completo = deepcopy(self)
+        error_inicial = Metricas.error(y_val, arbol_completo.predict(x_val))
+        nodos = arbol_completo.posorden()
+        for nodo in nodos:
+            if not nodo.es_hoja():
+                arbol_podado = arbol_completo._podar(nodo)
+                nuevo_error = Metricas.error(y_val, arbol_podado.predict(x_val))
+                if nuevo_error - margen < error_inicial:
+                    arbol_completo = arbol_podado
+                    error_inicial = nuevo_error
+        return arbol_completo
 
     @abstractmethod
     def _mejor_atributo_split(self) -> str | None:
-        raise NotImplementedError
-    
-    @abstractmethod
-    def _information_gain(self, atributo: str) -> float:
         raise NotImplementedError
     
     @abstractmethod

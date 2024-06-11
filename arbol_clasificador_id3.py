@@ -1,7 +1,6 @@
 from typing import Any
 from sklearn.model_selection import train_test_split
 import pandas as pd
-import numpy as np
 from metricas import Metricas
 from _impureza import Entropia
 from _superclases import ArbolClasificador
@@ -9,8 +8,22 @@ from _superclases import ArbolClasificador
 class ArbolClasificadorID3(ArbolClasificador):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
+        self.impureza = Entropia()
+
+    def copy(self):
+        nuevo = ArbolClasificadorID3(**self.__dict__) # no funciona bien, solo pasa los hipers?
+        nuevo.data = self.data.copy()
+        nuevo.target = self.target.copy()
+        nuevo.target_categorias = self.target_categorias.copy()
+        nuevo.set_clase()
+        nuevo.atributo_split = self.atributo_split
+        nuevo.atributo_split_anterior = self.atributo_split_anterior
+        nuevo.valor_split_anterior = self.valor_split_anterior
+        nuevo.signo_split_anterior = self.signo_split_anterior
+        nuevo.impureza = self.impureza
+        nuevo.subs = [sub.copy() for sub in self.subs]
+        return nuevo
     
-    # Lo podemos pasar a ArbolClasificador, usar clausura
     def _mejor_atributo_split(self) -> str | None:
         mejor_ig = -1
         mejor_atributo = None
@@ -24,18 +37,8 @@ class ArbolClasificadorID3(ArbolClasificador):
                     mejor_atributo = atributo
 
         return mejor_atributo
-    
-    def copy(self):
-        nuevo = ArbolClasificadorID3(**self.__dict__)
-        nuevo.data = self.data.copy()
-        nuevo.target = self.target.copy()
-        nuevo.target_categorias = self.target_categorias.copy()
-        nuevo.subs = [sub.copy() for sub in self.subs]
-        return nuevo
         
     def _split(self, atributo: str) -> None:
-        
-        temp = self.copy()
         self.atributo_split = atributo  # guardo el atributo por el cual spliteo
 
         for categoria in self.data[atributo].unique():  # recorre el dominio de valores del atributo
@@ -50,55 +53,41 @@ class ArbolClasificadorID3(ArbolClasificador):
             nuevo_arbol.atributo_split_anterior = atributo
             nuevo_arbol.set_clase()
             nuevo_arbol.signo_split_anterior = '='
-            temp.agregar_subarbol(nuevo_arbol)  # Agrego el nuevo arbol en el arbol temporal
-
-        ok_min_obs_hoja = True
-        for sub_arbol in temp.subs:
-            if (self.min_obs_hoja !=-1 and sub_arbol._total_samples() < self.min_obs_hoja):
-                ok_min_obs_hoja = False
-
-        if ok_min_obs_hoja:
-            self.subs = temp.subs
-    
+            self.agregar_subarbol(nuevo_arbol)
+            
     def _information_gain(self, atributo: str) -> float:
-        # entropia_actual = self._entropia()
-        entropia_actual = Entropia().calcular(self.target)
+        def split(arbol, atributo):
+            arbol._split(atributo)
 
-        len_actual = self._total_samples()
-
-        nuevo = self.copy()
-
-        nuevo._split(atributo)
-
-        entropias_subarboles = 0 
-        for subarbol in nuevo.subs:
-            # entropia = subarbol._entropia()
-            entropia = Entropia().calcular(subarbol.target)
-            len_subarbol = subarbol._total_samples()
-            entropias_subarboles += ((len_subarbol/len_actual) * entropia)
-
-        information_gain = entropia_actual - entropias_subarboles
-        return information_gain
+        return self.impureza._information_gain_base(self, atributo, split) # quizas renombrar a ganancia (o evaluar_split) en impureza
+    
+    def _puede_splitearse(self, prof_acum: int, mejor_atributo: str) -> bool:
+        copia = self.copy()
+        information_gain = self._information_gain(mejor_atributo)
+        copia._split(mejor_atributo)
+        for subarbol in copia.subs:
+            if self.min_obs_hoja != -1 and subarbol._total_samples() < self.min_obs_hoja:
+                return False
+            
+        return not (len(self.target.unique()) == 1 or len(self.data.columns) == 0
+                    or (self.max_prof != -1 and self.max_prof <= prof_acum)
+                    or (self.min_obs_nodo != -1 and self.min_obs_nodo > self._total_samples())
+                    or (self.min_infor_gain != -1 and self.min_infor_gain > information_gain))
         
     def fit(self, X: pd.DataFrame, y: pd.Series):
         self.target = y
         self.data = X
         self.set_clase()
 
-        def _interna(arbol: ArbolClasificadorID3, prof_acum: int = 1):
+        def _interna(arbol, prof_acum: int = 1):
             arbol.set_target_categorias(y)
 
-            if arbol._puede_splitearse(prof_acum):
-                mejor_atributo = arbol._mejor_atributo_split()
+            mejor_atributo = arbol._mejor_atributo_split()
+            if mejor_atributo and arbol._puede_splitearse(prof_acum, mejor_atributo):
+                arbol._split(mejor_atributo)
 
-                if mejor_atributo:
-                    mejor_ig = arbol._information_gain(mejor_atributo)
-
-                    if (arbol.min_infor_gain == -1 or mejor_ig >= arbol.min_infor_gain):
-                        arbol._split(mejor_atributo)
-
-                        for sub_arbol in arbol.subs:
-                            _interna(sub_arbol, prof_acum + 1)
+                for sub_arbol in arbol.subs:
+                    _interna(sub_arbol, prof_acum + 1)
                     
         _interna(self)
         
@@ -122,44 +111,13 @@ class ArbolClasificadorID3(ArbolClasificador):
 
         return predicciones
         
-    # def _error_clasificacion(self, y, y_pred):
-    #     x = []
-    #     for i in range(len(y)):
-    #         x.append(y[i] != y_pred[i])
-    #     return np.mean(x)
-        
-    def reduced_error_pruning(self, x_test: Any, y_test: Any):
-        def _interna_rep(arbol: ArbolClasificadorID3, x_test, y_test):
-            if not arbol.es_hoja():
-                for subarbol in arbol.subs:
-                    _interna_rep(subarbol, x_test, y_test)
-
-                    pred_raiz: list[str] = arbol.predict(x_test)
-                    error_clasif_raiz = Metricas.error(y_test, pred_raiz)
-
-                    error_clasif_ramas = 0.0
-
-                    for rama in arbol.subs:
-                        new_arbol: ArbolClasificadorID3 = rama
-                        pred_podada = new_arbol.predict(x_test)
-                        error_clasif_podada = Metricas.error(y_test, pred_podada)
-                        error_clasif_ramas = error_clasif_ramas + error_clasif_podada
-
-                    if error_clasif_ramas < error_clasif_raiz:
-                        #print(" * Podar \n")
-                        arbol.subs = []
-                    #else:
-                        #print(" * No podar \n")
-
-        _interna_rep(self, x_test, y_test)
-
     def __str__(self) -> str:
         out = []
         def _interna(self, prefijo: str = '  ', es_ultimo: bool = True) -> None:
             simbolo_rama = '└─── ' if es_ultimo else '├─── '
             split = "Split: " + str(self.atributo_split)
             rta =  f"{self.atributo_split_anterior} = {self.valor_split_anterior}"
-            impureza = f"{self.criterio_impureza}: {round(self._impureza(), 3)}"
+            impureza = f"{self.impureza}: {round(self.impureza.calcular(self.target), 3)}"
             samples = f"Muestras: {str(self._total_samples())}"
             values = f"Conteo: {str(self._values())}"
             clase = 'Clase: ' + str(self.clase)
@@ -199,7 +157,6 @@ class ArbolClasificadorID3(ArbolClasificador):
                 out.append(prefijo_hoja + clase)
         _interna(self)
         return "\n".join(out)
-        
 
 def probar(df, target: str):
     X = df.drop(target, axis=1)
@@ -215,15 +172,14 @@ def probar(df, target: str):
     print(f"\n accuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
     print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio='ponderado')}\n")
 
-    print("Podo el arbol\n")
-    arbol.reduced_error_pruning(x_test, y_test)
-    print(arbol)
-    arbol.graficar()
-    y_pred = arbol.predict(x_test)
-    
+    # print("Podo el arbol\n")
+    # podado = arbol.reduced_error_pruning2(x_test, y_test)
+    # print(podado)
+    # podado.graficar()
+    # y_pred = podado.predict(x_test)    
 
-    print(f"\n accuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
-    print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio='ponderado')}\n")
+    # print(f"\n accuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}")
+    # print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio='ponderado')}\n")
 
 if __name__ == "__main__":
     patients = pd.read_csv("./datasets/cancer_patients.csv", index_col=0)
