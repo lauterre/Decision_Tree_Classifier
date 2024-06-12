@@ -134,6 +134,35 @@ class ArbolClasificadorC45(ArbolClasificador):
             i += 1
 
         return mejor_umbral  
+    
+    def _rellenar_missing_values(self):
+        for column in self.data.columns:
+            if self.es_atributo_numerico(column):
+                # Reemplazar valores faltantes con la media de la columna agrupada por target
+                mean_values = self.data.groupby(self.target)[column].transform('mean')
+                self.data.fillna({column: mean_values}, inplace=True)
+            else:
+                # Reemplazar valores faltantes con la moda de la columna agrupada por target
+                mode_values = self.data.groupby(self.target)[column].transform(lambda x: x.mode()[0] if not x.mode().empty else x)
+                self.data.fillna({column: mode_values}, inplace=True)
+
+    def fit(self, X: pd.DataFrame, y: pd.Series):
+        self.target = y.copy()
+        self.data = X.copy()
+        self._rellenar_missing_values()
+        self.set_clase()
+        
+        def _interna(arbol, prof_acum: int = 1):
+            arbol.set_target_categorias(y)
+
+            mejor_atributo = arbol._mejor_atributo_split()
+            if mejor_atributo and arbol._puede_splitearse(prof_acum, mejor_atributo):
+                arbol._split(mejor_atributo) # el check de numerico ocurre dentro de _split()
+                
+                for sub_arbol in arbol.subs:
+                    _interna(sub_arbol, prof_acum + 1)
+        
+        _interna(self)   
         
     def predict(self, X: pd.DataFrame) -> list:
         predicciones = []
@@ -264,8 +293,6 @@ class ArbolClasificadorC45(ArbolClasificador):
                     _interna(sub_arbol, prefijo, ultimo)
         _interna(self)
         return "\n".join(out)
-    def __repr__(self) -> str:
-        return f'{self._total_samples()}\n{self.clase}\n{self.atributo_split_anterior}'
     
 def probar(df, target: str):
     X = df.drop(target, axis=1)
@@ -358,14 +385,20 @@ if __name__ == "__main__":
     # probar_cv(df, "Play Tennis")
     # probar(tennis, "Play Tennis")
 
-    print("pruebo con patients") 
+    # print("pruebo con patients") 
 
-    patients = pd.read_csv("./datasets/cancer_patients.csv", index_col=0)
-    patients = patients.drop("Patient Id", axis = 1)
-    patients.loc[:, patients.columns != "Age"] = patients.loc[:, patients.columns != "Age"].astype(str) # para que sean categorias
+    # patients = pd.read_csv("./datasets/cancer_patients.csv", index_col=0)
+    # patients = patients.drop("Patient Id", axis = 1)
+    # patients.loc[:, patients.columns != "Age"] = patients.loc[:, patients.columns != "Age"].astype(str) # para que sean categorias
     
-    #probar_cv(patients, "Level")
-    probar_grid_search(patients, "Level")
+    # #probar_cv(patients, "Level")
+    # probar_grid_search(patients, "Level")
+
+    print("pruebo con patientsna")
+    patientsna = pd.read_csv("./datasets/cancer_patients_con_NA.csv", index_col=0)
+    patientsna = patientsna.drop("Patient Id", axis = 1)
+    patientsna.loc[:, patientsna.columns != "Age"] = patientsna.loc[:, patientsna.columns != "Age"].astype(str) # para que sean categorias
+    probar_grid_search(patientsna, "Level")
     
     #titanic = pd.read_csv("./datasets/titanic.csv")
     #print("pruebo con titanic")
