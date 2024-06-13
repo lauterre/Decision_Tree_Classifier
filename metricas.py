@@ -82,7 +82,7 @@ class Metricas:
         return f1_score
 
     @staticmethod
-    def accuracy_score(y_true: pd.Series, y_pred: list):
+    def accuracy_score(y_true: pd.Series, y_pred: list) -> float:
         if len(y_true) != len(y_pred):
             raise ValueError("y_true e y_pred debe tener la misma longitud")
         
@@ -91,7 +91,7 @@ class Metricas:
         return verdaderos_p / len(y_true)
     
     @staticmethod
-    def error(y_true: pd.Series, y_pred: list):
+    def error_score(y_true: pd.Series, y_pred: list) -> float:
         return 1 - Metricas.accuracy_score(y_true, y_pred)
 
     

@@ -8,6 +8,10 @@ class Impureza():
     def calcular(self, target: pd.Series) -> float:
         raise NotImplementedError
     
+    @abstractmethod
+    def calcular_impureza_split(self, arbol, atributo: str, split: Callable) -> float:
+        raise NotImplementedError
+    
 class Entropia(Impureza):
     def calcular(self, target: pd.Series) -> float:
         entropia = 0
@@ -18,7 +22,7 @@ class Entropia(Impureza):
             entropia -= proporcion * np.log2(proporcion)
         return entropia
  
-    def _information_gain_base(self, arbol, atributo: str, split: Callable):
+    def calcular_impureza_split(self, arbol, atributo: str, split: Callable): # information gain
         entropia_actual = self.calcular(arbol.target)
         len_actual = arbol._total_samples()
         nuevo = arbol.copy()
@@ -49,7 +53,7 @@ class Gini(Impureza):
             gini -= proporcion ** 2
         return gini
     
-    def costo(self, atributo:str, target: pd.Series) -> float:
+    def calcular_impureza_split(self, atributo:str, target: pd.Series) -> float: # funcion de costo
         pass
     
     def __str__(self) -> str:
