@@ -3,25 +3,26 @@ import pandas as pd
 import numpy as np
 from arbol_clasificador_c45 import ArbolClasificadorC45
 from metricas import Metricas
-from herramientas import Herramientas
+from herramientas import Herramientas, GridSearch
 from _superclases import Clasificador, Bosque, Hiperparametros
 from arbol_clasificador_id3 import ArbolClasificadorID3
 
 
 class BosqueClasificador(Bosque, Clasificador): # Bosque
-    def __init__(self, clase_arbol: str = "id3", cantidad_arboles: int = 10, cantidad_atributos:str ='sqrt',**kwargs) -> None:
+    def __init__(self, clase_arbol: str = "id3", cantidad_arboles: int = 10, cantidad_atributos:str ='sqrt',verbose: bool = False,**kwargs) -> None:
         super().__init__(cantidad_arboles)
         self.hiperparametros_arbol = Hiperparametros(**kwargs)
         for key, value in self.hiperparametros_arbol.__dict__.items():
             setattr(self, key, value)
         self.cantidad_atributos = cantidad_atributos
         self.clase_arbol = clase_arbol
+        self.verbose = verbose
 
     def _bootstrap_samples(self, X: pd.DataFrame, y: pd.Series) -> tuple[pd.DataFrame, pd.Series]:
         # Nro filas
         n_samples = X.shape[0]
         atributos = np.random.choice(n_samples, n_samples, replace=True)
-        return X.iloc[atributos], y.iloc[atributos]
+        return X.iloc[atributos].reset_index(drop=True), y.iloc[atributos].reset_index(drop=True)
 
     def seleccionar_atributos(self, X: pd.DataFrame)-> list[int]:
         n_features = X.shape[1]
@@ -40,7 +41,7 @@ class BosqueClasificador(Bosque, Clasificador): # Bosque
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> None:
         for _ in range(self.cantidad_arboles):
-            print(f"Contruyendo arbol nro: {_ + 1}")
+            if self.verbose : print(f"Contruyendo arbol nro: {_ + 1}") 
             # Bootstrapping
             X_sample, y_sample = self._bootstrap_samples(X, y)
 
@@ -72,6 +73,34 @@ class BosqueClasificador(Bosque, Clasificador): # Bosque
         
         return predicciones_finales
     
+
+def probar_cv(df: pd.DataFrame, target: str):
+    X = df.drop(target, axis=1)
+    y = df[target]
+
+    x_train, x_test, y_train, y_test = Herramientas.dividir_set(X, y, test_size=0.15, random_state=42)
+    rf = BosqueClasificador(clase_arbol="id3", cantidad_arboles = 10, cantidad_atributos='sqrt', max_prof=2, min_obs_nodo=10, verbose=True)
+    print(Herramientas.cross_validation(x_train, y_train, rf, 5,verbose=True))
+
+def probar_grid_search(df, target: str):
+    X = df.drop(target, axis=1)
+    y = df[target]
+
+    x_train, x_test, y_train, y_test = Herramientas.dividir_set(X, y, test_size=0.20, random_state=42)
+    rf = BosqueClasificador()
+    grid_search = GridSearch(rf, {'clase_arbol': ['id3', 'c45'],'max_prof': [2, 3, 4, 5], 'min_obs_nodo': [10, 20, 30, 40]}, k_fold=3)
+
+    grid_search.fit(x_train, y_train)
+    print(grid_search.mejores_params)
+    print(grid_search.mejor_score)
+    print(grid_search.mostrar_resultados())
+    mejor_bosque = BosqueClasificador(**grid_search.mejores_params)
+    mejor_bosque.fit(x_train, y_train)
+
+    y_pred = mejor_bosque.predict(x_test)
+    print(f"accuracy en set de prueba: {Metricas.accuracy_score(y_test, y_pred)}")
+    print(f"f1-score en set de prueba: {Metricas.f1_score(y_test, y_pred, promedio='ponderado')}\n")
+    
     
 if __name__ == "__main__":
     # Crea un conjunto de datos de ejemplo
@@ -85,14 +114,15 @@ if __name__ == "__main__":
     y = patients["Level"]
     x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    # fiteo el RandomForest con ArbolDecisionID3
-    rf = BosqueClasificador(clase_arbol="c45", cantidad_arboles = 10, cantidad_atributos='sqrt', max_prof=10, min_obs_nodo=10)
-    rf.fit(x_train, y_train)
-    #cross_validation(x_train, y_train, rf, 4)
-    #score_arbol = Herramientas.cross_validation(X, y, rf, 10)
+    print("pruebo con patients") 
 
-    # Predice con el RandomForest
-    predicciones = rf.predict(x_test)
-    print(f'Accuracy Score: {Metricas.accuracy_score(y_test, predicciones)}')
+    patients = pd.read_csv("./datasets/cancer_patients.csv", index_col=0)
+    patients = patients.drop("Patient Id", axis = 1)
+    patients.loc[:, patients.columns != "Age"] = patients.loc[:, patients.columns != "Age"].astype(str) # para que sean categorias
+    
+    print("pruebo cross validation")
+    #probar_cv(patients, "Level") #anda joya
+    print("pruebo grid search")
+    #probar_grid_search(patients, "Level") #anda joya, ojo con correrlo que tarda bastante (hay muchas combinaciones)
 
         
