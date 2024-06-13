@@ -175,11 +175,9 @@ class ArbolClasificadorC45(ArbolClasificador):
     def _rellenar_missing_values(self):
         for columna in self.data.columns:
             if self.es_atributo_numerico(columna):
-                # Reemplazar valores faltantes con la media de la columna agrupada por target
                 medias = self.data.groupby(self.target)[columna].transform('mean')
                 self.data.fillna({columna: medias}, inplace=True)
             else:
-                # Reemplazar valores faltantes con la moda de la columna agrupada por target
                 modas = self.data.groupby(self.target)[columna].transform(lambda x: x.mode()[0] if not x.mode().empty else x)
                 self.data.fillna({columna: modas}, inplace=True)
     
@@ -406,7 +404,7 @@ def probar_grid_search(df, target: str):
 
     x_train, x_test, y_train, y_test = Herramientas.dividir_set(X, y, test_size=0.20, random_state=42)
     arbol = ArbolClasificadorC45()
-    grid_search = GridSearch(arbol, {"max_prof": [2, 3], "min_obs_hoja": [3, 5]}, k_fold=3)
+    grid_search = GridSearch(arbol, {"max_prof": [2, 3, -1], "min_obs_hoja": [3, 5,-1], "min_obs_nodo": [3, 5,-1]}, k_fold=3)
 
     grid_search.fit(x_train, y_train)
     print(grid_search.mejores_params)
