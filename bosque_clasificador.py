@@ -1,4 +1,3 @@
-from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
 from arbol_clasificador_c45 import ArbolClasificadorC45
@@ -8,7 +7,7 @@ from _superclases import Clasificador, Bosque, Hiperparametros
 from arbol_clasificador_id3 import ArbolClasificadorID3
 
 
-class BosqueClasificador(Bosque, Clasificador): # Bosque
+class BosqueClasificador(Bosque, Clasificador):
     def __init__(self, clase_arbol: str = "id3", cantidad_arboles: int = 10, cantidad_atributos:str ='sqrt',verbose: bool = False,**kwargs) -> None:
         super().__init__(cantidad_arboles)
         self.hiperparametros_arbol = Hiperparametros(**kwargs)
