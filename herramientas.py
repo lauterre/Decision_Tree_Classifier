@@ -48,7 +48,7 @@ class Herramientas:
         return k_score_total / k_fold
 
     @staticmethod
-    def dividir_set(X, y, test_size=0.2, val_size=0.2, val=False, random_state=None):
+    def dividir_set(X, y, test_size=0.2, val_size=0.2, val=False, random_state=None) -> tuple:
         if random_state is not None:
             np.random.seed(random_state)
         

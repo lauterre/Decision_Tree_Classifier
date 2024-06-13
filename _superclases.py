@@ -88,38 +88,6 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
         self.signo_split_anterior: Optional[str] = None
         self.clase: Optional[str] = None
         self.impureza: Optional[Impureza] = None
-        # TODO: quedo igual al de id3
-
-    def fit(self, X: pd.DataFrame, y: pd.Series):
-        # Check no fiteado
-        self.target = y.copy()
-        self.data = X.copy()
-        self.set_clase()
-
-        def _interna(arbol, prof_acum: int = 1):
-            arbol.set_target_categorias(y)
-
-            mejor_atributo = arbol._mejor_atributo_split()
-            if mejor_atributo and arbol._puede_splitearse(prof_acum, mejor_atributo):
-                arbol._split(mejor_atributo) # el check de numerico ahora ocurre dentro de _split()
-                
-                for sub_arbol in arbol.subs:
-                    _interna(sub_arbol, prof_acum + 1)
-        
-        _interna(self)
-
-    def _puede_splitearse(self, prof_acum: int, mejor_atributo: str) -> bool:
-        copia = self.copy()
-        information_gain = self._information_gain(mejor_atributo)
-        copia._split(mejor_atributo)
-        for subarbol in copia.subs:
-            if self.min_obs_hoja != -1 and subarbol._total_samples() < self.min_obs_hoja:
-                return False
-            
-        return not (len(self.target.unique()) == 1 or len(self.data.columns) == 0
-                    or (self.max_prof != -1 and self.max_prof <= prof_acum)
-                    or (self.min_obs_nodo != -1 and self.min_obs_nodo > self._total_samples())
-                    or (self.min_infor_gain != -1 and self.min_infor_gain > information_gain))
     
     def es_raiz(self) -> bool:
         return self.valor_split_anterior is None
@@ -166,13 +134,13 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
                     _interna_rep(subarbol, x_test, y_test)
 
                 pred_raiz: list[str] = arbol.predict(x_test)
-                error_clasif_raiz = Metricas.error(y_test, pred_raiz)
+                error_clasif_raiz = Metricas.error_score(y_test, pred_raiz)
 
                 error_clasif_ramas = 0.0
 
                 for subarbol in arbol.subs:
                     pred_podada = subarbol.predict(x_test) # type: ignore
-                    error_clasif_podada = Metricas.error(y_test, pred_podada)
+                    error_clasif_podada = Metricas.error_score(y_test, pred_podada)
                     error_clasif_ramas = error_clasif_ramas + error_clasif_podada
 
                 if error_clasif_ramas < error_clasif_raiz:
@@ -207,12 +175,12 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
     def reduced_error_pruning2(self, x_val, y_val, margen: float = 0) -> "ArbolClasificador":
         # TODO: check si esta entrenado
         arbol_completo = deepcopy(self)
-        error_inicial = Metricas.error(y_val, arbol_completo.predict(x_val))
+        error_inicial = Metricas.error_score(y_val, arbol_completo.predict(x_val))
         nodos = arbol_completo.posorden()
         for nodo in nodos:
             if not nodo.es_hoja():
                 arbol_podado = arbol_completo._podar(nodo)
-                nuevo_error = Metricas.error(y_val, arbol_podado.predict(x_val))
+                nuevo_error = Metricas.error_score(y_val, arbol_podado.predict(x_val))
                 if nuevo_error - margen < error_inicial:
                     arbol_completo = arbol_podado
                     error_inicial = nuevo_error
