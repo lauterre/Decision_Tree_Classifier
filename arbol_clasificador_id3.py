@@ -1,6 +1,5 @@
-from typing import Any
-from sklearn.model_selection import train_test_split
 import pandas as pd
+from herramientas import Herramientas
 from metricas import Metricas
 from _impureza import Entropia
 from _superclases import ArbolClasificador
@@ -163,7 +162,7 @@ def probar(df, target: str):
     X = df.drop(target, axis=1)
     y = df[target]
 
-    x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    x_train, x_test, y_train, y_test = Herramientas.dividir_set(X, y, test_size=0.2, random_state=42)
     arbol = ArbolClasificadorID3()
     arbol.fit(x_train, y_train)
     print(arbol)

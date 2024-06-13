@@ -101,7 +101,7 @@ class GridSearch:
                 score = Herramientas.cross_validation(X, y, clasificador, self._k_fold)
                 print(f'Score: {score}')
             else:
-                x_train, x_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=self.random_state)
+                x_train, x_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=self.random_state) # usariamos el nuestro, pero este es mas eficiente xq no usa pandas supongo
                 clasificador.fit(x_train, y_train)
                 score = Metricas.accuracy_score(y_val, clasificador.predict(x_val))
             if score > self.mejor_score:
