@@ -73,6 +73,17 @@ class BosqueClasificador(Bosque, Clasificador): # Bosque
         
         return predicciones_finales
     
+def probar_bosque_clasificador(df, target):
+    X = df.drop(target, axis=1)
+    y = df[target]
+
+    x_train, x_test, y_train, y_test = Herramientas.dividir_set(X, y, test_size=0.20, random_state=42)
+    rf = BosqueClasificador(clase_arbol="id3", cantidad_arboles = 10, cantidad_atributos='sqrt', max_prof=2, min_obs_nodo=10, verbose=True)
+    rf.fit(x_train, y_train)
+    y_pred = rf.predict(x_test)
+    print(f"accuracy en set de prueba: {Metricas.accuracy_score(y_test, y_pred)}")
+    print(f"f1-score en set de prueba: {Metricas.f1_score(y_test, y_pred, promedio='ponderado')}\n")
+    
 
 def probar_cv(df: pd.DataFrame, target: str):
     X = df.drop(target, axis=1)
@@ -103,22 +114,13 @@ def probar_grid_search(df, target: str):
     
     
 if __name__ == "__main__":
-    # Crea un conjunto de datos de ejemplo
-    patients = pd.read_csv("./datasets/cancer_patients.csv", index_col=0)
-    patients = patients.drop("Patient Id", axis = 1)
-    bins = [0, 15, 20, 30, 40, 50, 60, 70, float('inf')]
-    labels = ['0-15', '15-20', '20-30', '30-40', '40-50', '50-60', '60-70', '70+']
-    patients['Age'] = pd.cut(patients['Age'], bins=bins, labels=labels, right=False)
-    
-    X = patients.drop('Level', axis=1)
-    y = patients["Level"]
-    x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
     print("pruebo con patients") 
 
     patients = pd.read_csv("./datasets/cancer_patients.csv", index_col=0)
     patients = patients.drop("Patient Id", axis = 1)
     patients.loc[:, patients.columns != "Age"] = patients.loc[:, patients.columns != "Age"].astype(str) # para que sean categorias
+    print("pruebo bosque clasificador")
+    #probar_bosque_clasificador(patients, "Level") #anda joya
     
     print("pruebo cross validation")
     #probar_cv(patients, "Level") #anda joya
