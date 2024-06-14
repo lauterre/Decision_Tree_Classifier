@@ -12,12 +12,14 @@ titanic = pd.read_csv("./datasets/titanic.csv")
 
 patientsna = pd.read_csv("./datasets/cancer_patients_con_NA.csv", index_col=0)
 patientsna = patientsna.drop("Patient Id", axis = 1)
-patientsna.loc[:, patientsna.columns != "Age"] = patientsna.loc[:, patientsna.columns != "Age"].astype(str)
+patientsna.loc[:, patientsna.columns != "Age"] = patientsna.loc[:, patientsna.columns != "Age"].astype(CategoricalDtype)
 
 patients = pd.read_csv("./datasets/cancer_patients.csv", index_col=0)
 patients = patients.drop("Patient Id", axis = 1)
-patients.loc[:, patients.columns != "Age"] = patients.loc[:, patients.columns != "Age"].astype(str)
 
+
+#patients.loc[:, patients.columns != "Age"] = patients.loc[:, patients.columns != "Age"].astype(str)
+patients.loc[:, patients.columns != "Age"] = patients.loc[:, patients.columns != "Age"].astype(CategoricalDtype)
 os.system('cls')    
 
 def mostrar_id3():
@@ -94,7 +96,7 @@ def mostrar_c45_na():
     arbol_c45.graficar()
     input("Métricas del modelo: \n")
     print(f'Acuraccy Score: {Metricas.accuracy_score(y_test, arbol_c45.predict(x_test))}')
-    #print(f'F1 Score ponderado: {Metricas.f1_score(y_test, arbol_c45.predict(x_test), promedio= 'ponderado')}')
+    print(f'F1 Score ponderado: {Metricas.f1_score(y_test, arbol_c45.predict(x_test), promedio= "ponderado")}')
 
 def mostrar_bosque_id3():
     input('Dataframe Cancer Patients sin NA:\n')
