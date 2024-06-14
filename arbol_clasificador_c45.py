@@ -432,10 +432,17 @@ if __name__ == "__main__":
     # df = pd.DataFrame(data=iris.data, columns=iris.feature_names)
     # df['target'] = iris.target
 
+<<<<<<< Updated upstream
     # print("pruebo con iris")
     # probar(df, "target")
     # probar_cv(df, "target")
     #probar_grid_search(df, "target")
+=======
+    print("pruebo con iris")
+    probar(df, "target")
+    probar_cv(df, "target")
+    probar_grid_search(df, "target")
+>>>>>>> Stashed changes
 
     # print("pruebo con tennis")
     # tennis = pd.read_csv("./datasets/PlayTennis.csv")
