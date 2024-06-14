@@ -98,7 +98,7 @@ def probar_grid_search(df, target: str):
 
     x_train, x_test, y_train, y_test = Herramientas.dividir_set(X, y, test_size=0.20, random_state=42)
     rf = BosqueClasificador()
-    grid_search = GridSearch(rf, {'clase_arbol': ['id3', 'c45'],'max_prof': [2, 3, 4, 5], 'min_obs_nodo': [10, 20, 30, 40]}, k_fold=3)
+    grid_search = GridSearch(rf, {'clase_arbol': ['id3', 'c45'],'min_obs_nodo': [10, 20, 30, 40]}, k_fold=3)
 
     grid_search.fit(x_train, y_train)
     print(grid_search.mejores_params)
@@ -124,6 +124,6 @@ if __name__ == "__main__":
     print("pruebo cross validation")
     #probar_cv(patients, "Level") #anda joya
     print("pruebo grid search")
-    #probar_grid_search(patients, "Level") #anda joya, ojo con correrlo que tarda bastante (hay muchas combinaciones)
+    probar_grid_search(patients, "Level") #anda joya, ojo con correrlo que tarda bastante (hay muchas combinaciones)
 
         

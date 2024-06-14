@@ -44,7 +44,7 @@ class Herramientas:
             k_score_total += k_score
             
             if verbose: print(f"Score individual del fold nro {j+1}:", k_score)
-    
+            
         return k_score_total / k_fold
 
     @staticmethod

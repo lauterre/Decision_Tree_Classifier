@@ -190,7 +190,10 @@ if __name__ == "__main__":
 
     tennis = pd.read_csv("./datasets/PlayTennis.csv")
 
-    print("Pruebo con patients")
-    probar(patients, "Level")
-    print("Pruebo con Play Tennis")
-    probar(tennis, "Play Tennis")
+    titanic = pd.read_csv("./datasets/titanic.csv")
+    print("Pruebo con Titanic")
+    probar(titanic, "Survived")
+    # print("Pruebo con patients")
+    # probar(patients, "Level")
+    # print("Pruebo con Play Tennis")
+    # probar(tennis, "Play Tennis")

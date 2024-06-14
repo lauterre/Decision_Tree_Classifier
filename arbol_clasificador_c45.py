@@ -229,6 +229,14 @@ class ArbolClasificadorC45(ArbolClasificador):
                         return _recorrer(arbol.subs[0], fila)
                     else:
                         return _recorrer(arbol.subs[1], fila)
+                elif arbol.es_atributo_ordinal(arbol.atributo_split):
+                    niveles_ordenados = arbol.data[arbol.atributo_split].cat.categories
+                    posicion_valor = niveles_ordenados.get_loc(valor)
+                    posicion_umbral = niveles_ordenados.get_loc(arbol.umbral_split)
+                    if posicion_valor < posicion_umbral:
+                        return _recorrer(arbol.subs[0], fila)
+                    else:
+                        return _recorrer(arbol.subs[1], fila)
                 else:
                     for subarbol in arbol.subs:
                         if valor == subarbol.valor_split_anterior:
@@ -357,12 +365,11 @@ def probar(df, target: str):
     arbol.fit(X, y)
     print(arbol)
     arbol.graficar()
-    # y_pred_train = arbol.predict(x_train)
-    # y_pred_test = arbol.predict(x_test)
-    # y_pred_val = arbol.predict(x_val)
+    y_pred_train = arbol.predict(x_train)
     
-    # print(f"accuracy en set de entrenamiento: {Metricas.accuracy_score(y_train, y_pred_train)}")
-    # print(f"f1-score en set de entrenamiento: {Metricas.f1_score(y_train, y_pred_train, promedio='ponderado')}\n")
+    
+    print(f"accuracy en set de entrenamientosadasdadsad: {Metricas.accuracy_score(y_train, y_pred_train)}")
+    print(f"f1-score en set de entrenamientoasdadasdasd: {Metricas.f1_score(y_train, y_pred_train, promedio='ponderado')}\n")
 
     # print(f"accuracy en set de validacion: {Metricas.accuracy_score(y_val, y_pred_val)}")
     # print(f"f1-score en set de validacion: {Metricas.f1_score(y_val, y_pred_val, promedio='ponderado')}\n")
@@ -426,9 +433,9 @@ if __name__ == "__main__":
     df['target'] = iris.target
 
     print("pruebo con iris")
-    # probar(df, "target")
+    probar(df, "target")
     # probar_cv(df, "target")
-    probar_grid_search(df, "target")
+    #probar_grid_search(df, "target")
 
     print("pruebo con tennis")
     tennis = pd.read_csv("./datasets/PlayTennis.csv")
@@ -437,10 +444,10 @@ if __name__ == "__main__":
     wind_order = ['Weak', 'Strong']
 
     # Convertir columnsas a ordinal
-    tennis['Temperature'] = tennis['Temperature'].astype(CategoricalDtype(categories=temperature_order, ordered=True))
-    tennis['Humidity'] = tennis['Humidity'].astype(CategoricalDtype(categories=humidity_order, ordered=True))
-    tennis['Wind'] = tennis['Wind'].astype(CategoricalDtype(categories=wind_order, ordered=True))
-    probar_grid_search(tennis, "Play Tennis")
+    # tennis['Temperature'] = tennis['Temperature'].astype(CategoricalDtype(categories=temperature_order, ordered=True))
+    # tennis['Humidity'] = tennis['Humidity'].astype(CategoricalDtype(categories=humidity_order, ordered=True))
+    # tennis['Wind'] = tennis['Wind'].astype(CategoricalDtype(categories=wind_order, ordered=True))
+    #probar_grid_search(tennis, "Play Tennis")
     # probar_cv(df, "Play Tennis")
     # probar(tennis, "Play Tennis")
 
