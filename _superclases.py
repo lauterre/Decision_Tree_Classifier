@@ -125,7 +125,7 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
     
     def graficar_feo(self) -> None:
         graficador = GraficadorArbolFeo(self)
-        graficador.graficar()
+        graficador.plot()
 
     def reduced_error_pruning(self, x_test: pd.DataFrame, y_test: pd.Series) -> None:
         def _interna_rep(arbol: ArbolClasificador, x_test, y_test):

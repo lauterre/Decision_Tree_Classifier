@@ -109,6 +109,5 @@ class GridSearch:
                 self.mejores_params = parametros
             self.resutados['score'].append(score)
 
-
     def mostrar_resultados(self):
-        return pd.DataFrame(self.resutados).sort_values(by='score', ascending=False)            
+        return pd.DataFrame(self.resutados).sort_values(by='score', ascending=False)         
