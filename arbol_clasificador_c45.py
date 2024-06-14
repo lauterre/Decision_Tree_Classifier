@@ -329,7 +329,8 @@ class ArbolClasificadorC45(ArbolClasificador):
             else:
                 out.append(prefijo + "│")
                 
-                if arbol.atributo_split and (arbol.es_atributo_numerico(arbol.atributo_split) or arbol.es_atributo_ordinal(arbol.atributo_split)):
+                #if arbol.atributo_split and (arbol.es_atributo_numerico(arbol.atributo_split) or arbol.es_atributo_ordinal(arbol.atributo_split)):
+                if arbol.signo_split_anterior != "=":
                     out.append(prefijo + simbolo_rama + impureza)
                     prefijo2 = prefijo + " " * (len(simbolo_rama)) if es_ultimo else prefijo + "│" + " " * (len(simbolo_rama) - 1)
                     out.append(prefijo2 + samples)
