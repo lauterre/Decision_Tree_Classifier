@@ -104,7 +104,8 @@ class ArbolClasificadorID3(ArbolClasificador):
                         existe = True
                         _recorrer(subarbol, fila)
                 if not existe:
-                    predicciones.append(predicciones[0])
+                    # predicciones.append(predicciones[0])
+                    predicciones.append(arbol.clase)
 
         for _, fila in X.iterrows():
             _recorrer(self, fila)
@@ -162,7 +163,7 @@ def probar(df, target: str):
     X = df.drop(target, axis=1)
     y = df[target]
 
-    x_train, x_test, y_train, y_test = Herramientas.dividir_set(X, y, test_size=0.2, random_state=42)
+    x_train, x_test, y_train, y_test = Herramientas.dividir_set(X, y, test_size=0.2)
     arbol = ArbolClasificadorID3()
     arbol.fit(x_train, y_train)
     print(arbol)
@@ -182,15 +183,18 @@ def probar(df, target: str):
     # print(f"f1-score: {Metricas.f1_score(y_test, y_pred, promedio='ponderado')}\n")
 
 if __name__ == "__main__":
-    patients = pd.read_csv("./datasets/cancer_patients.csv", index_col=0)
-    patients = patients.drop("Patient Id", axis = 1)
-    bins = [0, 15, 20, 30, 40, 50, 60, 70, float('inf')]
-    labels = ['0-15', '15-20', '20-30', '30-40', '40-50', '50-60', '60-70', '70+']
-    patients['Age'] = pd.cut(patients['Age'], bins=bins, labels=labels, right=False)
+    # patients = pd.read_csv("./datasets/cancer_patients.csv", index_col=0)
+    # patients = patients.drop("Patient Id", axis = 1)
+    # bins = [0, 15, 20, 30, 40, 50, 60, 70, float('inf')]
+    # labels = ['0-15', '15-20', '20-30', '30-40', '40-50', '50-60', '60-70', '70+']
+    # patients['Age'] = pd.cut(patients['Age'], bins=bins, labels=labels, right=False)
 
-    tennis = pd.read_csv("./datasets/PlayTennis.csv")
+    # tennis = pd.read_csv("./datasets/PlayTennis.csv")
 
-    print("Pruebo con patients")
-    probar(patients, "Level")
-    print("Pruebo con Play Tennis")
-    probar(tennis, "Play Tennis")
+    titanic = pd.read_csv("./datasets/titanic.csv")
+    print("Pruebo con Titanic")
+    probar(titanic, "Survived")
+    # print("Pruebo con patients")
+    # probar(patients, "Level")
+    # print("Pruebo con Play Tennis")
+    # probar(tennis, "Play Tennis")

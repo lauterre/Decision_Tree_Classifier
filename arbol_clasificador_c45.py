@@ -229,6 +229,14 @@ class ArbolClasificadorC45(ArbolClasificador):
                         return _recorrer(arbol.subs[0], fila)
                     else:
                         return _recorrer(arbol.subs[1], fila)
+                elif arbol.es_atributo_ordinal(arbol.atributo_split):
+                    niveles_ordenados = arbol.data[arbol.atributo_split].cat.categories
+                    posicion_valor = niveles_ordenados.get_loc(valor)
+                    posicion_umbral = niveles_ordenados.get_loc(arbol.umbral_split)
+                    if posicion_valor < posicion_umbral:
+                        return _recorrer(arbol.subs[0], fila)
+                    else:
+                        return _recorrer(arbol.subs[1], fila)
                 else:
                     for subarbol in arbol.subs:
                         if valor == subarbol.valor_split_anterior:
@@ -280,7 +288,7 @@ class ArbolClasificadorC45(ArbolClasificador):
             if arbol.atributo_split and arbol.es_atributo_numerico(arbol.atributo_split):
                 split = f"{arbol.atributo_split} < {round(arbol.umbral_split, 2)} ?" if arbol.umbral_split else ""
             elif arbol.atributo_split and arbol.es_atributo_ordinal(arbol.atributo_split):
-                split = f"{arbol.atributo_split} = {arbol.umbral_split} ?" if arbol.umbral_split else ""
+                split = f"{arbol.atributo_split} < {arbol.umbral_split} ?" if arbol.umbral_split else ""
             else:
                 split = str(arbol.atributo_split) + " ?"
 
@@ -321,7 +329,8 @@ class ArbolClasificadorC45(ArbolClasificador):
             else:
                 out.append(prefijo + "│")
                 
-                if arbol.atributo_split and arbol.es_atributo_numerico(arbol.atributo_split):
+                #if arbol.atributo_split and (arbol.es_atributo_numerico(arbol.atributo_split) or arbol.es_atributo_ordinal(arbol.atributo_split)):
+                if arbol.signo_split_anterior != "=":
                     out.append(prefijo + simbolo_rama + impureza)
                     prefijo2 = prefijo + " " * (len(simbolo_rama)) if es_ultimo else prefijo + "│" + " " * (len(simbolo_rama) - 1)
                     out.append(prefijo2 + samples)
@@ -351,44 +360,16 @@ def probar(df, target: str):
 
     # x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.15)
     # x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=0.2)
-    x_train, x_val, x_test, y_train, y_val, y_test = Herramientas.dividir_set(X, y, test_size=0.15, val_size=0.15, val=True, random_state=42)
+    # x_train, x_val, x_test, y_train, y_val, y_test = Herramientas.dividir_set(X, y, test_size=0.15, val_size=0.15, val=True, random_state=42)
     arbol = ArbolClasificadorC45()
 
     arbol.fit(X, y)
     print(arbol)
     arbol.graficar()
     # y_pred_train = arbol.predict(x_train)
-    # y_pred_test = arbol.predict(x_test)
-    # y_pred_val = arbol.predict(x_val)
     
     # print(f"accuracy en set de entrenamiento: {Metricas.accuracy_score(y_train, y_pred_train)}")
     # print(f"f1-score en set de entrenamiento: {Metricas.f1_score(y_train, y_pred_train, promedio='ponderado')}\n")
-
-    # print(f"accuracy en set de validacion: {Metricas.accuracy_score(y_val, y_pred_val)}")
-    # print(f"f1-score en set de validacion: {Metricas.f1_score(y_val, y_pred_val, promedio='ponderado')}\n")
-    
-    # print(f"accuracy en set de prueba: {Metricas.accuracy_score(y_test, y_pred_test)}")
-    # print(f"f1-score en set de prueba: {Metricas.f1_score(y_test, y_pred_test, promedio='ponderado')}\n")
-    
-    # print("Podo el arbol\n")
-
-    # arbol.reduced_error_pruning(x_val, y_val)
-
-    # #print(podado)
-    # arbol.graficar()
-
-    # y_pred_train = arbol.predict(x_train)
-    # y_pred_test = arbol.predict(x_test)
-    # y_pred_val = arbol.predict(x_val)
-    
-    # print(f"accuracy en set de entrenamiento: {Metricas.accuracy_score(y_train, y_pred_train):.2f}")
-    # print(f"f1-score en set de entrenamiento: {Metricas.f1_score(y_train, y_pred_train, promedio='ponderado')}\n")
-
-    # print(f"accuracy en set de validacion: {Metricas.accuracy_score(y_val, y_pred_val)}")
-    # print(f"f1-score en set de validacion: {Metricas.f1_score(y_val, y_pred_val, promedio='ponderado')}\n")
-    
-    # print(f"accuracy en set de prueba: {Metricas.accuracy_score(y_test, y_pred_test)}")
-    # print(f"f1-score en set de prueba: {Metricas.f1_score(y_test, y_pred_test, promedio='ponderado')}\n")
 
 def probar_cv(df, target: str):
     X = df.drop(target, axis=1)
@@ -396,7 +377,7 @@ def probar_cv(df, target: str):
 
     x_train, x_test, y_train, y_test = Herramientas.dividir_set(X, y, test_size=0.15, random_state=42)
     arbol = ArbolClasificadorC45(max_prof = 5, min_obs_hoja=5, min_obs_nodo=5)
-    print(Herramientas.cross_validation(x_train, y_train, arbol, 5))
+    print(Herramientas.cross_validation(x_train, y_train, arbol, 5, verbose=True))
 
 def probar_grid_search(df, target: str):
     X = df.drop(target, axis=1)
@@ -421,35 +402,38 @@ def probar_grid_search(df, target: str):
 if __name__ == "__main__":
     import sklearn.datasets
 
-    iris = sklearn.datasets.load_iris()
-    df = pd.DataFrame(data=iris.data, columns=iris.feature_names)
-    df['target'] = iris.target
+    # iris = sklearn.datasets.load_iris()
+    # df = pd.DataFrame(data=iris.data, columns=iris.feature_names)
+    # df['target'] = iris.target
 
-    print("pruebo con iris")
+    # print("pruebo con iris")
     # probar(df, "target")
     # probar_cv(df, "target")
-    probar_grid_search(df, "target")
+    # probar_grid_search(df, "target")
 
-    print("pruebo con tennis")
-    tennis = pd.read_csv("./datasets/PlayTennis.csv")
-    temperature_order = ['Cool', 'Mild', 'Hot']
-    humidity_order = ['Normal', 'High']
-    wind_order = ['Weak', 'Strong']
+    # print("pruebo con tennis")
+    # tennis = pd.read_csv("./datasets/PlayTennis.csv")
+    # temperature_order = ['Cool', 'Mild', 'Hot']
+    # humidity_order = ['Normal', 'High']
+    # wind_order = ['Weak', 'Strong']
 
-    # Convertir columnsas a ordinal
-    tennis['Temperature'] = tennis['Temperature'].astype(CategoricalDtype(categories=temperature_order, ordered=True))
-    tennis['Humidity'] = tennis['Humidity'].astype(CategoricalDtype(categories=humidity_order, ordered=True))
-    tennis['Wind'] = tennis['Wind'].astype(CategoricalDtype(categories=wind_order, ordered=True))
-    probar_grid_search(tennis, "Play Tennis")
-    # probar_cv(df, "Play Tennis")
+    # # Convertir columnsas a ordinal
+    # tennis['Temperature'] = tennis['Temperature'].astype(CategoricalDtype(categories=temperature_order, ordered=True))
+    # tennis['Humidity'] = tennis['Humidity'].astype(CategoricalDtype(categories=humidity_order, ordered=True))
+    # tennis['Wind'] = tennis['Wind'].astype(CategoricalDtype(categories=wind_order, ordered=True))
+    # #probar_grid_search(tennis, "Play Tennis")
+    # # probar_cv(df, "Play Tennis")
     # probar(tennis, "Play Tennis")
 
-    # print("pruebo con patients") 
+    print("pruebo con patients") 
 
-    # patients = pd.read_csv("./datasets/cancer_patients.csv", index_col=0)
-    # patients = patients.drop("Patient Id", axis = 1)
-    # patients.loc[:, patients.columns != "Age"] = patients.loc[:, patients.columns != "Age"].astype(str) # para que sean categorias
-    
+    patients = pd.read_csv("./datasets/cancer_patients.csv", index_col=0)
+    patients = patients.drop("Patient Id", axis = 1)
+
+    # Convertir las columnas a categorías ordinales manteniendo NaN
+    cols_to_convert = patients.columns[(patients.columns != 'Age') & (patients.columns != 'Level')]
+    patients[cols_to_convert] = patients[cols_to_convert].apply(lambda col: col.astype('float').astype(CategoricalDtype(categories=[1, 2, 3, 4, 5, 6, 7], ordered=True)))
+    probar(patients, "Level")
     # #probar_cv(patients, "Level")
     # probar_grid_search(patients, "Level")
 
@@ -459,8 +443,8 @@ if __name__ == "__main__":
     # patientsna.loc[:, patientsna.columns != "Age"] = patientsna.loc[:, patientsna.columns != "Age"].astype(str) # para que sean categorias
     # probar_grid_search(patientsna, "Level")
     
-    #titanic = pd.read_csv("./datasets/titanic.csv")
-    #print("pruebo con titanic")
-    #probar_cv(df, "target")
+    # titanic = pd.read_csv("./datasets/titanic.csv")
+    # print("pruebo con titanic")
+    # probar_cv(titanic, "Survived")
     #probar(titanic, "Survived")
-    #probar_grid_search(df, "target")
+    #probar_grid_search(titanic, "Survived")

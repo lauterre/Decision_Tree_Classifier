@@ -61,7 +61,7 @@ class BosqueClasificador(Bosque, Clasificador):
                 raise ValueError("Clase de arbol soportado por el bosque: 'id3', 'c45'")
             #arbol.imprimir()
 
-    def predict(self, X: pd.DataFrame) -> pd.Series:
+    def predict(self, X: pd.DataFrame) -> list:
         todas_predicciones = pd.DataFrame(index=X.index, columns=range(len(self.arboles))) 
         
         for i, arbol in enumerate(self.arboles):
@@ -70,7 +70,7 @@ class BosqueClasificador(Bosque, Clasificador):
         # Aplicar la votación mayoritaria
         predicciones_finales = todas_predicciones.apply(lambda x: x.value_counts().idxmax(), axis=1)
         
-        return predicciones_finales
+        return list(predicciones_finales)
     
 def probar_bosque_clasificador(df, target):
     X = df.drop(target, axis=1)
@@ -89,7 +89,7 @@ def probar_cv(df: pd.DataFrame, target: str):
     y = df[target]
 
     x_train, x_test, y_train, y_test = Herramientas.dividir_set(X, y, test_size=0.15, random_state=42)
-    rf = BosqueClasificador(clase_arbol="id3", cantidad_arboles = 10, cantidad_atributos='sqrt', max_prof=2, min_obs_nodo=10, verbose=True)
+    rf = BosqueClasificador(clase_arbol="c45", cantidad_arboles = 10, cantidad_atributos='sqrt', max_prof=2, min_obs_nodo=10, verbose=True)
     print(Herramientas.cross_validation(x_train, y_train, rf, 5,verbose=True))
 
 def probar_grid_search(df, target: str):
@@ -98,7 +98,7 @@ def probar_grid_search(df, target: str):
 
     x_train, x_test, y_train, y_test = Herramientas.dividir_set(X, y, test_size=0.20, random_state=42)
     rf = BosqueClasificador()
-    grid_search = GridSearch(rf, {'clase_arbol': ['id3', 'c45'],'max_prof': [2, 3, 4, 5], 'min_obs_nodo': [10, 20, 30, 40]}, k_fold=3)
+    grid_search = GridSearch(rf, {'clase_arbol': ['id3', 'c45'],'min_obs_nodo': [10, 20, 30, 40]}, k_fold=3)
 
     grid_search.fit(x_train, y_train)
     print(grid_search.mejores_params)
@@ -113,17 +113,22 @@ def probar_grid_search(df, target: str):
     
     
 if __name__ == "__main__":
-    print("pruebo con patients") 
+    # print("pruebo con patients") 
 
-    patients = pd.read_csv("./datasets/cancer_patients.csv", index_col=0)
-    patients = patients.drop("Patient Id", axis = 1)
-    patients.loc[:, patients.columns != "Age"] = patients.loc[:, patients.columns != "Age"].astype(str) # para que sean categorias
-    print("pruebo bosque clasificador")
-    #probar_bosque_clasificador(patients, "Level") #anda joya
+    # patients = pd.read_csv("./datasets/cancer_patients.csv", index_col=0)
+    # patients = patients.drop("Patient Id", axis = 1)
+    # patients.loc[:, patients.columns != "Age"] = patients.loc[:, patients.columns != "Age"].astype(str) # para que sean categorias
+    # print("pruebo bosque clasificador")
+    # #probar_bosque_clasificador(patients, "Level") #anda joya
     
-    print("pruebo cross validation")
-    #probar_cv(patients, "Level") #anda joya
-    print("pruebo grid search")
-    #probar_grid_search(patients, "Level") #anda joya, ojo con correrlo que tarda bastante (hay muchas combinaciones)
+    # print("pruebo cross validation")
+    # #probar_cv(patients, "Level") #anda joya
+    # print("pruebo grid search")
+    # probar_grid_search(patients, "Level") #anda joya, ojo con correrlo que tarda bastante (hay muchas combinaciones)
+
+    print("pruebo con titanic")
+    titanic = pd.read_csv("./datasets/titanic.csv")
+    probar_cv(titanic, "Survived")
+
 
         

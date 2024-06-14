@@ -44,7 +44,7 @@ class Herramientas:
             k_score_total += k_score
             
             if verbose: print(f"Score individual del fold nro {j+1}:", k_score)
-    
+            
         return k_score_total / k_fold
 
     @staticmethod
@@ -109,7 +109,5 @@ class GridSearch:
                 self.mejores_params = parametros
             self.resutados['score'].append(score)
 
-
     def mostrar_resultados(self):
-        return pd.DataFrame(self.resutados).sort_values(by='score', ascending=False)            
-            
+        return pd.DataFrame(self.resutados).sort_values(by='score', ascending=False)         
