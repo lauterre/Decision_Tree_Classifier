@@ -5,7 +5,8 @@ from bosque_clasificador import BosqueClasificador
 from herramientas import GridSearch, Herramientas
 from metricas import Metricas
 from pandas.api.types import CategoricalDtype
-
+import os
+   
 tennis = pd.read_csv('datasets/PlayTennis.csv')
 titanic = pd.read_csv("./datasets/titanic.csv")
 
@@ -16,7 +17,8 @@ patientsna.loc[:, patientsna.columns != "Age"] = patientsna.loc[:, patientsna.co
 patients = pd.read_csv("./datasets/cancer_patients.csv", index_col=0)
 patients = patients.drop("Patient Id", axis = 1)
 patients.loc[:, patients.columns != "Age"] = patients.loc[:, patients.columns != "Age"].astype(str)
-    
+
+os.system('cls')    
 
 def mostrar_id3():
     input('Dataframe PlayTennis:\n')
@@ -26,7 +28,7 @@ def mostrar_id3():
     x_train, x_test, y_train, y_test = Herramientas.dividir_set(X, y, test_size=0.3, random_state=42)
     arbol_id3 = ArbolClasificadorID3()
     arbol_id3.fit(x_train, y_train)
-    input("Impresión en consola:\n")
+    input("\n Impresión en consola:\n")
     print(arbol_id3)
     input("Graficamos el arbol...\n")
     arbol_id3.graficar()
@@ -92,7 +94,7 @@ def mostrar_c45_na():
     arbol_c45.graficar()
     input("Métricas del modelo: \n")
     print(f'Acuraccy Score: {Metricas.accuracy_score(y_test, arbol_c45.predict(x_test))}')
-    print(f'F1 Score ponderado: {Metricas.f1_score(y_test, arbol_c45.predict(x_test), promedio= 'ponderado')}')
+    #print(f'F1 Score ponderado: {Metricas.f1_score(y_test, arbol_c45.predict(x_test), promedio= 'ponderado')}')
 
 def mostrar_bosque_id3():
     input('Dataframe Cancer Patients sin NA:\n')
@@ -153,31 +155,38 @@ def mostrar_grid_search_numerico():
     print(f"f1-score en set de prueba: {Metricas.f1_score(y_test, y_pred)}\n")
 
 def prueba():
-    print(f'Bienvenidxs a la presentación del TPI de Algoritmos 2')
+    print(f'\n \n Bienvenidxs a la presentación del TPI de Algoritmos 2')
     input('Presione Enter para continuar...')
-    print(f'Contruccion del Arbol clasificador ID3')
+    print(f'\n Contruccion del Arbol clasificador ID3 \n')
     mostrar_id3()
-    input('Presione Enter para continuar...')
-    print(f'Contruccion del Arbol clasificador C4.5')
-    input('Presione Enter para continuar...')
+
+    input('\n Presione Enter para continuar...')
+    print(f'\n Contruccion del Arbol clasificador C4.5')
+    input('Presione Enter para continuar...\n')
     mostrar_c45_tennis()
-    input('Presione Enter para continuar...')
-    print(f'Contruccion del Arbol clasificador C4.5 con Dataset numerico')
+
+    input('\n Presione Enter para continuar...')
+    print(f'\n Contruccion del Arbol clasificador C4.5 con Dataset numerico')
     mostrar_c45_titanic()
-    input('Presione Enter para continuar...')
-    print(f'Contruccion del Arbol clasificador C4.5 con NA')
-    input('Presione Enter para continuar...')
+    
+    input('\n Presione Enter para continuar...')
+    print(f'\n Contruccion del Arbol clasificador C4.5 con NA')
+    input('Presione Enter para continuar...\n')
     mostrar_c45_na()
-    input('Presione Enter para continuar...')
-    print(f'Contruccion del Bosque Clasificar ID3')
+
+    input('\n Presione Enter para continuar...')
+    print(f'\n Contruccion del Bosque Clasificar ID3')
     input('Presione Enter para continuar...')
     mostrar_bosque_id3()
-    input('Presione Enter para continuar...')
-    print(f'Grid Search')
+    
+    input('\n Presione Enter para continuar...')
+    print(f'\n Grid Search')
     mostrar_grid_search()
-    print(f'Grid Search con dataset numerico')
+    
+    print(f'\n Grid Search con dataset numerico')
     mostrar_grid_search_numerico()
 
 
 if __name__ == '__main__':
     prueba()
+    
