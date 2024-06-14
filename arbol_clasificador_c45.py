@@ -403,7 +403,7 @@ def probar_cv(df, target: str):
 
     x_train, x_test, y_train, y_test = Herramientas.dividir_set(X, y, test_size=0.15, random_state=42)
     arbol = ArbolClasificadorC45(max_prof = 5, min_obs_hoja=5, min_obs_nodo=5)
-    print(Herramientas.cross_validation(x_train, y_train, arbol, 5))
+    print(Herramientas.cross_validation(x_train, y_train, arbol, 5, verbose=True))
 
 def probar_grid_search(df, target: str):
     X = df.drop(target, axis=1)
@@ -428,20 +428,20 @@ def probar_grid_search(df, target: str):
 if __name__ == "__main__":
     import sklearn.datasets
 
-    iris = sklearn.datasets.load_iris()
-    df = pd.DataFrame(data=iris.data, columns=iris.feature_names)
-    df['target'] = iris.target
+    # iris = sklearn.datasets.load_iris()
+    # df = pd.DataFrame(data=iris.data, columns=iris.feature_names)
+    # df['target'] = iris.target
 
-    print("pruebo con iris")
-    probar(df, "target")
+    # print("pruebo con iris")
+    # probar(df, "target")
     # probar_cv(df, "target")
     #probar_grid_search(df, "target")
 
-    print("pruebo con tennis")
-    tennis = pd.read_csv("./datasets/PlayTennis.csv")
-    temperature_order = ['Cool', 'Mild', 'Hot']
-    humidity_order = ['Normal', 'High']
-    wind_order = ['Weak', 'Strong']
+    # print("pruebo con tennis")
+    # tennis = pd.read_csv("./datasets/PlayTennis.csv")
+    # temperature_order = ['Cool', 'Mild', 'Hot']
+    # humidity_order = ['Normal', 'High']
+    # wind_order = ['Weak', 'Strong']
 
     # Convertir columnsas a ordinal
     # tennis['Temperature'] = tennis['Temperature'].astype(CategoricalDtype(categories=temperature_order, ordered=True))
@@ -466,8 +466,8 @@ if __name__ == "__main__":
     # patientsna.loc[:, patientsna.columns != "Age"] = patientsna.loc[:, patientsna.columns != "Age"].astype(str) # para que sean categorias
     # probar_grid_search(patientsna, "Level")
     
-    #titanic = pd.read_csv("./datasets/titanic.csv")
-    #print("pruebo con titanic")
-    #probar_cv(df, "target")
+    titanic = pd.read_csv("./datasets/titanic.csv")
+    print("pruebo con titanic")
+    probar_cv(titanic, "Survived")
     #probar(titanic, "Survived")
-    #probar_grid_search(df, "target")
+    #probar_grid_search(titanic, "Survived")

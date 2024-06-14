@@ -112,4 +112,3 @@ class GridSearch:
 
     def mostrar_resultados(self):
         return pd.DataFrame(self.resutados).sort_values(by='score', ascending=False)            
-            
