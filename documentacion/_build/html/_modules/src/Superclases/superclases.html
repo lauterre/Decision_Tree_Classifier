@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="es" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.Superclases.superclases &mdash; documentación de TP Algo2 - 1.0.0</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=36c4ab74"></script>
+        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../../_static/translations.js?v=efdbd0b9"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Índice" href="../../../genindex.html" />
+    <link rel="search" title="Búsqueda" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            TP Algo2
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Buscar documentos" aria-label="Buscar documentos" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">src</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">TP Algo2</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Código de módulo</a></li>
+      <li class="breadcrumb-item active">src.Superclases.superclases</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Código fuente para src.Superclases.superclases</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">src.Impureza.impureza</span> <span class="kn">import</span> <span class="n">Impureza</span>
+<span class="kn">from</span> <span class="nn">src.tools.graficador</span> <span class="kn">import</span> <span class="n">GraficadorArbol</span><span class="p">,</span> <span class="n">GraficadorArbolFeo</span>
+<span class="kn">from</span> <span class="nn">src.tools.metricas</span> <span class="kn">import</span> <span class="n">Metricas</span>
+
+<span class="sd">&#39;&#39;&#39;Este módulo contiene las superclases Clasificador, Arbol, ArbolClasificador y Bosque.</span>
+<span class="sd">    - Clasificador es una clase abstracta que define los métodos necesarios para un modelo clasificador.</span>
+<span class="sd">    - Arbol es una clase abstracta que define los métodos necesarios para la estructura del árbol.</span>
+<span class="sd">    - ArbolClasificador es una clase abstracta que define los métodos necesarios para un árbol de decisión clasificador.</span>
+<span class="sd">    - Bosque es una clase abstracta que define los métodos necesarios para un bosque de árboles.</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<div class="viewcode-block" id="Clasificador">
+<a class="viewcode-back" href="../../../Superclases.html#src.Superclases.superclases.Clasificador">[documentos]</a>
+<span class="k">class</span> <span class="nc">Clasificador</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Clase abstracta que define los métodos necesarios para un clasificador.&#39;&#39;&#39;</span>
+<div class="viewcode-block" id="Clasificador.fit">
+<a class="viewcode-back" href="../../../Superclases.html#src.Superclases.superclases.Clasificador.fit">[documentos]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+    
+<div class="viewcode-block" id="Clasificador.predict">
+<a class="viewcode-back" href="../../../Superclases.html#src.Superclases.superclases.Clasificador.predict">[documentos]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+</div>
+
+    
+<div class="viewcode-block" id="Hiperparametros">
+<a class="viewcode-back" href="../../../Superclases.html#src.Superclases.superclases.Hiperparametros">[documentos]</a>
+<span class="k">class</span> <span class="nc">Hiperparametros</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Clase que contiene los hiperparámetros de un árbol de decisión.&#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_prof</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;max_prof&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_obs_nodo</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;min_obs_nodo&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_infor_gain</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;min_infor_gain&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)</span> <span class="c1"># me hace ruido que este aca, esta atado a la entropia CART no lo usaria</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_obs_hoja</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;min_obs_hoja&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Arbol">
+<a class="viewcode-back" href="../../../Superclases.html#src.Superclases.superclases.Arbol">[documentos]</a>
+<span class="k">class</span> <span class="nc">Arbol</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span> <span class="c1"># seria ArbolNario</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Clase abstracta que define los métodos necesarios para un árbol de decisión.</span>
+<span class="sd">    Para este proyecto definimos un árbol de decisión como un árbol n-ario.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Arbol</span><span class="p">]</span><span class="o">=</span> <span class="p">[]</span>
+    
+<div class="viewcode-block" id="Arbol.es_hoja">
+<a class="viewcode-back" href="../../../Superclases.html#src.Superclases.superclases.Arbol.es_hoja">[documentos]</a>
+    <span class="k">def</span> <span class="nf">es_hoja</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Esta función devuelve True si el nodo es una hoja.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:    </span>
+<span class="sd">            bool: True si el nodo es una hoja, False en caso contrario.&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">subs</span> <span class="o">==</span> <span class="p">[]</span></div>
+
+        
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span> 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">es_hoja</span><span class="p">():</span>
+            <span class="k">return</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">1</span> <span class="o">+</span> <span class="nb">sum</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">subarbol</span><span class="p">)</span> <span class="k">for</span> <span class="n">subarbol</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">subs</span><span class="p">])</span>
+    
+<div class="viewcode-block" id="Arbol.altura">
+<a class="viewcode-back" href="../../../Superclases.html#src.Superclases.superclases.Arbol.altura">[documentos]</a>
+    <span class="k">def</span> <span class="nf">altura</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Esta función devuelve la altura del árbol. Es decir los niveles del árbol.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            int: altura del árbol.&#39;&#39;&#39;</span>
+        <span class="n">altura_actual</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">subarbol</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">subs</span><span class="p">:</span>
+            <span class="n">altura_actual</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">altura_actual</span><span class="p">,</span> <span class="n">subarbol</span><span class="o">.</span><span class="n">altura</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">altura_actual</span> <span class="o">+</span> <span class="mi">1</span></div>
+
+    
+<div class="viewcode-block" id="Arbol.ancho">
+<a class="viewcode-back" href="../../../Superclases.html#src.Superclases.superclases.Arbol.ancho">[documentos]</a>
+    <span class="k">def</span> <span class="nf">ancho</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nivel</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">nodos</span><span class="o">=</span><span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Esta función devuelve el nivel del arbol con mayor cantidad de nodos.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            nivel (int): nivel del árbol. Se inicializa en 0 para poder hacer la recursión.</span>
+<span class="sd">            nodos (defaultdict(int)): diccionario con la cantidad de nodos en cada nivel.</span>
+<span class="sd">            </span>
+<span class="sd">            Returns:</span>
+<span class="sd">                int: nivel del arbol con mayor cantidad de nodos.&#39;&#39;&#39;</span>
+        <span class="n">nodos</span><span class="p">[</span><span class="n">nivel</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">subarbol</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">subs</span><span class="p">:</span>
+            <span class="n">subarbol</span><span class="o">.</span><span class="n">ancho</span><span class="p">(</span><span class="n">nivel</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">nodos</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">nodos</span><span class="o">.</span><span class="n">values</span><span class="p">())</span></div>
+
+    
+<div class="viewcode-block" id="Arbol.ancho_nivel">
+<a class="viewcode-back" href="../../../Superclases.html#src.Superclases.superclases.Arbol.ancho_nivel">[documentos]</a>
+    <span class="k">def</span> <span class="nf">ancho_nivel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nivel</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">nodos</span><span class="o">=</span><span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Esta función devuelve la cantidad de nodos por nivel.</span>
+
+<span class="sd">        Args:  </span>
+<span class="sd">            nivel (int): nivel del árbol. Se inicializa en 0 para poder hacer la recursión.</span>
+<span class="sd">            nodos (defaultdict(int)): diccionario con la cantidad de nodos en cada nivel.</span>
+
+<span class="sd">        Returns:    </span>
+<span class="sd">            int: cantidad de nodos en el nivel dado.</span>
+<span class="sd">        &#39;&#39;&#39;</span>        
+        <span class="n">nodos</span><span class="p">[</span><span class="n">nivel</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">subarbol</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">subs</span><span class="p">:</span>
+            <span class="n">subarbol</span><span class="o">.</span><span class="n">ancho_nivel</span><span class="p">(</span><span class="n">nivel</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">nodos</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">nodos</span><span class="p">[</span><span class="n">nivel</span><span class="p">]</span></div>
+
+    
+<div class="viewcode-block" id="Arbol.posorden">
+<a class="viewcode-back" href="../../../Superclases.html#src.Superclases.superclases.Arbol.posorden">[documentos]</a>
+    <span class="k">def</span> <span class="nf">posorden</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="s2">&quot;Arbol&quot;</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Esta función devuelve una lista con los nodos del árbol en posorden.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list[Arbol]: lista con los nodos del árbol en posorden.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">recorrido</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">subarbol</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">subs</span><span class="p">:</span>
+            <span class="n">recorrido</span> <span class="o">+=</span> <span class="n">subarbol</span><span class="o">.</span><span class="n">posorden</span><span class="p">()</span>
+        <span class="n">recorrido</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">recorrido</span></div>
+
+    
+<div class="viewcode-block" id="Arbol.agregar_subarbol">
+<a class="viewcode-back" href="../../../Superclases.html#src.Superclases.superclases.Arbol.agregar_subarbol">[documentos]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">agregar_subarbol</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subarbol</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Funcion abstracta que agrega un subarbol al árbol.&#39;&#39;&#39;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+    
+<div class="viewcode-block" id="Arbol.copy">
+<a class="viewcode-back" href="../../../Superclases.html#src.Superclases.superclases.Arbol.copy">[documentos]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Funcion abstracta que devuelve una copia profunda del árbol.&#39;&#39;&#39;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+    
+<div class="viewcode-block" id="Arbol.es_raiz">
+<a class="viewcode-back" href="../../../Superclases.html#src.Superclases.superclases.Arbol.es_raiz">[documentos]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">es_raiz</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Funcion abstracta que devuelve True si el nodo es la raiz.&#39;&#39;&#39;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+</div>
+
+    
+<div class="viewcode-block" id="ArbolClasificador">
+<a class="viewcode-back" href="../../../Superclases.html#src.Superclases.superclases.ArbolClasificador">[documentos]</a>
+<span class="k">class</span> <span class="nc">ArbolClasificador</span><span class="p">(</span><span class="n">Arbol</span><span class="p">,</span> <span class="n">Clasificador</span><span class="p">,</span> <span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Clase abstracta que define los métodos necesarios para un árbol de decisión clasificador.&#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Inicializa un árbol de decisión clasificador.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            **kwargs: hiperparámetros del árbol.</span>
+
+<span class="sd">        Atributos:</span>
+<span class="sd">            hipermarametros (Hiperparametros): hiperparámetros del árbol.        </span>
+<span class="sd">            data (pd.DataFrame): datos de entrenamiento.</span>
+<span class="sd">            target (pd.Series): target de los datos de entrenamiento.</span>
+<span class="sd">            Los siguientes atributos se inicializan como None y se completan durante el entrenamiento:</span>
+<span class="sd">            target_categorias (list[str]): categorías del target.</span>
+<span class="sd">            atributo_split (str): atributo con el que se hizo el split.</span>
+<span class="sd">            atributo_split_anterior (str): atributo con el que se hizo el split en el nodo anterior.</span>
+<span class="sd">            valor_split_anterior (str): valor con el que se hizo el split en el nodo anterior.</span>
+<span class="sd">            signo_split_anterior (str): signo con el que se hizo el split en el nodo anterior.</span>
+<span class="sd">            clase (str): clase del nodo.</span>
+<span class="sd">            impureza (Impureza): impureza del nodo.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">hiperparametros</span> <span class="o">=</span> <span class="n">Hiperparametros</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>  
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">hiperparametros</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_categorias</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span><span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">atributo_split</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">atributo_split_anterior</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">valor_split_anterior</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span><span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">signo_split_anterior</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clase</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">impureza</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Impureza</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    
+<div class="viewcode-block" id="ArbolClasificador.es_raiz">
+<a class="viewcode-back" href="../../../Superclases.html#src.Superclases.superclases.ArbolClasificador.es_raiz">[documentos]</a>
+    <span class="k">def</span> <span class="nf">es_raiz</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Función que devuelve True si el nodo es la raiz.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: True si el nodo es la raiz, False en caso contrario.&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">valor_split_anterior</span> <span class="ow">is</span> <span class="kc">None</span></div>
+
+    
+    <span class="k">def</span> <span class="nf">_values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Esta función devuelve la cantidad de muestras por clase en el target.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            list[int]: cantidad de muestras por categoría en el target.&#39;&#39;&#39;</span>
+        <span class="n">recuento_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">valor</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_categorias</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">recuento_values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">valor</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">values</span>
+    
+<div class="viewcode-block" id="ArbolClasificador.set_clase">
+<a class="viewcode-back" href="../../../Superclases.html#src.Superclases.superclases.ArbolClasificador.set_clase">[documentos]</a>
+    <span class="k">def</span> <span class="nf">set_clase</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Esta función setea el atributo clase del nodo, se elige la clase con mayor cantidad de muestras.&#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">clase</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span><span class="o">.</span><span class="n">idxmax</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No hay valores en el target&quot;</span><span class="p">)</span></div>
+
+        
+
+<div class="viewcode-block" id="ArbolClasificador.set_target_categorias">
+<a class="viewcode-back" href="../../../Superclases.html#src.Superclases.superclases.ArbolClasificador.set_target_categorias">[documentos]</a>
+    <span class="k">def</span> <span class="nf">set_target_categorias</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Esta función setea el atributo que contiene las categorías del target.&#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_categorias</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span></div>
+
+    
+    <span class="k">def</span> <span class="nf">_total_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Esta función devuelve la cantidad de muestras en el nodo.&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+    
+<div class="viewcode-block" id="ArbolClasificador.agregar_subarbol">
+<a class="viewcode-back" href="../../../Superclases.html#src.Superclases.superclases.ArbolClasificador.agregar_subarbol">[documentos]</a>
+    <span class="k">def</span> <span class="nf">agregar_subarbol</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subarbol</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Esta función agrega un subarbol al árbol.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            subarbol (ArbolClasificador): subarbol a agregar.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">Hiperparametros</span><span class="p">()</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">:</span>  <span class="c1"># Solo copiar los atributos que están en Hiperparametros</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="n">subarbol</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">subarbol</span><span class="p">)</span></div>
+
+    
+<div class="viewcode-block" id="ArbolClasificador.graficar">
+<a class="viewcode-back" href="../../../Superclases.html#src.Superclases.superclases.ArbolClasificador.graficar">[documentos]</a>
+    <span class="k">def</span> <span class="nf">graficar</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Esta función grafica el árbol de decisión.&#39;&#39;&#39;</span>
+        <span class="n">graficador</span> <span class="o">=</span> <span class="n">GraficadorArbol</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">graficador</span><span class="o">.</span><span class="n">graficar</span><span class="p">()</span></div>
+
+    
+<div class="viewcode-block" id="ArbolClasificador.graficar_feo">
+<a class="viewcode-back" href="../../../Superclases.html#src.Superclases.superclases.ArbolClasificador.graficar_feo">[documentos]</a>
+    <span class="k">def</span> <span class="nf">graficar_feo</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Esta función grafica el árbol de decisión.&#39;&#39;&#39;</span>
+        <span class="n">graficador</span> <span class="o">=</span> <span class="n">GraficadorArbolFeo</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">graficador</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="ArbolClasificador.reduced_error_pruning">
+<a class="viewcode-back" href="../../../Superclases.html#src.Superclases.superclases.ArbolClasificador.reduced_error_pruning">[documentos]</a>
+    <span class="k">def</span> <span class="nf">reduced_error_pruning</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_test</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">y_test</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Esta función realiza la poda del arbol con el metodo Reduced Error Pruning.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            x_test (pd.DataFrame): datos de test.</span>
+<span class="sd">            y_test (pd.Series): target de los datos de test.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">def</span> <span class="nf">_interna_rep</span><span class="p">(</span><span class="n">arbol</span><span class="p">:</span> <span class="n">ArbolClasificador</span><span class="p">,</span> <span class="n">x_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">arbol</span><span class="o">.</span><span class="n">es_hoja</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">subarbol</span> <span class="ow">in</span> <span class="n">arbol</span><span class="o">.</span><span class="n">subs</span><span class="p">:</span>
+                    <span class="n">_interna_rep</span><span class="p">(</span><span class="n">subarbol</span><span class="p">,</span> <span class="n">x_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
+
+                <span class="n">pred_raiz</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">arbol</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x_test</span><span class="p">)</span>
+                <span class="n">error_clasif_raiz</span> <span class="o">=</span> <span class="n">Metricas</span><span class="o">.</span><span class="n">error_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">pred_raiz</span><span class="p">)</span>
+
+                <span class="n">error_clasif_ramas</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+                <span class="k">for</span> <span class="n">subarbol</span> <span class="ow">in</span> <span class="n">arbol</span><span class="o">.</span><span class="n">subs</span><span class="p">:</span>
+                    <span class="n">pred_podada</span> <span class="o">=</span> <span class="n">subarbol</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x_test</span><span class="p">)</span> <span class="c1"># type: ignore</span>
+                    <span class="n">error_clasif_podada</span> <span class="o">=</span> <span class="n">Metricas</span><span class="o">.</span><span class="n">error_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">pred_podada</span><span class="p">)</span>
+                    <span class="n">error_clasif_ramas</span> <span class="o">=</span> <span class="n">error_clasif_ramas</span> <span class="o">+</span> <span class="n">error_clasif_podada</span>
+
+                <span class="k">if</span> <span class="n">error_clasif_ramas</span> <span class="o">&lt;</span> <span class="n">error_clasif_raiz</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; * Podar </span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="n">arbol</span><span class="o">.</span><span class="n">subs</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; * No podar </span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">_interna_rep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span></div>
+
+
+    
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">__value</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">__value</span><span class="p">,</span> <span class="n">ArbolClasificador</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">__value</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+                                                           <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">__value</span><span class="o">.</span><span class="n">target</span><span class="p">)</span> 
+                                                           <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">atributo_split</span> <span class="o">==</span> <span class="n">__value</span><span class="o">.</span><span class="n">atributo_split</span> 
+                                                           <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">atributo_split_anterior</span> <span class="o">==</span> <span class="n">__value</span><span class="o">.</span><span class="n">atributo_split_anterior</span> 
+                                                           <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">valor_split_anterior</span> <span class="o">==</span> <span class="n">__value</span><span class="o">.</span><span class="n">valor_split_anterior</span> 
+                                                           <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">signo_split_anterior</span> <span class="o">==</span> <span class="n">__value</span><span class="o">.</span><span class="n">signo_split_anterior</span> 
+                                                           <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">clase</span> <span class="o">==</span> <span class="n">__value</span><span class="o">.</span><span class="n">clase</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_podar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodo</span><span class="p">:</span> <span class="s2">&quot;ArbolClasificador&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;ArbolClasificador&quot;</span><span class="p">:</span>
+        <span class="n">arbol_podado</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">_interna</span><span class="p">(</span><span class="n">arbol</span><span class="p">,</span> <span class="n">nodo</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">arbol</span> <span class="o">==</span> <span class="n">nodo</span><span class="p">:</span>
+                <span class="n">arbol</span><span class="o">.</span><span class="n">subs</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">sub</span> <span class="ow">in</span> <span class="n">arbol_podado</span><span class="o">.</span><span class="n">subs</span><span class="p">:</span>
+                    <span class="n">sub</span><span class="o">.</span><span class="n">_podar</span><span class="p">(</span><span class="n">nodo</span><span class="p">)</span>
+        <span class="n">_interna</span><span class="p">(</span><span class="n">arbol_podado</span><span class="p">,</span> <span class="n">nodo</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">arbol_podado</span>
+    
+<div class="viewcode-block" id="ArbolClasificador.reduced_error_pruning2">
+<a class="viewcode-back" href="../../../Superclases.html#src.Superclases.superclases.ArbolClasificador.reduced_error_pruning2">[documentos]</a>
+    <span class="k">def</span> <span class="nf">reduced_error_pruning2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_val</span><span class="p">,</span> <span class="n">y_val</span><span class="p">,</span> <span class="n">margen</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;ArbolClasificador&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Esta función realiza la poda del arbol con el metodo Reduced Error Pruning.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            x_val (pd.DataFrame): datos de validación.</span>
+<span class="sd">            y_val (pd.Series): target de los datos de validación.</span>
+<span class="sd">            margen (float): margen de error permitido para realizar la poda.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="c1"># TODO: check si esta entrenado</span>
+        <span class="n">arbol_completo</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">error_inicial</span> <span class="o">=</span> <span class="n">Metricas</span><span class="o">.</span><span class="n">error_score</span><span class="p">(</span><span class="n">y_val</span><span class="p">,</span> <span class="n">arbol_completo</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x_val</span><span class="p">))</span>
+        <span class="n">nodos</span> <span class="o">=</span> <span class="n">arbol_completo</span><span class="o">.</span><span class="n">posorden</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">nodo</span> <span class="ow">in</span> <span class="n">nodos</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">nodo</span><span class="o">.</span><span class="n">es_hoja</span><span class="p">():</span>
+                <span class="n">arbol_podado</span> <span class="o">=</span> <span class="n">arbol_completo</span><span class="o">.</span><span class="n">_podar</span><span class="p">(</span><span class="n">nodo</span><span class="p">)</span>
+                <span class="n">nuevo_error</span> <span class="o">=</span> <span class="n">Metricas</span><span class="o">.</span><span class="n">error_score</span><span class="p">(</span><span class="n">y_val</span><span class="p">,</span> <span class="n">arbol_podado</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x_val</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">nuevo_error</span> <span class="o">-</span> <span class="n">margen</span> <span class="o">&lt;</span> <span class="n">error_inicial</span><span class="p">:</span>
+                    <span class="n">arbol_completo</span> <span class="o">=</span> <span class="n">arbol_podado</span>
+                    <span class="n">error_inicial</span> <span class="o">=</span> <span class="n">nuevo_error</span>
+        <span class="k">return</span> <span class="n">arbol_completo</span></div>
+
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_mejor_atributo_split</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Esta función abstracta devuelve el mejor atributo para hacer el split.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: mejor atributo para hacer el split.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+    
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_split</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atributo</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Esta función abstracta realiza el split del árbol.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            atributo (str): atributo con el que se hace el split.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+
+<div class="viewcode-block" id="Bosque">
+<a class="viewcode-back" href="../../../Superclases.html#src.Superclases.superclases.Bosque">[documentos]</a>
+<span class="k">class</span> <span class="nc">Bosque</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Clase abstracta que define los métodos necesarios para un bosque de árboles.&#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cantidad_arboles</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Inicializa un bosque de árboles.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            cantidad_arboles (int): cantidad de árboles en el bosque.</span>
+
+<span class="sd">        Atributos:</span>
+<span class="sd">            arboles (list[Arbol]): lista con los árboles del bosque.</span>
+<span class="sd">            cantidad_arboles (int): cantidad de árboles en el bosque.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">arboles</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Arbol</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cantidad_arboles</span> <span class="o">=</span> <span class="n">cantidad_arboles</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Derechos de autor 2024, Hernan De Lorenzo, Nazareno Magallanes, Lautaro Terreno, Marcelo Valeiras.</p>
+  </div>
+
+  Compilado con <a href="https://www.sphinx-doc.org/">Sphinx</a> usando un
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">tema</a>
+    proporcionado por <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

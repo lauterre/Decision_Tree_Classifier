@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="es" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.Impureza.impureza &mdash; documentación de TP Algo2 - 1.0.0</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=36c4ab74"></script>
+        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../../_static/translations.js?v=efdbd0b9"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Índice" href="../../../genindex.html" />
+    <link rel="search" title="Búsqueda" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            TP Algo2
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Buscar documentos" aria-label="Buscar documentos" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">src</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">TP Algo2</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Código de módulo</a></li>
+      <li class="breadcrumb-item active">src.Impureza.impureza</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Código fuente para src.Impureza.impureza</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="sd">&#39;&#39;&#39;Este módulo contiene la clase abstracta Impureza y sus subclases Entropia, Gini y MSE.</span>
+
+<span class="sd">La clase abstracta Impureza contiene los métodos abstractos calcular y calcular_impureza_split.</span>
+<span class="sd">La subclase Entropia implementa los métodos calcular y calcular_impureza_split.</span>
+<span class="sd">La subclase Gini implementa el método calcular.</span>
+<span class="sd">La subclase MSE implementa el método calcular.</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<div class="viewcode-block" id="Impureza">
+<a class="viewcode-back" href="../../../Impureza.html#src.Impureza.impureza.Impureza">[documentos]</a>
+<span class="k">class</span> <span class="nc">Impureza</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Clase abstracta que define los métodos necesarios para calcular la impureza de un target y la ganancia de información de un atributo.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+<div class="viewcode-block" id="Impureza.calcular">
+<a class="viewcode-back" href="../../../Impureza.html#src.Impureza.impureza.Impureza.calcular">[documentos]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">calcular</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+    
+<div class="viewcode-block" id="Impureza.calcular_impureza_split">
+<a class="viewcode-back" href="../../../Impureza.html#src.Impureza.impureza.Impureza.calcular_impureza_split">[documentos]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">calcular_impureza_split</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arbol</span><span class="p">,</span> <span class="n">atributo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">split</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+</div>
+
+    
+<div class="viewcode-block" id="Entropia">
+<a class="viewcode-back" href="../../../Impureza.html#src.Impureza.impureza.Entropia">[documentos]</a>
+<span class="k">class</span> <span class="nc">Entropia</span><span class="p">(</span><span class="n">Impureza</span><span class="p">):</span>
+<div class="viewcode-block" id="Entropia.calcular">
+<a class="viewcode-back" href="../../../Impureza.html#src.Impureza.impureza.Entropia.calcular">[documentos]</a>
+    <span class="k">def</span> <span class="nf">calcular</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Esta funcion calcula la entropia de un target dado.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            target (pd.Series): target a calcular la entropia.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            float: entropia del target        </span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">entropia</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">proporciones</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">target_categorias</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">target_categorias</span><span class="p">:</span>
+            <span class="n">proporcion</span> <span class="o">=</span> <span class="n">proporciones</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">entropia</span> <span class="o">-=</span> <span class="n">proporcion</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">proporcion</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">entropia</span></div>
+
+ 
+<div class="viewcode-block" id="Entropia.calcular_impureza_split">
+<a class="viewcode-back" href="../../../Impureza.html#src.Impureza.impureza.Entropia.calcular_impureza_split">[documentos]</a>
+    <span class="k">def</span> <span class="nf">calcular_impureza_split</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arbol</span><span class="p">,</span> <span class="n">atributo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">split</span><span class="p">:</span> <span class="n">Callable</span><span class="p">):</span> 
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Esta funcion calcula la ganancia de información para un atributo dado.   </span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            arbol (Arbol): arbol a calcular la impureza.</span>
+<span class="sd">            atributo (str): atributo a splittear.</span>
+<span class="sd">            split (Callable): funcion de split.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            float: ganancia de información del atributo.        </span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">entropia_actual</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calcular</span><span class="p">(</span><span class="n">arbol</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+        <span class="n">len_actual</span> <span class="o">=</span> <span class="n">arbol</span><span class="o">.</span><span class="n">_total_samples</span><span class="p">()</span>
+        <span class="n">nuevo</span> <span class="o">=</span> <span class="n">arbol</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="n">split</span><span class="p">(</span><span class="n">nuevo</span><span class="p">,</span> <span class="n">atributo</span><span class="p">)</span>
+
+        <span class="n">entropias_subarboles</span> <span class="o">=</span> <span class="mi">0</span> 
+        <span class="k">for</span> <span class="n">subarbol</span> <span class="ow">in</span> <span class="n">nuevo</span><span class="o">.</span><span class="n">subs</span><span class="p">:</span>
+            <span class="n">entropia</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calcular</span><span class="p">(</span><span class="n">subarbol</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+            <span class="n">len_subarbol</span> <span class="o">=</span> <span class="n">subarbol</span><span class="o">.</span><span class="n">_total_samples</span><span class="p">()</span>
+            <span class="n">entropias_subarboles</span> <span class="o">+=</span> <span class="p">((</span><span class="n">len_subarbol</span><span class="o">/</span><span class="n">len_actual</span><span class="p">)</span> <span class="o">*</span> <span class="n">entropia</span><span class="p">)</span>
+
+        <span class="n">information_gain</span> <span class="o">=</span> <span class="n">entropia_actual</span> <span class="o">-</span> <span class="n">entropias_subarboles</span>
+        <span class="k">return</span> <span class="n">information_gain</span></div>
+
+    
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;Entropia&quot;</span></div>
+
+
+<span class="c1">### Para CART, seguro no los usamos</span>
+    
+<div class="viewcode-block" id="Gini">
+<a class="viewcode-back" href="../../../Impureza.html#src.Impureza.impureza.Gini">[documentos]</a>
+<span class="k">class</span> <span class="nc">Gini</span><span class="p">(</span><span class="n">Impureza</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Clase que implementa el cálculo de la impureza Gini.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+<div class="viewcode-block" id="Gini.calcular">
+<a class="viewcode-back" href="../../../Impureza.html#src.Impureza.impureza.Gini.calcular">[documentos]</a>
+    <span class="k">def</span> <span class="nf">calcular</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Esta funcion calcula la impureza Gini de un target dado.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            target (pd.Series): target a calcular la impureza Gini.</span>
+
+<span class="sd">        Returns:    </span>
+<span class="sd">            float: impureza Gini del target.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">gini</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">proporciones</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">target_categorias</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">target_categorias</span><span class="p">:</span>
+            <span class="n">proporcion</span> <span class="o">=</span> <span class="n">proporciones</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">gini</span> <span class="o">-=</span> <span class="n">proporcion</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="k">return</span> <span class="n">gini</span></div>
+
+    
+<div class="viewcode-block" id="Gini.calcular_impureza_split">
+<a class="viewcode-back" href="../../../Impureza.html#src.Impureza.impureza.Gini.calcular_impureza_split">[documentos]</a>
+    <span class="k">def</span> <span class="nf">calcular_impureza_split</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atributo</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span> <span class="c1"># funcion de costo</span>
+        <span class="o">...</span></div>
+
+    
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;Gini&quot;</span></div>
+
+    
+<div class="viewcode-block" id="MSE">
+<a class="viewcode-back" href="../../../Impureza.html#src.Impureza.impureza.MSE">[documentos]</a>
+<span class="k">class</span> <span class="nc">MSE</span><span class="p">(</span><span class="n">Impureza</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Clase que implementa el cálculo de la impureza  partir del error cuadrático medio.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+<div class="viewcode-block" id="MSE.calcular">
+<a class="viewcode-back" href="../../../Impureza.html#src.Impureza.impureza.MSE.calcular">[documentos]</a>
+    <span class="k">def</span> <span class="nf">calcular</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Esta funcion calcula el error cuadrático medio de un target dado.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            target (pd.Series): target a calcular el error cuadrático medio.</span>
+
+<span class="sd">        Returns:    </span>
+<span class="sd">            float: error cuadrático medio del target.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">media</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="n">mse</span> <span class="o">=</span> <span class="p">((</span><span class="n">target</span> <span class="o">-</span> <span class="n">media</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">mse</span></div>
+
+    
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;MSE&quot;</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Derechos de autor 2024, Hernan De Lorenzo, Nazareno Magallanes, Lautaro Terreno, Marcelo Valeiras.</p>
+  </div>
+
+  Compilado con <a href="https://www.sphinx-doc.org/">Sphinx</a> usando un
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">tema</a>
+    proporcionado por <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="es" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.tools.graficador &mdash; documentación de TP Algo2 - 1.0.0</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=36c4ab74"></script>
+        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../../_static/translations.js?v=efdbd0b9"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Índice" href="../../../genindex.html" />
+    <link rel="search" title="Búsqueda" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            TP Algo2
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Buscar documentos" aria-label="Buscar documentos" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">src</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">TP Algo2</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Código de módulo</a></li>
+      <li class="breadcrumb-item active">src.tools.graficador</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Código fuente para src.tools.graficador</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">pydot</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+<span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">BytesIO</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Modulo para graficar arboles de decision.</span>
+<span class="sd">Para usar este graficador, es necesario instalar Graphviz en la computadora.</span>
+<span class="sd">https://graphviz.org/download/</span>
+<span class="sd">Caso contrario, usar GraficadorArbolFeo</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<div class="viewcode-block" id="GraficadorArbol">
+<a class="viewcode-back" href="../../../tools.html#src.tools.graficador.GraficadorArbol">[documentos]</a>
+<span class="k">class</span> <span class="nc">GraficadorArbol</span><span class="p">():</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arbol</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Inicializa el graficador de arboles.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            arbol (Arbol): Arbol de decision a graficar.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">arbol</span> <span class="o">=</span> <span class="n">arbol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dot</span> <span class="o">=</span> <span class="n">pydot</span><span class="o">.</span><span class="n">Dot</span><span class="p">(</span><span class="n">graph_type</span><span class="o">=</span><span class="s1">&#39;graph&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">colores_clases</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generar_colores_clases</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_generar_colores_clases</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Funcion auxiliar para generar colores para las clases del arbol.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: Diccionario con colores asignados a cada clase.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">colores</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;lightblue&#39;</span><span class="p">,</span> <span class="s1">&#39;lightgreen&#39;</span><span class="p">,</span> <span class="s1">&#39;lightpink&#39;</span><span class="p">,</span> <span class="s1">&#39;lightsalmon&#39;</span><span class="p">,</span> <span class="s1">&#39;lightyellow&#39;</span><span class="p">,</span> <span class="s1">&#39;lightsteelblue&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">clase</span><span class="p">:</span> <span class="n">colores</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">clase</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">arbol</span><span class="o">.</span><span class="n">target_categorias</span><span class="p">)}</span>
+    
+<div class="viewcode-block" id="GraficadorArbol.graficar">
+<a class="viewcode-back" href="../../../tools.html#src.tools.graficador.GraficadorArbol.graficar">[documentos]</a>
+    <span class="k">def</span> <span class="nf">graficar</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Grafica el arbol de decision.&#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_agregar_nodos</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">arbol</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_agregar_aristas</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">arbol</span><span class="p">)</span>
+        <span class="n">png_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dot</span><span class="o">.</span><span class="n">create_png</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mostrar_png</span><span class="p">(</span><span class="n">png_data</span><span class="p">)</span></div>
+
+    
+    <span class="k">def</span> <span class="nf">_crear_caja</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arbol</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Crea el contenido que se muestra en cada nodo del arbol.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">retorno</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">arbol</span><span class="o">.</span><span class="n">es_raiz</span><span class="p">():</span>
+            <span class="n">retorno</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">arbol</span><span class="o">.</span><span class="n">atributo_split_anterior</span><span class="si">}{</span><span class="n">arbol</span><span class="o">.</span><span class="n">signo_split_anterior</span><span class="si">}{</span><span class="nb">round</span><span class="p">(</span><span class="n">arbol</span><span class="o">.</span><span class="n">valor_split_anterior</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="nb">isinstance</span><span class="p">(</span><span class="n">arbol</span><span class="o">.</span><span class="n">valor_split_anterior</span><span class="p">,</span><span class="w"> </span><span class="nb">float</span><span class="p">)</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="n">arbol</span><span class="o">.</span><span class="n">valor_split_anterior</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">retorno</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Muestras: </span><span class="si">{</span><span class="n">arbol</span><span class="o">.</span><span class="n">_total_samples</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">retorno</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Conteo: </span><span class="si">{</span><span class="n">arbol</span><span class="o">.</span><span class="n">_values</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">retorno</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">arbol</span><span class="o">.</span><span class="n">impureza</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">arbol</span><span class="o">.</span><span class="n">impureza</span><span class="o">.</span><span class="n">calcular</span><span class="p">(</span><span class="n">arbol</span><span class="o">.</span><span class="n">target</span><span class="p">),</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">retorno</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Clase: </span><span class="si">{</span><span class="n">arbol</span><span class="o">.</span><span class="n">clase</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">retorno</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_agregar_nodos</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arbol</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Agrega los nodos al grafo del arbol.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">nodo_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">id</span><span class="p">(</span><span class="n">arbol</span><span class="p">))</span>
+        <span class="n">atributos_nodo</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_crear_caja</span><span class="p">(</span><span class="n">arbol</span><span class="p">),</span>
+            <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="s2">&quot;box&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;style&quot;</span><span class="p">:</span> <span class="s2">&quot;rounded, filled&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;fontname&quot;</span><span class="p">:</span> <span class="s2">&quot;Helvetica&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;fontsize&quot;</span><span class="p">:</span> <span class="s2">&quot;15&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="n">arbol</span><span class="o">.</span><span class="n">es_hoja</span><span class="p">():</span>
+            <span class="n">atributos_nodo</span><span class="p">[</span><span class="s2">&quot;fillcolor&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">colores_clases</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">arbol</span><span class="o">.</span><span class="n">clase</span><span class="p">,</span> <span class="s2">&quot;white&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">atributos_nodo</span><span class="p">[</span><span class="s2">&quot;fillcolor&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;white&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dot</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">pydot</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">nodo_id</span><span class="p">,</span> <span class="o">**</span><span class="n">atributos_nodo</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">subarbol</span> <span class="ow">in</span> <span class="n">arbol</span><span class="o">.</span><span class="n">subs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_agregar_nodos</span><span class="p">(</span><span class="n">subarbol</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_agregar_aristas</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arbol</span><span class="p">,</span> <span class="n">padre_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Agrega las aristas al grafo del arbol.&#39;&#39;&#39;</span>
+        <span class="n">nodo_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">id</span><span class="p">(</span><span class="n">arbol</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">padre_id</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dot</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">pydot</span><span class="o">.</span><span class="n">Edge</span><span class="p">(</span><span class="n">padre_id</span><span class="p">,</span> <span class="n">nodo_id</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">subarbol</span> <span class="ow">in</span> <span class="n">arbol</span><span class="o">.</span><span class="n">subs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_agregar_aristas</span><span class="p">(</span><span class="n">subarbol</span><span class="p">,</span> <span class="n">nodo_id</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_mostrar_png</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">png_data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Muestra la imagen del arbol.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            png_data (bytes): Imagen del arbol en formato png.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">png_data</span><span class="p">))</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+
+
+
+<div class="viewcode-block" id="GraficadorArbolFeo">
+<a class="viewcode-back" href="../../../tools.html#src.tools.graficador.GraficadorArbolFeo">[documentos]</a>
+<span class="k">class</span> <span class="nc">GraficadorArbolFeo</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arbol</span> <span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Constructor del graficador de arboles.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            arbol (Arbol): Arbol de decision a graficar.</span>
+<span class="sd">            ax (matplotlib.axes._subplots.AxesSubplot): Eje donde se graficara el arbol.</span>
+<span class="sd">            fontsize (int): Tamaño de la fuente en el grafico.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">arbol</span> <span class="o">=</span> <span class="n">arbol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax</span> <span class="o">=</span> <span class="n">ax</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fontsize</span> <span class="o">=</span> <span class="n">fontsize</span>
+
+<div class="viewcode-block" id="GraficadorArbolFeo.plot">
+<a class="viewcode-back" href="../../../tools.html#src.tools.graficador.GraficadorArbolFeo.plot">[documentos]</a>
+    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Grafica el arbol de decision.&#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_fig_size</span><span class="p">()))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">set_axis_off</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_plot_tree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">arbol</span><span class="p">,</span> <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">arbol</span><span class="o">.</span><span class="n">ancho_nivel</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">arbol</span><span class="o">.</span><span class="n">altura</span><span class="p">()),</span> <span class="n">level_width</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">arbol</span><span class="o">.</span><span class="n">ancho_nivel</span><span class="p">())</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+        
+    <span class="k">def</span> <span class="nf">_plot_tree</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arbol</span><span class="p">,</span> <span class="n">xy</span><span class="p">,</span> <span class="n">level_width</span><span class="p">,</span> <span class="n">level_height</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Funcion interna para graficar el arbol.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            arbol (Arbol): Arbol de decision a graficar.</span>
+<span class="sd">            xy (tuple): Coordenadas del nodo actual.</span>
+<span class="sd">            level_width (int): Ancho del nivel actual.</span>
+<span class="sd">            level_height (int): Altura del nivel actual.</span>
+<span class="sd">            depth (int): Profundidad del nodo actual.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        
+        <span class="n">bbox_args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">boxstyle</span><span class="o">=</span><span class="s2">&quot;round&quot;</span><span class="p">,</span> <span class="n">fc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_color</span><span class="p">(</span><span class="n">arbol</span><span class="p">,</span> <span class="n">arbol</span><span class="o">.</span><span class="n">clase</span><span class="p">)</span> <span class="k">if</span> <span class="n">arbol</span><span class="o">.</span><span class="n">es_hoja</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&quot;white&quot;</span><span class="p">,</span> <span class="n">ec</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">)</span>
+        <span class="n">caja</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_crear_caja</span><span class="p">(</span><span class="n">arbol</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_annotate</span><span class="p">(</span><span class="n">caja</span><span class="p">,</span> <span class="n">xy</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span> <span class="n">bbox_args</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">arbol</span><span class="o">.</span><span class="n">subs</span><span class="p">:</span>
+            <span class="n">num_subs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">arbol</span><span class="o">.</span><span class="n">subs</span><span class="p">)</span>
+            <span class="n">width_per_node</span> <span class="o">=</span> <span class="n">level_width</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">num_subs</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">child_positions</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">subarbol</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">arbol</span><span class="o">.</span><span class="n">subs</span><span class="p">):</span>
+                <span class="n">new_x</span> <span class="o">=</span> <span class="n">xy</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="p">(</span><span class="n">level_width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">width_per_node</span>
+                <span class="n">new_xy</span> <span class="o">=</span> <span class="p">(</span><span class="n">new_x</span><span class="p">,</span> <span class="n">xy</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">level_height</span><span class="p">)</span>
+                <span class="n">child_positions</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">subarbol</span><span class="p">,</span> <span class="n">new_xy</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">xy</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">new_x</span><span class="p">],</span> <span class="p">[</span><span class="n">xy</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">new_xy</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">subarbol</span><span class="p">,</span> <span class="n">new_xy</span> <span class="ow">in</span> <span class="n">child_positions</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_plot_tree</span><span class="p">(</span><span class="n">subarbol</span><span class="p">,</span> <span class="n">new_xy</span><span class="p">,</span> <span class="n">width_per_node</span><span class="p">,</span> <span class="n">level_height</span><span class="p">,</span> <span class="n">depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">_crear_caja</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arbol</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Crea el contenido que se muestra en cada nodo del arbol.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            arbol (Arbol): Arbol de decision.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            str: Contenido del nodo.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">retorno</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">arbol</span><span class="o">.</span><span class="n">es_raiz</span><span class="p">():</span>
+            <span class="n">retorno</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">arbol</span><span class="o">.</span><span class="n">atributo_split_anterior</span><span class="si">}{</span><span class="n">arbol</span><span class="o">.</span><span class="n">signo_split_anterior</span><span class="si">}{</span><span class="n">arbol</span><span class="o">.</span><span class="n">valor_split_anterior</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">retorno</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Muestras: </span><span class="si">{</span><span class="n">arbol</span><span class="o">.</span><span class="n">_total_samples</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">retorno</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Conteo: </span><span class="si">{</span><span class="n">arbol</span><span class="o">.</span><span class="n">_values</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">retorno</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">arbol</span><span class="o">.</span><span class="n">criterio_impureza</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">arbol</span><span class="o">.</span><span class="n">_impureza</span><span class="p">(),</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">retorno</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Clase: </span><span class="si">{</span><span class="n">arbol</span><span class="o">.</span><span class="n">clase</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">retorno</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">_annotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">xy</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span> <span class="n">bbox_args</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Agrega el texto al grafico.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            text (str): Texto a agregar.</span>
+<span class="sd">            xy (tuple): Coordenadas del texto.</span>
+<span class="sd">            depth (int): Profundidad del nodo.</span>
+<span class="sd">            bbox_args (dict): Argumentos para el cuadro de texto.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">dynamic_fontsize</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_fontsize</span><span class="p">()</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">bbox</span><span class="o">=</span><span class="n">bbox_args</span><span class="p">,</span>
+            <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+            <span class="n">va</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+            <span class="n">zorder</span><span class="o">=</span><span class="mi">100</span> <span class="o">-</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">depth</span><span class="p">,</span>
+            <span class="n">xycoords</span><span class="o">=</span><span class="s2">&quot;data&quot;</span><span class="p">,</span>
+            <span class="n">fontsize</span><span class="o">=</span><span class="n">dynamic_fontsize</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">xy</span><span class="o">=</span><span class="n">xy</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">_calculate_fontsize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Calcula el tamaño de la fuente en base a la cantidad de nodos del arbol.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            int: Tamaño de la fuente.</span>
+<span class="sd">        &#39;&#39;&#39;</span> 
+        <span class="n">num_nodes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">arbol</span><span class="p">)</span>
+        <span class="n">base_size</span> <span class="o">=</span> <span class="mi">10</span>  <span class="c1"># base fontsize</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">base_size</span> <span class="o">-</span> <span class="n">num_nodes</span> <span class="o">//</span> <span class="mi">10</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">_get_fig_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Calcula el tamaño de la figura en base a la altura y ancho del arbol.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            tuple: Tamaño de la figura.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">prof</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">arbol</span><span class="o">.</span><span class="n">altura</span><span class="p">()</span>
+        <span class="n">ancho_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">arbol</span><span class="o">.</span><span class="n">ancho</span><span class="p">()</span>
+        <span class="n">ancho</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">ancho_max</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">altura</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">prof</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">ancho</span><span class="p">,</span> <span class="n">altura</span><span class="p">)</span>
+        
+<div class="viewcode-block" id="GraficadorArbolFeo.get_color">
+<a class="viewcode-back" href="../../../tools.html#src.tools.graficador.GraficadorArbolFeo.get_color">[documentos]</a>
+    <span class="k">def</span> <span class="nf">get_color</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arbol</span><span class="p">,</span> <span class="n">clase</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Devuelve el color asignado a una clase.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            arbol (Arbol): Arbol de decision.</span>
+<span class="sd">            clase (str): Clase a colorear.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: Color asignado a la clase.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">clases</span> <span class="o">=</span> <span class="n">arbol</span><span class="o">.</span><span class="n">target_categorias</span>
+        <span class="n">colores</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;lightgreen&quot;</span><span class="p">,</span> <span class="s2">&quot;lightblue&quot;</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">)]</span>
+        <span class="n">colores_clases</span> <span class="o">=</span> <span class="p">{</span><span class="n">c</span><span class="p">:</span> <span class="n">colores</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">clases</span><span class="p">)}</span>
+        <span class="k">return</span> <span class="n">colores_clases</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">clase</span><span class="p">,</span> <span class="s2">&quot;white&quot;</span><span class="p">)</span></div>
+</div>
+
+
+        
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Derechos de autor 2024, Hernan De Lorenzo, Nazareno Magallanes, Lautaro Terreno, Marcelo Valeiras.</p>
+  </div>
+
+  Compilado con <a href="https://www.sphinx-doc.org/">Sphinx</a> usando un
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">tema</a>
+    proporcionado por <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -4,19 +4,33 @@ import numpy as np
 import random
 from typing import Any, Optional
 
-from _impureza import Entropia
-from _superclases import ArbolClasificador
-from herramientas import GridSearch, Herramientas
-from metricas import Metricas
-
+from src.Impureza.impureza import Entropia
+from src.Superclases.superclases import ArbolClasificador
+from src.tools.herramientas import GridSearch, Herramientas
+from src.tools.metricas import Metricas
+'''Documentación para el módulo arbol_clasificador_c45.py'''
 
 class ArbolClasificadorC45(ArbolClasificador):
+    '''Clase que implementa un árbol de decisión para clasificación utilizando el algoritmo C4.5'''
     def __init__(self, **kwargs) -> None:
+        '''Constructor de la clase ArbolClasificadorC45.
+        
+        Args:
+            **kwargs: hiperparametros del arbol.
+            
+        Atributos:
+            umbral_split(float | str | None): umbral de split para atributos numéricos y ordinales.
+            impureza (Entropia): instancia de la clase Entropia que calcula la impureza de un conjunto de datos.
+        '''
         super().__init__(**kwargs)
         self.umbral_split: Optional[float | str] = None
         self.impureza = Entropia()
     
-    def copy(self):
+    def copy(self) -> "ArbolClasificadorC45":
+        '''Devuelve una copia profunda del arbol
+        
+        Returns:
+            ArbolClasificadorC45: copia del arbol'''
         nuevo = ArbolClasificadorC45(**self.__dict__) 
         nuevo.data = self.data.copy()
         nuevo.target = self.target.copy()
@@ -31,7 +45,14 @@ class ArbolClasificadorC45(ArbolClasificador):
         nuevo.subs = [sub.copy() for sub in self.subs]
         return nuevo
         
-    def _nuevo_subarbol(self, atributo: str, operacion: str, valor: Any):
+    def _nuevo_subarbol(self, atributo: str, operacion: str, valor: Any) -> None:
+        '''Crea un nuevo subarbol y lo agrega a la lista de subarboles del arbol actual.
+        
+        Args:
+            atributo (str): atributo por el cual se va a hacer el split.
+            operacion (str): operacion que se va a realizar en el split.
+            valor (Any): valor que se va a comparar en el split.
+        '''
         nuevo = ArbolClasificadorC45(**self.__dict__)
         if operacion == "menor":
             nuevo.data = self.data[self.data[atributo] < valor]
@@ -56,23 +77,41 @@ class ArbolClasificadorC45(ArbolClasificador):
         self.agregar_subarbol(nuevo)
 
     def _split_numerico(self, atributo: str, umbral: float | int) -> None:
+        '''Realiza el split en el caso que el atributo sea numérico.
+        
+        Args:
+            atributo (str): atributo por el cual se va a hacer el split.
+            umbral (float | int): umbral de split.
+        '''
         self.atributo_split = atributo
         self.umbral_split = umbral
         self._nuevo_subarbol(atributo, "menor", umbral)
         self._nuevo_subarbol(atributo, "mayor", umbral)
 
     def _split_categorico(self, atributo: str) -> None:
+        '''Realiza el split en el caso que el atributo sea categórico.
+        
+        Args:
+            atributo (str): atributo por el cual se va a hacer el split.
+        '''
         self.atributo_split = atributo
         for categoria in self.data[atributo].unique():
             self._nuevo_subarbol(atributo, "igual", categoria)
     
     def _split_ordinal(self, atributo: str, umbral: str) -> None:
+        '''Realiza el split en el caso que el atributo sea ordinal.
+        
+        Args:
+            atributo (str): atributo por el cual se va a hacer el split.
+            umbral (str): umbral de split.
+        '''
         self.atributo_split = atributo
         self.umbral_split = umbral
         self._nuevo_subarbol(atributo, "menor", umbral)
         self._nuevo_subarbol(atributo, "mayor", umbral)
     
     def _split(self, atributo: str):
+        '''Realiza el split en el caso que el atributo sea numérico, ordinal o categórico.'''
         if self.es_atributo_numerico(atributo):
             mejor_umbral = self._mejor_umbral_split_num(atributo)
             self._split_numerico(atributo, mejor_umbral)
@@ -85,18 +124,43 @@ class ArbolClasificadorC45(ArbolClasificador):
             self._split_categorico(atributo)
 
     def es_atributo_numerico(self, atributo: str) -> bool:
+        '''Funcion que verifica si un atributo es numerico.
+        
+        Args:
+            atributo (str): nombre del atributo a verificar.
+            
+        Returns:
+            bool: True si el atributo es numerico, False en caso contrario.
+        '''
         return pd.api.types.is_numeric_dtype(self.data[atributo])
     
     def es_atributo_ordinal(self, atributo: str) -> bool:
+        '''Funcion que verifica si un atributo es ordinal.
+        
+        Args:
+            atributo (str): nombre del atributo a verificar.
+            
+        Returns:
+            bool: True si el atributo es ordinal, False en caso contrario.
+        '''
         return isinstance(self.data[atributo].dtype, pd.CategoricalDtype) and self.data[atributo].cat.ordered
     
     def _information_gain(self, atributo: str) -> float:  #calcula el mejor umbral de ser necesario
+        '''Calcula la ganancia de información de un atributo.
+
+        Args:
+            atributo (str): nombre del atributo a calcular la ganancia de información.
+
+        Returns:
+            float: ganancia de información del atributo.
+        '''
         def split(arbol, atributo):
             arbol._split(atributo)
         
         return self.impureza.calcular_impureza_split(self, atributo, split)
     
     def _split_info(self):
+        '''Calcula el split info del arbol. Mide la dispersión de los valores de los atributos.'''
         split_info = 0
         len_actual = self._total_samples()
         for subarbol in self.subs:
@@ -105,6 +169,14 @@ class ArbolClasificadorC45(ArbolClasificador):
         return -split_info
         
     def _gain_ratio(self, atributo: str) -> float:
+        '''Calcula el gain ratio de un atributo. El gain ratio es la division de la ganancia de información de un atributo por el split info del mismo atributo.
+
+        Args:
+            atributo (str): nombre del atributo a calcular el gain ratio.
+
+        Returns:
+            float: gain ratio del atributo.
+        '''
         nuevo = self.copy()
 
         information_gain = nuevo._information_gain(atributo)
@@ -114,6 +186,10 @@ class ArbolClasificadorC45(ArbolClasificador):
         return information_gain / split_info
     
     def _mejor_atributo_split(self) -> str | None:
+        '''Calcula el mejor atributo para hacer el split. El mejor atributo es aquel que maximiza el gain ratio.
+        
+        Returns:
+            str: nombre del mejor atributo para hacer el split.'''
         mejor_gain_ratio = -1
         mejor_atributo = None
         atributos = self.data.columns
@@ -140,6 +216,14 @@ class ArbolClasificadorC45(ArbolClasificador):
             return self.impureza.calcular_impureza_split(self, atributo, split_ord)
     
     def _mejor_umbral_split_num(self, atributo: str) -> float:
+        '''Calcula el mejor umbral para hacer el split en un atributo numérico.
+        
+        Args:
+            atributo (str): nombre del atributo a calcular el mejor umbral.
+            
+            Returns:
+                float: mejor umbral para hacer el split.
+        '''
         self.data = self.data.sort_values(by=atributo)
         mejor_ig = -1
         valores_unicos = self.data[atributo].unique()
@@ -157,6 +241,14 @@ class ArbolClasificadorC45(ArbolClasificador):
         return mejor_umbral  
     
     def _mejor_umbral_split_ord(self, atributo: str) -> str:
+        '''Calcula el mejor umbral para hacer el split en un atributo ordinal.
+
+        Args:
+            atributo (str): nombre del atributo a calcular el mejor umbral.
+
+        Returns:
+            str: mejor umbral para hacer el split.
+        '''
         self.data = self.data.sort_values(by=atributo, ascending=False) # porque cuando hacemos el split pedimos que sea < al umbral, si estan de menor a mayor, el primer valor nunca es < al umbral
         mejor_ig = -1
         valores_unicos = self.data[atributo].unique()
@@ -172,7 +264,8 @@ class ArbolClasificadorC45(ArbolClasificador):
         
         return mejor_umbral
     
-    def _rellenar_missing_values(self):
+    def _rellenar_missing_values(self) -> None:
+        '''Rellena los valores faltantes de las columnas numéricas con la media y de las columnas categóricas con la moda.'''
         for columna in self.data.columns:
             if self.es_atributo_numerico(columna):
                 medias = self.data.groupby(self.target)[columna].transform('mean')
@@ -181,7 +274,16 @@ class ArbolClasificadorC45(ArbolClasificador):
                 modas = self.data.groupby(self.target)[columna].transform(lambda x: x.mode()[0] if not x.mode().empty else x)
                 self.data.fillna({columna: modas}, inplace=True)
     
-    def _puede_splitearse(self, prof_acum: int, mejor_atributo: str) -> bool:
+    def _puede_splitearse(self, prof_acum: int, mejor_atributo: str) -> bool:  
+        '''Verifica si el arbol puede splitearse en base a los hiperparametros y a la ganancia de información del mejor atributo.
+
+        Args:
+            prof_acum (int): profundidad acumulada del arbol.
+            mejor_atributo (str): mejor atributo para hacer el split.
+
+        Returns:
+            bool: True si el arbol puede splitearse, False en caso contrario.
+        '''
         copia = self.copy()
         information_gain = self._information_gain(mejor_atributo)
         copia._split(mejor_atributo)
@@ -195,6 +297,12 @@ class ArbolClasificadorC45(ArbolClasificador):
                     or (self.min_infor_gain != -1 and self.min_infor_gain > information_gain))
 
     def fit(self, X: pd.DataFrame, y: pd.Series):
+        '''Entrena el arbol de decisión con los datos de entrada.
+
+        Args:
+            X (pd.DataFrame): datos de entrenamiento.
+            y (pd.Series): vector con el atributo a predecir.
+        '''
         # TODO: check no fitteado
         self.target = y.copy()
         self.data = X.copy()
@@ -214,6 +322,15 @@ class ArbolClasificadorC45(ArbolClasificador):
         _interna(self)   
         
     def predict(self, X: pd.DataFrame) -> list:
+        '''Predice la clase de las instancias de entrada. 
+        En caso de que haya valores faltantes en las instancias, se predice con la probabilidad de las clases de los subarboles.
+
+        Args:
+            X (pd.DataFrame): instancias a predecir.
+
+        Returns:
+            predicciones (list): lista con las predicciones.
+        '''
         predicciones = []
         
         def _recorrer(arbol, fila: pd.Series):
@@ -223,7 +340,7 @@ class ArbolClasificadorC45(ArbolClasificador):
                 valor = fila[arbol.atributo_split]
                 if pd.isna(valor):  # Manejar valores faltantes en la predicción
                     dist_probabilidades = _predict_valor_faltante(arbol, fila)
-                    return obtener_clase_aleatoria(dist_probabilidades)          
+                    return _obtener_clase_aleatoria(dist_probabilidades)          
                 if arbol.es_atributo_numerico(arbol.atributo_split):  # es split numerico, TODO: lo podes ver con el signo
                     if valor < arbol.umbral_split:
                         return _recorrer(arbol.subs[0], fila)
@@ -258,7 +375,7 @@ class ArbolClasificadorC45(ArbolClasificador):
                         probabilidades[clase] += sub_probs[clase] 
             return probabilidades
         
-        def obtener_clase_aleatoria(diccionario_probabilidades):
+        def _obtener_clase_aleatoria(diccionario_probabilidades):
                 cantidad_total = sum(diccionario_probabilidades.values())
                 for key in diccionario_probabilidades:
                     diccionario_probabilidades[key] = round(diccionario_probabilidades[key] / cantidad_total,2) #Redondeado para que se entienda mas

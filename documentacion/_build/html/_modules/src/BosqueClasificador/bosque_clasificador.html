@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="es" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.BosqueClasificador.bosque_clasificador &mdash; documentación de TP Algo2 - 1.0.0</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=36c4ab74"></script>
+        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../../_static/translations.js?v=efdbd0b9"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Índice" href="../../../genindex.html" />
+    <link rel="search" title="Búsqueda" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            TP Algo2
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Buscar documentos" aria-label="Buscar documentos" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">src</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">TP Algo2</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Código de módulo</a></li>
+      <li class="breadcrumb-item active">src.BosqueClasificador.bosque_clasificador</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Código fuente para src.BosqueClasificador.bosque_clasificador</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">src.ArbolDecision.arbol_clasificador_C45</span> <span class="kn">import</span> <span class="n">ArbolClasificadorC45</span>
+<span class="kn">from</span> <span class="nn">src.tools.metricas</span> <span class="kn">import</span> <span class="n">Metricas</span>
+<span class="kn">from</span> <span class="nn">src.tools.herramientas</span> <span class="kn">import</span> <span class="n">Herramientas</span><span class="p">,</span> <span class="n">GridSearch</span>
+<span class="kn">from</span> <span class="nn">src.Superclases.superclases</span> <span class="kn">import</span> <span class="n">Clasificador</span><span class="p">,</span> <span class="n">Bosque</span><span class="p">,</span> <span class="n">Hiperparametros</span>
+<span class="kn">from</span> <span class="nn">src.ArbolDecision.arbol_clasificador_ID3</span> <span class="kn">import</span> <span class="n">ArbolClasificadorID3</span>
+
+
+<div class="viewcode-block" id="BosqueClasificador">
+<a class="viewcode-back" href="../../../BosqueClasificador.html#src.BosqueClasificador.bosque_clasificador.BosqueClasificador">[documentos]</a>
+<span class="k">class</span> <span class="nc">BosqueClasificador</span><span class="p">(</span><span class="n">Bosque</span><span class="p">,</span> <span class="n">Clasificador</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Clase que representa un bosque de árboles clasificadores.&#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">clase_arbol</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;id3&quot;</span><span class="p">,</span> <span class="n">cantidad_arboles</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">cantidad_atributos</span><span class="p">:</span><span class="nb">str</span> <span class="o">=</span><span class="s1">&#39;sqrt&#39;</span><span class="p">,</span><span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Constructor de la clase BosqueClasificador.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            clase_arbol (str): Clase de árbol a utilizar. Puede ser &#39;id3&#39; o &#39;c45&#39;.</span>
+<span class="sd">            cantidad_arboles (int): Cantidad de árboles a construir.</span>
+<span class="sd">            cantidad_atributos (str): Cantidad de atributos a considerar en cada árbol. Puede ser &#39;all&#39;, &#39;log2&#39;, &#39;sqrt&#39;.</span>
+<span class="sd">            verbose (bool): Indica si se imprimen mensajes durante el entrenamiento.</span>
+<span class="sd">            **kwargs: Hiperparámetros del árbol.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">cantidad_arboles</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hiperparametros_arbol</span> <span class="o">=</span> <span class="n">Hiperparametros</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hiperparametros_arbol</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cantidad_atributos</span> <span class="o">=</span> <span class="n">cantidad_atributos</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clase_arbol</span> <span class="o">=</span> <span class="n">clase_arbol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+
+    <span class="k">def</span> <span class="nf">_bootstrap_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Genera un conjunto de muestras de entrenamiento a partir de X e y.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            X (pd.DataFrame): Conjunto de datos de entrenamiento.</span>
+<span class="sd">            y (pd.Series): Etiquetas de los datos de entrenamiento.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            pd.DataFrame: Muestras de entrenamiento generadas.</span>
+<span class="sd">            pd.Series: Etiquetas de las muestras de entrenamiento generadas.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">n_samples</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">atributos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">n_samples</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">X</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">atributos</span><span class="p">]</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">y</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">atributos</span><span class="p">]</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BosqueClasificador.seleccionar_atributos">
+<a class="viewcode-back" href="../../../BosqueClasificador.html#src.BosqueClasificador.bosque_clasificador.BosqueClasificador.seleccionar_atributos">[documentos]</a>
+    <span class="k">def</span> <span class="nf">seleccionar_atributos</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span><span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Selecciona aleatoriamente los atributos con los que se va a entrenar el arbol.</span>
+<span class="sd">        El atributo cantidad_atributos indica la cantidad de atributos a seleccionar. </span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            X (pd.DataFrame): Conjunto de datos de entrenamiento.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list[int]: indices de los atributos seleccionados</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">n_features</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cantidad_atributos</span> <span class="o">==</span> <span class="s1">&#39;all&#39;</span><span class="p">:</span>
+            <span class="n">size</span> <span class="o">=</span> <span class="n">n_features</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">cantidad_atributos</span> <span class="o">==</span> <span class="s1">&#39;log2&#39;</span><span class="p">:</span>
+            <span class="n">size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">n_features</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">cantidad_atributos</span> <span class="o">==</span> <span class="s1">&#39;sqrt&#39;</span><span class="p">:</span>
+            <span class="n">size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">n_features</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>
+            <span class="c1">#TODO: agregar exception</span>
+
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">n_features</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">indices</span></div>
+
+
+<div class="viewcode-block" id="BosqueClasificador.fit">
+<a class="viewcode-back" href="../../../BosqueClasificador.html#src.BosqueClasificador.bosque_clasificador.BosqueClasificador.fit">[documentos]</a>
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Entrena el bosque de árboles clasificadores.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            X (pd.DataFrame): Conjunto de datos de entrenamiento.</span>
+<span class="sd">            y (pd.Series): Etiquetas de los datos de entrenamiento.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cantidad_arboles</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Contruyendo arbol nro: </span><span class="si">{</span><span class="n">_</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> 
+            <span class="c1"># Bootstrapping</span>
+            <span class="n">X_sample</span><span class="p">,</span> <span class="n">y_sample</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bootstrap_samples</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+            <span class="c1"># Selección de atributos</span>
+            <span class="n">atributos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">seleccionar_atributos</span><span class="p">(</span><span class="n">X_sample</span><span class="p">)</span>
+            <span class="n">X_sample</span> <span class="o">=</span> <span class="n">X_sample</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="n">atributos</span><span class="p">]</span>
+
+            <span class="c1"># Crear y entrenar un nuevo árbol</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">clase_arbol</span> <span class="o">==</span> <span class="s1">&#39;id3&#39;</span><span class="p">:</span>
+                <span class="n">arbol</span> <span class="o">=</span> <span class="n">ArbolClasificadorID3</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">hiperparametros_arbol</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
+                <span class="n">arbol</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">X_sample</span><span class="p">),</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">y_sample</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">arboles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arbol</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">clase_arbol</span> <span class="o">==</span> <span class="s1">&#39;c45&#39;</span><span class="p">:</span>
+                <span class="n">arbol</span> <span class="o">=</span> <span class="n">ArbolClasificadorC45</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">hiperparametros_arbol</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
+                <span class="n">arbol</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">X_sample</span><span class="p">),</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">y_sample</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">arboles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arbol</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Clase de arbol soportado por el bosque: &#39;id3&#39;, &#39;c45&#39;&quot;</span><span class="p">)</span></div>
+
+            <span class="c1">#arbol.imprimir()</span>
+
+<div class="viewcode-block" id="BosqueClasificador.predict">
+<a class="viewcode-back" href="../../../BosqueClasificador.html#src.BosqueClasificador.bosque_clasificador.BosqueClasificador.predict">[documentos]</a>
+    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Realiza predicciones sobre un conjunto de datos.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            X (pd.DataFrame): Conjunto de datos de prueba.</span>
+
+<span class="sd">        Returns:    </span>
+<span class="sd">            predicciones_finales (list): Predicciones realizadas.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">todas_predicciones</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">X</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">arboles</span><span class="p">)))</span> 
+        
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">arbol</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">arboles</span><span class="p">):</span>
+            <span class="n">todas_predicciones</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">arbol</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+        <span class="c1"># Aplicar la votación mayoritaria</span>
+        <span class="n">predicciones_finales</span> <span class="o">=</span> <span class="n">todas_predicciones</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span><span class="o">.</span><span class="n">idxmax</span><span class="p">(),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">predicciones_finales</span><span class="p">)</span></div>
+</div>
+
+    
+<div class="viewcode-block" id="probar_bosque_clasificador">
+<a class="viewcode-back" href="../../../BosqueClasificador.html#src.BosqueClasificador.bosque_clasificador.probar_bosque_clasificador">[documentos]</a>
+<span class="k">def</span> <span class="nf">probar_bosque_clasificador</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">target</span><span class="p">]</span>
+
+    <span class="n">x_train</span><span class="p">,</span> <span class="n">x_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">Herramientas</span><span class="o">.</span><span class="n">dividir_set</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.20</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+    <span class="n">rf</span> <span class="o">=</span> <span class="n">BosqueClasificador</span><span class="p">(</span><span class="n">clase_arbol</span><span class="o">=</span><span class="s2">&quot;id3&quot;</span><span class="p">,</span> <span class="n">cantidad_arboles</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">cantidad_atributos</span><span class="o">=</span><span class="s1">&#39;sqrt&#39;</span><span class="p">,</span> <span class="n">max_prof</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">min_obs_nodo</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">rf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+    <span class="n">y_pred</span> <span class="o">=</span> <span class="n">rf</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x_test</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;accuracy en set de prueba: </span><span class="si">{</span><span class="n">Metricas</span><span class="o">.</span><span class="n">accuracy_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span><span class="w"> </span><span class="n">y_pred</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;f1-score en set de prueba: </span><span class="si">{</span><span class="n">Metricas</span><span class="o">.</span><span class="n">f1_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span><span class="w"> </span><span class="n">y_pred</span><span class="p">,</span><span class="w"> </span><span class="n">promedio</span><span class="o">=</span><span class="s1">&#39;ponderado&#39;</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+    
+
+<div class="viewcode-block" id="probar_cv">
+<a class="viewcode-back" href="../../../BosqueClasificador.html#src.BosqueClasificador.bosque_clasificador.probar_cv">[documentos]</a>
+<span class="k">def</span> <span class="nf">probar_cv</span><span class="p">(</span><span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">target</span><span class="p">]</span>
+
+    <span class="n">x_train</span><span class="p">,</span> <span class="n">x_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">Herramientas</span><span class="o">.</span><span class="n">dividir_set</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.15</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+    <span class="n">rf</span> <span class="o">=</span> <span class="n">BosqueClasificador</span><span class="p">(</span><span class="n">clase_arbol</span><span class="o">=</span><span class="s2">&quot;c45&quot;</span><span class="p">,</span> <span class="n">cantidad_arboles</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">cantidad_atributos</span><span class="o">=</span><span class="s1">&#39;sqrt&#39;</span><span class="p">,</span> <span class="n">max_prof</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">min_obs_nodo</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">Herramientas</span><span class="o">.</span><span class="n">cross_validation</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">rf</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="probar_grid_search">
+<a class="viewcode-back" href="../../../BosqueClasificador.html#src.BosqueClasificador.bosque_clasificador.probar_grid_search">[documentos]</a>
+<span class="k">def</span> <span class="nf">probar_grid_search</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">target</span><span class="p">]</span>
+
+    <span class="n">x_train</span><span class="p">,</span> <span class="n">x_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">Herramientas</span><span class="o">.</span><span class="n">dividir_set</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.20</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+    <span class="n">rf</span> <span class="o">=</span> <span class="n">BosqueClasificador</span><span class="p">()</span>
+    <span class="n">grid_search</span> <span class="o">=</span> <span class="n">GridSearch</span><span class="p">(</span><span class="n">rf</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;clase_arbol&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;id3&#39;</span><span class="p">,</span> <span class="s1">&#39;c45&#39;</span><span class="p">],</span><span class="s1">&#39;min_obs_nodo&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">40</span><span class="p">]},</span> <span class="n">k_fold</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+    <span class="n">grid_search</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">grid_search</span><span class="o">.</span><span class="n">mejores_params</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">grid_search</span><span class="o">.</span><span class="n">mejor_score</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">grid_search</span><span class="o">.</span><span class="n">mostrar_resultados</span><span class="p">())</span>
+    <span class="n">mejor_bosque</span> <span class="o">=</span> <span class="n">BosqueClasificador</span><span class="p">(</span><span class="o">**</span><span class="n">grid_search</span><span class="o">.</span><span class="n">mejores_params</span><span class="p">)</span>
+    <span class="n">mejor_bosque</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+
+    <span class="n">y_pred</span> <span class="o">=</span> <span class="n">mejor_bosque</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x_test</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;accuracy en set de prueba: </span><span class="si">{</span><span class="n">Metricas</span><span class="o">.</span><span class="n">accuracy_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span><span class="w"> </span><span class="n">y_pred</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;f1-score en set de prueba: </span><span class="si">{</span><span class="n">Metricas</span><span class="o">.</span><span class="n">f1_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span><span class="w"> </span><span class="n">y_pred</span><span class="p">,</span><span class="w"> </span><span class="n">promedio</span><span class="o">=</span><span class="s1">&#39;ponderado&#39;</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+    
+    
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="c1"># print(&quot;pruebo con patients&quot;) </span>
+
+    <span class="c1"># patients = pd.read_csv(&quot;./datasets/cancer_patients.csv&quot;, index_col=0)</span>
+    <span class="c1"># patients = patients.drop(&quot;Patient Id&quot;, axis = 1)</span>
+    <span class="c1"># patients.loc[:, patients.columns != &quot;Age&quot;] = patients.loc[:, patients.columns != &quot;Age&quot;].astype(str) # para que sean categorias</span>
+    <span class="c1"># print(&quot;pruebo bosque clasificador&quot;)</span>
+    <span class="c1"># #probar_bosque_clasificador(patients, &quot;Level&quot;) #anda joya</span>
+    
+    <span class="c1"># print(&quot;pruebo cross validation&quot;)</span>
+    <span class="c1"># #probar_cv(patients, &quot;Level&quot;) #anda joya</span>
+    <span class="c1"># print(&quot;pruebo grid search&quot;)</span>
+    <span class="c1"># probar_grid_search(patients, &quot;Level&quot;) #anda joya, ojo con correrlo que tarda bastante (hay muchas combinaciones)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;pruebo con titanic&quot;</span><span class="p">)</span>
+    <span class="n">titanic</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;./datasets/titanic.csv&quot;</span><span class="p">)</span>
+    <span class="n">probar_cv</span><span class="p">(</span><span class="n">titanic</span><span class="p">,</span> <span class="s2">&quot;Survived&quot;</span><span class="p">)</span>
+
+
+        
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Derechos de autor 2024, Hernan De Lorenzo, Nazareno Magallanes, Lautaro Terreno, Marcelo Valeiras.</p>
+  </div>
+
+  Compilado con <a href="https://www.sphinx-doc.org/">Sphinx</a> usando un
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">tema</a>
+    proporcionado por <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
