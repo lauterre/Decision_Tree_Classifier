@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="es" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BosqueClasificador package &mdash; documentación de TP Algo2 - 1.0.0</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=36c4ab74"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="_static/translations.js?v=efdbd0b9"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Índice" href="genindex.html" />
+    <link rel="search" title="Búsqueda" href="search.html" />
+    <link rel="next" title="Impureza package" href="Impureza.html" />
+    <link rel="prev" title="ArbolDecision package" href="ArbolDecision.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            TP Algo2
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Buscar documentos" aria-label="Buscar documentos" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">src</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="ArbolDecision.html">ArbolDecision package</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">BosqueClasificador package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-src.BosqueClasificador.bosque_clasificador">Bosque Clasificador</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#src.BosqueClasificador.bosque_clasificador.BosqueClasificador"><code class="docutils literal notranslate"><span class="pre">BosqueClasificador</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.BosqueClasificador.bosque_clasificador.probar_bosque_clasificador"><code class="docutils literal notranslate"><span class="pre">probar_bosque_clasificador()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.BosqueClasificador.bosque_clasificador.probar_cv"><code class="docutils literal notranslate"><span class="pre">probar_cv()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.BosqueClasificador.bosque_clasificador.probar_grid_search"><code class="docutils literal notranslate"><span class="pre">probar_grid_search()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-src.BosqueClasificador">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Impureza.html">Impureza package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Superclases.html">Superclases package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">tools package</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">TP Algo2</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">src</a></li>
+      <li class="breadcrumb-item active">BosqueClasificador package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/BosqueClasificador.rst.txt" rel="nofollow"> Ver código fuente de la página</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="bosqueclasificador-package">
+<h1>BosqueClasificador package<a class="headerlink" href="#bosqueclasificador-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-src.BosqueClasificador.bosque_clasificador">
+<span id="bosque-clasificador"></span><h2>Bosque Clasificador<a class="headerlink" href="#module-src.BosqueClasificador.bosque_clasificador" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.BosqueClasificador.bosque_clasificador.BosqueClasificador">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.BosqueClasificador.bosque_clasificador.</span></span><span class="sig-name descname"><span class="pre">BosqueClasificador</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">clase_arbol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'id3'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cantidad_arboles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cantidad_atributos</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'sqrt'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/BosqueClasificador/bosque_clasificador.html#BosqueClasificador"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#src.BosqueClasificador.bosque_clasificador.BosqueClasificador" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="Superclases.html#src.Superclases.superclases.Bosque" title="src.Superclases.superclases.Bosque"><code class="xref py py-class docutils literal notranslate"><span class="pre">Bosque</span></code></a>, <a class="reference internal" href="Superclases.html#src.Superclases.superclases.Clasificador" title="src.Superclases.superclases.Clasificador"><code class="xref py py-class docutils literal notranslate"><span class="pre">Clasificador</span></code></a></p>
+<p>Clase que representa un bosque de árboles clasificadores.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.BosqueClasificador.bosque_clasificador.BosqueClasificador.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/src/BosqueClasificador/bosque_clasificador.html#BosqueClasificador.fit"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#src.BosqueClasificador.bosque_clasificador.BosqueClasificador.fit" title="Link to this definition"></a></dt>
+<dd><p>Entrena el bosque de árboles clasificadores.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>X (pd.DataFrame): Conjunto de datos de entrenamiento.
+y (pd.Series): Etiquetas de los datos de entrenamiento.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.BosqueClasificador.bosque_clasificador.BosqueClasificador.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="reference internal" href="_modules/src/BosqueClasificador/bosque_clasificador.html#BosqueClasificador.predict"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#src.BosqueClasificador.bosque_clasificador.BosqueClasificador.predict" title="Link to this definition"></a></dt>
+<dd><p>Realiza predicciones sobre un conjunto de datos.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>X (pd.DataFrame): Conjunto de datos de prueba.</p>
+</dd>
+<dt>Returns:    </dt><dd><p>predicciones_finales (list): Predicciones realizadas.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.BosqueClasificador.bosque_clasificador.BosqueClasificador.seleccionar_atributos">
+<span class="sig-name descname"><span class="pre">seleccionar_atributos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/src/BosqueClasificador/bosque_clasificador.html#BosqueClasificador.seleccionar_atributos"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#src.BosqueClasificador.bosque_clasificador.BosqueClasificador.seleccionar_atributos" title="Link to this definition"></a></dt>
+<dd><p>Selecciona aleatoriamente los atributos con los que se va a entrenar el arbol.
+El atributo cantidad_atributos indica la cantidad de atributos a seleccionar.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>X (pd.DataFrame): Conjunto de datos de entrenamiento.</p>
+</dd>
+<dt>Returns:</dt><dd><p>list[int]: indices de los atributos seleccionados</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.BosqueClasificador.bosque_clasificador.probar_bosque_clasificador">
+<span class="sig-prename descclassname"><span class="pre">src.BosqueClasificador.bosque_clasificador.</span></span><span class="sig-name descname"><span class="pre">probar_bosque_clasificador</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/BosqueClasificador/bosque_clasificador.html#probar_bosque_clasificador"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#src.BosqueClasificador.bosque_clasificador.probar_bosque_clasificador" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.BosqueClasificador.bosque_clasificador.probar_cv">
+<span class="sig-prename descclassname"><span class="pre">src.BosqueClasificador.bosque_clasificador.</span></span><span class="sig-name descname"><span class="pre">probar_cv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/BosqueClasificador/bosque_clasificador.html#probar_cv"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#src.BosqueClasificador.bosque_clasificador.probar_cv" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.BosqueClasificador.bosque_clasificador.probar_grid_search">
+<span class="sig-prename descclassname"><span class="pre">src.BosqueClasificador.bosque_clasificador.</span></span><span class="sig-name descname"><span class="pre">probar_grid_search</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/BosqueClasificador/bosque_clasificador.html#probar_grid_search"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#src.BosqueClasificador.bosque_clasificador.probar_grid_search" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-src.BosqueClasificador">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-src.BosqueClasificador" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Pie de página">
+        <a href="ArbolDecision.html" class="btn btn-neutral float-left" title="ArbolDecision package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Anterior</a>
+        <a href="Impureza.html" class="btn btn-neutral float-right" title="Impureza package" accesskey="n" rel="next">Siguiente <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Derechos de autor 2024, Hernan De Lorenzo, Nazareno Magallanes, Lautaro Terreno, Marcelo Valeiras.</p>
+  </div>
+
+  Compilado con <a href="https://www.sphinx-doc.org/">Sphinx</a> usando un
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">tema</a>
+    proporcionado por <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

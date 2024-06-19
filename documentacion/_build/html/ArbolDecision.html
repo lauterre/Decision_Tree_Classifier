@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="es" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ArbolDecision package &mdash; documentación de TP Algo2 - 1.0.0</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=36c4ab74"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="_static/translations.js?v=efdbd0b9"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Índice" href="genindex.html" />
+    <link rel="search" title="Búsqueda" href="search.html" />
+    <link rel="next" title="BosqueClasificador package" href="BosqueClasificador.html" />
+    <link rel="prev" title="src" href="modules.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            TP Algo2
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Buscar documentos" aria-label="Buscar documentos" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">src</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">ArbolDecision package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-src.ArbolDecision.arbol_clasificador_C45">Arbol Clasificador C45</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#src.ArbolDecision.arbol_clasificador_C45.ArbolClasificadorC45"><code class="docutils literal notranslate"><span class="pre">ArbolClasificadorC45</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ArbolDecision.arbol_clasificador_C45.probar"><code class="docutils literal notranslate"><span class="pre">probar()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ArbolDecision.arbol_clasificador_C45.probar_cv"><code class="docutils literal notranslate"><span class="pre">probar_cv()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ArbolDecision.arbol_clasificador_C45.probar_grid_search"><code class="docutils literal notranslate"><span class="pre">probar_grid_search()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-src.ArbolDecision.arbol_clasificador_ID3">Arbol Clasificador ID3</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#src.ArbolDecision.arbol_clasificador_ID3.ArbolClasificadorID3"><code class="docutils literal notranslate"><span class="pre">ArbolClasificadorID3</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ArbolDecision.arbol_clasificador_ID3.probar"><code class="docutils literal notranslate"><span class="pre">probar()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-src.ArbolDecision">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="BosqueClasificador.html">BosqueClasificador package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Impureza.html">Impureza package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Superclases.html">Superclases package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">tools package</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">TP Algo2</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">src</a></li>
+      <li class="breadcrumb-item active">ArbolDecision package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/ArbolDecision.rst.txt" rel="nofollow"> Ver código fuente de la página</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="arboldecision-package">
+<h1>ArbolDecision package<a class="headerlink" href="#arboldecision-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-src.ArbolDecision.arbol_clasificador_C45">
+<span id="arbol-clasificador-c45"></span><h2>Arbol Clasificador C45<a class="headerlink" href="#module-src.ArbolDecision.arbol_clasificador_C45" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.ArbolDecision.arbol_clasificador_C45.ArbolClasificadorC45">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.ArbolDecision.arbol_clasificador_C45.</span></span><span class="sig-name descname"><span class="pre">ArbolClasificadorC45</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/ArbolDecision/arbol_clasificador_C45.html#ArbolClasificadorC45"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#src.ArbolDecision.arbol_clasificador_C45.ArbolClasificadorC45" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="Superclases.html#src.Superclases.superclases.ArbolClasificador" title="src.Superclases.superclases.ArbolClasificador"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArbolClasificador</span></code></a></p>
+<p>Clase que implementa un árbol de decisión para clasificación utilizando el algoritmo C4.5</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ArbolDecision.arbol_clasificador_C45.ArbolClasificadorC45.copy">
+<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#src.ArbolDecision.arbol_clasificador_C45.ArbolClasificadorC45" title="src.ArbolDecision.arbol_clasificador_C45.ArbolClasificadorC45"><span class="pre">ArbolClasificadorC45</span></a></span></span><a class="reference internal" href="_modules/src/ArbolDecision/arbol_clasificador_C45.html#ArbolClasificadorC45.copy"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#src.ArbolDecision.arbol_clasificador_C45.ArbolClasificadorC45.copy" title="Link to this definition"></a></dt>
+<dd><p>Devuelve una copia profunda del arbol</p>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>ArbolClasificadorC45: copia del arbol</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ArbolDecision.arbol_clasificador_C45.ArbolClasificadorC45.es_atributo_numerico">
+<span class="sig-name descname"><span class="pre">es_atributo_numerico</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atributo</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/src/ArbolDecision/arbol_clasificador_C45.html#ArbolClasificadorC45.es_atributo_numerico"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#src.ArbolDecision.arbol_clasificador_C45.ArbolClasificadorC45.es_atributo_numerico" title="Link to this definition"></a></dt>
+<dd><p>Funcion que verifica si un atributo es numerico.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>atributo (str): nombre del atributo a verificar.</p>
+</dd>
+<dt>Returns:</dt><dd><p>bool: True si el atributo es numerico, False en caso contrario.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ArbolDecision.arbol_clasificador_C45.ArbolClasificadorC45.es_atributo_ordinal">
+<span class="sig-name descname"><span class="pre">es_atributo_ordinal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atributo</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/src/ArbolDecision/arbol_clasificador_C45.html#ArbolClasificadorC45.es_atributo_ordinal"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#src.ArbolDecision.arbol_clasificador_C45.ArbolClasificadorC45.es_atributo_ordinal" title="Link to this definition"></a></dt>
+<dd><p>Funcion que verifica si un atributo es ordinal.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>atributo (str): nombre del atributo a verificar.</p>
+</dd>
+<dt>Returns:</dt><dd><p>bool: True si el atributo es ordinal, False en caso contrario.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ArbolDecision.arbol_clasificador_C45.ArbolClasificadorC45.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/ArbolDecision/arbol_clasificador_C45.html#ArbolClasificadorC45.fit"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#src.ArbolDecision.arbol_clasificador_C45.ArbolClasificadorC45.fit" title="Link to this definition"></a></dt>
+<dd><p>Entrena el arbol de decisión con los datos de entrada.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>X (pd.DataFrame): datos de entrenamiento.
+y (pd.Series): vector con el atributo a predecir.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ArbolDecision.arbol_clasificador_C45.ArbolClasificadorC45.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="reference internal" href="_modules/src/ArbolDecision/arbol_clasificador_C45.html#ArbolClasificadorC45.predict"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#src.ArbolDecision.arbol_clasificador_C45.ArbolClasificadorC45.predict" title="Link to this definition"></a></dt>
+<dd><p>Predice la clase de las instancias de entrada. 
+En caso de que haya valores faltantes en las instancias, se predice con la probabilidad de las clases de los subarboles.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>X (pd.DataFrame): instancias a predecir.</p>
+</dd>
+<dt>Returns:</dt><dd><p>predicciones (list): lista con las predicciones.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ArbolDecision.arbol_clasificador_C45.probar">
+<span class="sig-prename descclassname"><span class="pre">src.ArbolDecision.arbol_clasificador_C45.</span></span><span class="sig-name descname"><span class="pre">probar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/ArbolDecision/arbol_clasificador_C45.html#probar"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#src.ArbolDecision.arbol_clasificador_C45.probar" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ArbolDecision.arbol_clasificador_C45.probar_cv">
+<span class="sig-prename descclassname"><span class="pre">src.ArbolDecision.arbol_clasificador_C45.</span></span><span class="sig-name descname"><span class="pre">probar_cv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/ArbolDecision/arbol_clasificador_C45.html#probar_cv"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#src.ArbolDecision.arbol_clasificador_C45.probar_cv" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ArbolDecision.arbol_clasificador_C45.probar_grid_search">
+<span class="sig-prename descclassname"><span class="pre">src.ArbolDecision.arbol_clasificador_C45.</span></span><span class="sig-name descname"><span class="pre">probar_grid_search</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/ArbolDecision/arbol_clasificador_C45.html#probar_grid_search"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#src.ArbolDecision.arbol_clasificador_C45.probar_grid_search" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-src.ArbolDecision.arbol_clasificador_ID3">
+<span id="arbol-clasificador-id3"></span><h2>Arbol Clasificador ID3<a class="headerlink" href="#module-src.ArbolDecision.arbol_clasificador_ID3" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.ArbolDecision.arbol_clasificador_ID3.ArbolClasificadorID3">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.ArbolDecision.arbol_clasificador_ID3.</span></span><span class="sig-name descname"><span class="pre">ArbolClasificadorID3</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/ArbolDecision/arbol_clasificador_ID3.html#ArbolClasificadorID3"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#src.ArbolDecision.arbol_clasificador_ID3.ArbolClasificadorID3" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="Superclases.html#src.Superclases.superclases.ArbolClasificador" title="src.Superclases.superclases.ArbolClasificador"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArbolClasificador</span></code></a></p>
+<p>Clase que representa un árbol de decisión que utiliza el algoritmo ID3 para clasificar.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ArbolDecision.arbol_clasificador_ID3.ArbolClasificadorID3.copy">
+<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#src.ArbolDecision.arbol_clasificador_ID3.ArbolClasificadorID3" title="src.ArbolDecision.arbol_clasificador_ID3.ArbolClasificadorID3"><span class="pre">ArbolClasificadorID3</span></a></span></span><a class="reference internal" href="_modules/src/ArbolDecision/arbol_clasificador_ID3.html#ArbolClasificadorID3.copy"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#src.ArbolDecision.arbol_clasificador_ID3.ArbolClasificadorID3.copy" title="Link to this definition"></a></dt>
+<dd><p>Devuelve una copia profunda del arbol</p>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>ArbolClasificadorID3: copia del arbol</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ArbolDecision.arbol_clasificador_ID3.ArbolClasificadorID3.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/src/ArbolDecision/arbol_clasificador_ID3.html#ArbolClasificadorID3.fit"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#src.ArbolDecision.arbol_clasificador_ID3.ArbolClasificadorID3.fit" title="Link to this definition"></a></dt>
+<dd><p>Entrena el arbol de decisión con los datos de entrada.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>X (pd.DataFrame): datos de entrenamiento.
+y (pd.Series): vector con el atributo a predecir.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ArbolDecision.arbol_clasificador_ID3.ArbolClasificadorID3.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/src/ArbolDecision/arbol_clasificador_ID3.html#ArbolClasificadorID3.predict"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#src.ArbolDecision.arbol_clasificador_ID3.ArbolClasificadorID3.predict" title="Link to this definition"></a></dt>
+<dd><p>Predice la clase de las instancias de entrada.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>X (pd.DataFrame): instancias a predecir.</p>
+</dd>
+<dt>Returns:</dt><dd><p>predicciones (list): lista con las predicciones.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ArbolDecision.arbol_clasificador_ID3.probar">
+<span class="sig-prename descclassname"><span class="pre">src.ArbolDecision.arbol_clasificador_ID3.</span></span><span class="sig-name descname"><span class="pre">probar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/ArbolDecision/arbol_clasificador_ID3.html#probar"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#src.ArbolDecision.arbol_clasificador_ID3.probar" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-src.ArbolDecision">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-src.ArbolDecision" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Pie de página">
+        <a href="modules.html" class="btn btn-neutral float-left" title="src" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Anterior</a>
+        <a href="BosqueClasificador.html" class="btn btn-neutral float-right" title="BosqueClasificador package" accesskey="n" rel="next">Siguiente <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Derechos de autor 2024, Hernan De Lorenzo, Nazareno Magallanes, Lautaro Terreno, Marcelo Valeiras.</p>
+  </div>
+
+  Compilado con <a href="https://www.sphinx-doc.org/">Sphinx</a> usando un
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">tema</a>
+    proporcionado por <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

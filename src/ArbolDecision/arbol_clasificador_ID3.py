@@ -1,16 +1,25 @@
 import pandas as pd
-from herramientas import Herramientas
-from metricas import Metricas
-from _impureza import Entropia
-from _superclases import ArbolClasificador
+from src.tools.herramientas import Herramientas
+from src.tools.metricas import Metricas
+from src.Impureza.impureza import Entropia
+from src.Superclases.superclases import ArbolClasificador
 
 class ArbolClasificadorID3(ArbolClasificador):
+    '''Clase que representa un árbol de decisión que utiliza el algoritmo ID3 para clasificar.'''
     def __init__(self, **kwargs) -> None:
+        '''Constructor de la clase ArbolClasificadorID3. Hereda de ArbolClasificador.
+        Args:
+            **kwargs: hiperparametros del árbol.
+        '''
         super().__init__(**kwargs)
         self.impureza = Entropia()
 
-    def copy(self):
-        nuevo = ArbolClasificadorID3(**self.__dict__) # no funciona bien, solo pasa los hipers?
+    def copy(self) -> "ArbolClasificadorID3":
+        '''Devuelve una copia profunda del arbol
+        
+        Returns:
+            ArbolClasificadorID3: copia del arbol'''
+        nuevo = ArbolClasificadorID3(**self.__dict__) 
         nuevo.data = self.data.copy()
         nuevo.target = self.target.copy()
         nuevo.target_categorias = self.target_categorias.copy()
@@ -24,6 +33,10 @@ class ArbolClasificadorID3(ArbolClasificador):
         return nuevo
     
     def _mejor_atributo_split(self) -> str | None:
+        '''Calcula el mejor atributo por el cual splitear el arbol.
+        
+        Returns:
+            str: nombre del mejor atributo por el cual splitear el arbol.'''
         mejor_ig = -1
         mejor_atributo = None
         atributos = self.data.columns
@@ -38,6 +51,12 @@ class ArbolClasificadorID3(ArbolClasificador):
         return mejor_atributo
         
     def _split(self, atributo: str) -> None:
+        '''Realiza el split del arbol por el atributo dado.
+
+        Args:
+            atributo (str): atributo por el cual splitear el arbol.
+        '''
+        
         self.atributo_split = atributo  # guardo el atributo por el cual spliteo
 
         for categoria in self.data[atributo].unique():  # recorre el dominio de valores del atributo
@@ -55,12 +74,29 @@ class ArbolClasificadorID3(ArbolClasificador):
             self.agregar_subarbol(nuevo_arbol)
             
     def _information_gain(self, atributo: str) -> float:
+        '''Calcula la ganancia de información de splitear por el atributo dado.
+
+        Args:  
+            atributo (str): atributo por el cual splitear el arbol.
+
+        Returns:
+            float: ganancia de información de splitear por el atributo dado.
+        '''
         def split(arbol, atributo):
             arbol._split(atributo)
 
         return self.impureza.calcular_impureza_split(self, atributo, split) # quizas renombrar a ganancia (o evaluar_split) en impureza     
 
     def _puede_splitearse(self, prof_acum: int, mejor_atributo: str) -> bool:
+        '''Verifica si el arbol puede splitearse por el atributo dado.
+
+        Args:
+            prof_acum (int): profundidad acumulada del arbol.
+            mejor_atributo (str): atributo por el cual splitear el arbol.
+
+        Returns:
+            bool: True si el arbol puede splitearse, False en caso contrario.
+        '''
         copia = self.copy()
         information_gain = self._information_gain(mejor_atributo)
         copia._split(mejor_atributo)
@@ -73,7 +109,13 @@ class ArbolClasificadorID3(ArbolClasificador):
                     or (self.min_obs_nodo != -1 and self.min_obs_nodo > self._total_samples())
                     or (self.min_infor_gain != -1 and self.min_infor_gain > information_gain))
 
-    def fit(self, X: pd.DataFrame, y: pd.Series):
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> None:
+        '''Entrena el arbol de decisión con los datos de entrada.
+
+        Args:
+            X (pd.DataFrame): datos de entrenamiento.
+            y (pd.Series): vector con el atributo a predecir.
+        '''
         # TODO: Check no fiteado
         self.target = y.copy()
         self.data = X.copy()
@@ -92,6 +134,14 @@ class ArbolClasificadorID3(ArbolClasificador):
         _interna(self)
 
     def predict(self, X: pd.DataFrame) -> list[str]:
+        '''Predice la clase de las instancias de entrada. 
+
+        Args:
+            X (pd.DataFrame): instancias a predecir.
+
+        Returns:
+            predicciones (list): lista con las predicciones.
+        '''
         predicciones = []
         def _recorrer(arbol, fila: pd.Series) -> None:
             if arbol.es_hoja():

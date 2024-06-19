@@ -1,9 +1,9 @@
-from arbol_clasificador_c45 import ArbolClasificadorC45
-from arbol_clasificador_id3 import ArbolClasificadorID3
+from src.ArbolDecision.arbol_clasificador_C45 import ArbolClasificadorC45
+from src.ArbolDecision.arbol_clasificador_ID3 import ArbolClasificadorID3
 import pandas as pd
-from bosque_clasificador import BosqueClasificador
-from herramientas import GridSearch, Herramientas
-from metricas import Metricas
+from src.BosqueClasificador.bosque_clasificador import BosqueClasificador 
+from src.tools.herramientas import GridSearch, Herramientas
+from src.tools.metricas import Metricas
 from pandas.api.types import CategoricalDtype
 
 tennis = pd.read_csv('datasets/PlayTennis.csv')

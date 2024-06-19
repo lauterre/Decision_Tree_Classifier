@@ -2,10 +2,22 @@ import pandas as pd
 # TODO: investigar y agregar: recall_score, precision_score, roc_auc_score, log-loss, etc.  (no creo que sea necesario)
 from typing import Union, Dict
 
-class Metricas:
 
+class Metricas:
+    '''Clase que contiene métodos para calcular métricas de evaluación de clasificadores.
+    '''
     @staticmethod
     def f1_score(y_true: pd.Series, y_pred: list, promedio = "binario") -> Union[float, Dict]:
+        '''Calcula el F1 Score de un clasificador.
+
+        Args:
+            y_true (pd.Series): Valores del target reales.
+            y_pred (list): Valores del target predichos.
+            promedio (str): Tipo de promedio a utilizar. Puede ser 'binario', 'micro', 'macro', 'ponderado' o None.
+
+        Returns:
+            float: F1 Score.
+        '''
 
         if len(y_true) != len(y_pred):
             raise ValueError("y_true e y_pred debe tener la misma longitud")
@@ -83,6 +95,15 @@ class Metricas:
 
     @staticmethod
     def accuracy_score(y_true: pd.Series, y_pred: list) -> float:
+        '''Calcula el Accuracy de un clasificador.
+
+        Args:
+            y_true (pd.Series): Valores del target reales.
+            y_pred (list): Valores del target predichos.
+
+        Returns:
+            float: Accuracy.
+        '''
         if len(y_true) != len(y_pred):
             raise ValueError("y_true e y_pred debe tener la misma longitud")
         

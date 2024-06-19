@@ -3,13 +3,32 @@ from typing import Optional
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
-from _superclases import Clasificador
-from metricas import Metricas
+from src.Superclases.superclases import Clasificador
+from src.tools.metricas import Metricas
+
+'''Este módulo contiene herramientas útiles para el manejo de modelos de clasificación.
+'''
 
 
 class Herramientas:
+    '''Clase que contiene métodos útiles para el manejo de modelos de clasificación.
+    '''
     @staticmethod
     def cross_validation(features: pd.DataFrame, target: pd.Series, classifier, k_fold: int = 5, metrica: str = "accuracy", promedio: str = "binario", verbose = False) -> float:
+        '''Realiza validación cruzada de un clasificador.
+
+        Args:
+            features (pd.DataFrame): Conjunto de datos de entrenamiento.
+            target (pd.Series): Etiquetas de los datos de entrenamiento.
+            classifier (Clasificador): Clasificador a evaluar.
+            k_fold (int): Cantidad de folds a utilizar.
+            metrica (str): Métrica a utilizar para evaluar el clasificador. Puede ser 'accuracy' o 'f1'.
+            promedio (str): Tipo de promedio a utilizar en la métrica 'f1'. Puede ser 'binario', 'micro', 'macro' o 'ponderado'.
+            verbose (bool): Indica si se deben imprimir los scores de cada fold.
+
+        Returns:
+            float: Score promedio de la validación cruzada.
+        '''
         if metrica == "accuracy":
             score = Metricas.accuracy_score
         elif metrica == "f1":
@@ -49,6 +68,19 @@ class Herramientas:
 
     @staticmethod
     def dividir_set(X, y, test_size=0.2, val_size=0.2, val=False, random_state=None) -> tuple:
+        '''Divide un conjunto de datos en entrenamiento, validación y prueba.
+
+        Args:
+            X (pd.DataFrame): Conjunto de datos de entrenamiento.
+            y (pd.Series): Etiquetas de los datos de entrenamiento.
+            test_size (float): Proporción de datos a utilizar como prueba.
+            val_size (float): Proporción de datos a utilizar como validación.
+            val (bool): Indica si se debe dividir en validación.
+            random_state (int): Semilla para la generación de números aleatorios.
+
+        Returns:
+            tuple: Conjuntos de datos divididos.
+        '''
         if random_state is not None:
             np.random.seed(random_state)
         
@@ -72,7 +104,18 @@ class Herramientas:
             return X_train, X_test, y_train, y_test
 
 class GridSearch:
-    def __init__(self, clasificador: Clasificador, params: dict[str, list], cv: bool = True, k_fold: int = 5, random_state: Optional[int] = None):
+    '''Clase que realiza una búsqueda en grilla de hiperparámetros para un clasificador.
+    '''
+    def __init__(self, clasificador: Clasificador, params: dict[str, list], cv: bool = True, k_fold: int = 5, random_state: Optional[int] = None) -> None:
+        '''Inicializa la clase GridSearch.
+
+        Args:
+            clasificador (Clasificador): Clasificador a utilizar.
+            params (dict[str, list]): Diccionario con los hiperparámetros a probar.
+            cv (bool): Indica si se debe realizar validación cruzada.
+            k_fold (int): Cantidad de folds a utilizar en la validación cruzada.
+            random_state (int): Semilla para la generación de números aleatorios.
+        '''
         self._clasificador: Clasificador = clasificador
         self._params: dict[str, list] = params
         self._cv: bool = cv
@@ -83,7 +126,13 @@ class GridSearch:
         self.random_state = random_state
         self.resutados: dict = {}
     
-    def fit(self, X, y):
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> None:
+        '''Realiza la búsqueda en grilla de hiperparámetros.
+
+        Args:
+            X (pd.DataFrame): Conjunto de datos de entrenamiento.
+            y (pd.Series): Etiquetas de los datos de entrenamiento.
+        '''
         params = list(self._params.keys())
         self.resutados = {p: [] for p in params}
         self.resutados['score'] = []
@@ -110,4 +159,9 @@ class GridSearch:
             self.resutados['score'].append(score)
 
     def mostrar_resultados(self):
+        '''Presenta los resultados de la búsqueda en grilla.
+
+        Returns:
+            pd.DataFrame: DataFrame con los resultados de la búsqueda en grilla.        
+        '''
         return pd.DataFrame(self.resutados).sort_values(by='score', ascending=False)         

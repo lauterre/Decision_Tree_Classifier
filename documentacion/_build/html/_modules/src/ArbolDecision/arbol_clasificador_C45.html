@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="es" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.ArbolDecision.arbol_clasificador_C45 &mdash; documentación de TP Algo2 - 1.0.0</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=36c4ab74"></script>
+        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../../_static/translations.js?v=efdbd0b9"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Índice" href="../../../genindex.html" />
+    <link rel="search" title="Búsqueda" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            TP Algo2
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Buscar documentos" aria-label="Buscar documentos" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">src</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">TP Algo2</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Código de módulo</a></li>
+      <li class="breadcrumb-item active">src.ArbolDecision.arbol_clasificador_C45</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Código fuente para src.ArbolDecision.arbol_clasificador_C45</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">pandas.api.types</span> <span class="kn">import</span> <span class="n">CategoricalDtype</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">from</span> <span class="nn">src.Impureza.impureza</span> <span class="kn">import</span> <span class="n">Entropia</span>
+<span class="kn">from</span> <span class="nn">src.Superclases.superclases</span> <span class="kn">import</span> <span class="n">ArbolClasificador</span>
+<span class="kn">from</span> <span class="nn">src.tools.herramientas</span> <span class="kn">import</span> <span class="n">GridSearch</span><span class="p">,</span> <span class="n">Herramientas</span>
+<span class="kn">from</span> <span class="nn">src.tools.metricas</span> <span class="kn">import</span> <span class="n">Metricas</span>
+<span class="sd">&#39;&#39;&#39;Documentación para el módulo arbol_clasificador_c45.py&#39;&#39;&#39;</span>
+
+<div class="viewcode-block" id="ArbolClasificadorC45">
+<a class="viewcode-back" href="../../../ArbolDecision.html#src.ArbolDecision.arbol_clasificador_C45.ArbolClasificadorC45">[documentos]</a>
+<span class="k">class</span> <span class="nc">ArbolClasificadorC45</span><span class="p">(</span><span class="n">ArbolClasificador</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Clase que implementa un árbol de decisión para clasificación utilizando el algoritmo C4.5&#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Constructor de la clase ArbolClasificadorC45.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            **kwargs: hiperparametros del arbol.</span>
+<span class="sd">            </span>
+<span class="sd">        Atributos:</span>
+<span class="sd">            umbral_split(float | str | None): umbral de split para atributos numéricos y ordinales.</span>
+<span class="sd">            impureza (Entropia): instancia de la clase Entropia que calcula la impureza de un conjunto de datos.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">umbral_split</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span> <span class="o">|</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">impureza</span> <span class="o">=</span> <span class="n">Entropia</span><span class="p">()</span>
+    
+<div class="viewcode-block" id="ArbolClasificadorC45.copy">
+<a class="viewcode-back" href="../../../ArbolDecision.html#src.ArbolDecision.arbol_clasificador_C45.ArbolClasificadorC45.copy">[documentos]</a>
+    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;ArbolClasificadorC45&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Devuelve una copia profunda del arbol</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            ArbolClasificadorC45: copia del arbol&#39;&#39;&#39;</span>
+        <span class="n">nuevo</span> <span class="o">=</span> <span class="n">ArbolClasificadorC45</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span> 
+        <span class="n">nuevo</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">nuevo</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">nuevo</span><span class="o">.</span><span class="n">target_categorias</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_categorias</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">nuevo</span><span class="o">.</span><span class="n">set_clase</span><span class="p">()</span>
+        <span class="n">nuevo</span><span class="o">.</span><span class="n">atributo_split</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">atributo_split</span>
+        <span class="n">nuevo</span><span class="o">.</span><span class="n">atributo_split_anterior</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">atributo_split_anterior</span>
+        <span class="n">nuevo</span><span class="o">.</span><span class="n">valor_split_anterior</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">valor_split_anterior</span>
+        <span class="n">nuevo</span><span class="o">.</span><span class="n">signo_split_anterior</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">signo_split_anterior</span>
+        <span class="n">nuevo</span><span class="o">.</span><span class="n">impureza</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">impureza</span>
+        <span class="n">nuevo</span><span class="o">.</span><span class="n">umbral_split</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">umbral_split</span> 
+        <span class="n">nuevo</span><span class="o">.</span><span class="n">subs</span> <span class="o">=</span> <span class="p">[</span><span class="n">sub</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">sub</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">subs</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">nuevo</span></div>
+
+        
+    <span class="k">def</span> <span class="nf">_nuevo_subarbol</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atributo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">operacion</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">valor</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Crea un nuevo subarbol y lo agrega a la lista de subarboles del arbol actual.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            atributo (str): atributo por el cual se va a hacer el split.</span>
+<span class="sd">            operacion (str): operacion que se va a realizar en el split.</span>
+<span class="sd">            valor (Any): valor que se va a comparar en el split.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">nuevo</span> <span class="o">=</span> <span class="n">ArbolClasificadorC45</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">operacion</span> <span class="o">==</span> <span class="s2">&quot;menor&quot;</span><span class="p">:</span>
+            <span class="n">nuevo</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">atributo</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">valor</span><span class="p">]</span>
+            <span class="n">nuevo</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">atributo</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">valor</span><span class="p">]</span>
+            <span class="n">nuevo</span><span class="o">.</span><span class="n">signo_split_anterior</span> <span class="o">=</span> <span class="s2">&quot;&lt;&quot;</span>
+        
+        <span class="k">elif</span> <span class="n">operacion</span> <span class="o">==</span> <span class="s2">&quot;mayor&quot;</span><span class="p">:</span>
+            <span class="n">nuevo</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">atributo</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">valor</span><span class="p">]</span>
+            <span class="n">nuevo</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">atributo</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">valor</span><span class="p">]</span>
+            <span class="n">nuevo</span><span class="o">.</span><span class="n">signo_split_anterior</span> <span class="o">=</span> <span class="s2">&quot;&gt;=&quot;</span>
+        
+        <span class="k">elif</span> <span class="n">operacion</span> <span class="o">==</span> <span class="s2">&quot;igual&quot;</span><span class="p">:</span>
+            <span class="n">nueva_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">atributo</span><span class="p">]</span> <span class="o">==</span> <span class="n">valor</span><span class="p">]</span>
+            <span class="n">nueva_data</span> <span class="o">=</span> <span class="n">nueva_data</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">atributo</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">nuevo</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">nueva_data</span>
+            <span class="n">nuevo</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">atributo</span><span class="p">]</span> <span class="o">==</span> <span class="n">valor</span><span class="p">]</span>
+            <span class="n">nuevo</span><span class="o">.</span><span class="n">signo_split_anterior</span> <span class="o">=</span> <span class="s2">&quot;=&quot;</span>
+        
+        <span class="n">nuevo</span><span class="o">.</span><span class="n">set_clase</span><span class="p">()</span>
+        <span class="n">nuevo</span><span class="o">.</span><span class="n">atributo_split_anterior</span> <span class="o">=</span> <span class="n">atributo</span>
+        <span class="n">nuevo</span><span class="o">.</span><span class="n">valor_split_anterior</span> <span class="o">=</span> <span class="n">valor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">agregar_subarbol</span><span class="p">(</span><span class="n">nuevo</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_split_numerico</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atributo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">umbral</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Realiza el split en el caso que el atributo sea numérico.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            atributo (str): atributo por el cual se va a hacer el split.</span>
+<span class="sd">            umbral (float | int): umbral de split.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">atributo_split</span> <span class="o">=</span> <span class="n">atributo</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">umbral_split</span> <span class="o">=</span> <span class="n">umbral</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nuevo_subarbol</span><span class="p">(</span><span class="n">atributo</span><span class="p">,</span> <span class="s2">&quot;menor&quot;</span><span class="p">,</span> <span class="n">umbral</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nuevo_subarbol</span><span class="p">(</span><span class="n">atributo</span><span class="p">,</span> <span class="s2">&quot;mayor&quot;</span><span class="p">,</span> <span class="n">umbral</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_split_categorico</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atributo</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Realiza el split en el caso que el atributo sea categórico.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            atributo (str): atributo por el cual se va a hacer el split.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">atributo_split</span> <span class="o">=</span> <span class="n">atributo</span>
+        <span class="k">for</span> <span class="n">categoria</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">atributo</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_nuevo_subarbol</span><span class="p">(</span><span class="n">atributo</span><span class="p">,</span> <span class="s2">&quot;igual&quot;</span><span class="p">,</span> <span class="n">categoria</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">_split_ordinal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atributo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">umbral</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Realiza el split en el caso que el atributo sea ordinal.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            atributo (str): atributo por el cual se va a hacer el split.</span>
+<span class="sd">            umbral (str): umbral de split.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">atributo_split</span> <span class="o">=</span> <span class="n">atributo</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">umbral_split</span> <span class="o">=</span> <span class="n">umbral</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nuevo_subarbol</span><span class="p">(</span><span class="n">atributo</span><span class="p">,</span> <span class="s2">&quot;menor&quot;</span><span class="p">,</span> <span class="n">umbral</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nuevo_subarbol</span><span class="p">(</span><span class="n">atributo</span><span class="p">,</span> <span class="s2">&quot;mayor&quot;</span><span class="p">,</span> <span class="n">umbral</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">_split</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atributo</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Realiza el split en el caso que el atributo sea numérico, ordinal o categórico.&#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">es_atributo_numerico</span><span class="p">(</span><span class="n">atributo</span><span class="p">):</span>
+            <span class="n">mejor_umbral</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mejor_umbral_split_num</span><span class="p">(</span><span class="n">atributo</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_split_numerico</span><span class="p">(</span><span class="n">atributo</span><span class="p">,</span> <span class="n">mejor_umbral</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">es_atributo_ordinal</span><span class="p">(</span><span class="n">atributo</span><span class="p">):</span>
+            <span class="n">mejor_umbral</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mejor_umbral_split_ord</span><span class="p">(</span><span class="n">atributo</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_split_ordinal</span><span class="p">(</span><span class="n">atributo</span><span class="p">,</span> <span class="n">mejor_umbral</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_split_categorico</span><span class="p">(</span><span class="n">atributo</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ArbolClasificadorC45.es_atributo_numerico">
+<a class="viewcode-back" href="../../../ArbolDecision.html#src.ArbolDecision.arbol_clasificador_C45.ArbolClasificadorC45.es_atributo_numerico">[documentos]</a>
+    <span class="k">def</span> <span class="nf">es_atributo_numerico</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atributo</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Funcion que verifica si un atributo es numerico.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            atributo (str): nombre del atributo a verificar.</span>
+<span class="sd">            </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: True si el atributo es numerico, False en caso contrario.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">is_numeric_dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">atributo</span><span class="p">])</span></div>
+
+    
+<div class="viewcode-block" id="ArbolClasificadorC45.es_atributo_ordinal">
+<a class="viewcode-back" href="../../../ArbolDecision.html#src.ArbolDecision.arbol_clasificador_C45.ArbolClasificadorC45.es_atributo_ordinal">[documentos]</a>
+    <span class="k">def</span> <span class="nf">es_atributo_ordinal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atributo</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Funcion que verifica si un atributo es ordinal.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            atributo (str): nombre del atributo a verificar.</span>
+<span class="sd">            </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: True si el atributo es ordinal, False en caso contrario.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">atributo</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">CategoricalDtype</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">atributo</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">ordered</span></div>
+
+    
+    <span class="k">def</span> <span class="nf">_information_gain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atributo</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>  <span class="c1">#calcula el mejor umbral de ser necesario</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Calcula la ganancia de información de un atributo.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            atributo (str): nombre del atributo a calcular la ganancia de información.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            float: ganancia de información del atributo.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">def</span> <span class="nf">split</span><span class="p">(</span><span class="n">arbol</span><span class="p">,</span> <span class="n">atributo</span><span class="p">):</span>
+            <span class="n">arbol</span><span class="o">.</span><span class="n">_split</span><span class="p">(</span><span class="n">atributo</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">impureza</span><span class="o">.</span><span class="n">calcular_impureza_split</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atributo</span><span class="p">,</span> <span class="n">split</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">_split_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Calcula el split info del arbol. Mide la dispersión de los valores de los atributos.&#39;&#39;&#39;</span>
+        <span class="n">split_info</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">len_actual</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_samples</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">subarbol</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">subs</span><span class="p">:</span>
+            <span class="n">len_subarbol</span> <span class="o">=</span> <span class="n">subarbol</span><span class="o">.</span><span class="n">_total_samples</span><span class="p">()</span>
+            <span class="n">split_info</span> <span class="o">+=</span> <span class="p">(</span><span class="n">len_subarbol</span> <span class="o">/</span> <span class="n">len_actual</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">len_subarbol</span> <span class="o">/</span> <span class="n">len_actual</span><span class="p">)</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">split_info</span>
+        
+    <span class="k">def</span> <span class="nf">_gain_ratio</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atributo</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Calcula el gain ratio de un atributo. El gain ratio es la division de la ganancia de información de un atributo por el split info del mismo atributo.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            atributo (str): nombre del atributo a calcular el gain ratio.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            float: gain ratio del atributo.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">nuevo</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="n">information_gain</span> <span class="o">=</span> <span class="n">nuevo</span><span class="o">.</span><span class="n">_information_gain</span><span class="p">(</span><span class="n">atributo</span><span class="p">)</span>
+        <span class="n">nuevo</span><span class="o">.</span><span class="n">_split</span><span class="p">(</span><span class="n">atributo</span><span class="p">)</span>
+        <span class="n">split_info</span> <span class="o">=</span> <span class="n">nuevo</span><span class="o">.</span><span class="n">_split_info</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">information_gain</span> <span class="o">/</span> <span class="n">split_info</span>
+    
+    <span class="k">def</span> <span class="nf">_mejor_atributo_split</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Calcula el mejor atributo para hacer el split. El mejor atributo es aquel que maximiza el gain ratio.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            str: nombre del mejor atributo para hacer el split.&#39;&#39;&#39;</span>
+        <span class="n">mejor_gain_ratio</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">atributos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span>
+
+        <span class="k">for</span> <span class="n">atributo</span> <span class="ow">in</span> <span class="n">atributos</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">atributo</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">gain_ratio</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gain_ratio</span><span class="p">(</span><span class="n">atributo</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">gain_ratio</span> <span class="o">&gt;</span> <span class="n">mejor_gain_ratio</span><span class="p">:</span>
+                    <span class="n">mejor_gain_ratio</span> <span class="o">=</span> <span class="n">gain_ratio</span>
+                    <span class="n">mejor_atributo</span> <span class="o">=</span> <span class="n">atributo</span>
+
+        <span class="k">return</span> <span class="n">mejor_atributo</span>
+    
+    <span class="k">def</span> <span class="nf">__information_gain_numerico</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atributo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">umbral</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span><span class="p">):</span>  <span class="c1"># helper de mejor_umbral_split, no calcula el mejor umbral</span>
+            <span class="k">def</span> <span class="nf">split_num</span><span class="p">(</span><span class="n">arbol</span><span class="p">,</span> <span class="n">atributo</span><span class="p">):</span>
+                <span class="n">arbol</span><span class="o">.</span><span class="n">_split_numerico</span><span class="p">(</span><span class="n">atributo</span><span class="p">,</span> <span class="n">umbral</span><span class="p">)</span>
+            
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">impureza</span><span class="o">.</span><span class="n">calcular_impureza_split</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atributo</span><span class="p">,</span> <span class="n">split_num</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">__information_gain_ordinal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atributo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">umbral</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>  <span class="c1"># helper de mejor_umbral_split, no calcula el mejor umbral</span>
+            <span class="k">def</span> <span class="nf">split_ord</span><span class="p">(</span><span class="n">arbol</span><span class="p">,</span> <span class="n">atributo</span><span class="p">):</span>
+                <span class="n">arbol</span><span class="o">.</span><span class="n">_split_ordinal</span><span class="p">(</span><span class="n">atributo</span><span class="p">,</span> <span class="n">umbral</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">impureza</span><span class="o">.</span><span class="n">calcular_impureza_split</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atributo</span><span class="p">,</span> <span class="n">split_ord</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">_mejor_umbral_split_num</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atributo</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Calcula el mejor umbral para hacer el split en un atributo numérico.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            atributo (str): nombre del atributo a calcular el mejor umbral.</span>
+<span class="sd">            </span>
+<span class="sd">            Returns:</span>
+<span class="sd">                float: mejor umbral para hacer el split.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="n">atributo</span><span class="p">)</span>
+        <span class="n">mejor_ig</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">valores_unicos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">atributo</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+        <span class="n">mejor_umbral</span> <span class="o">=</span> <span class="n">valores_unicos</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">valores_unicos</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">umbral</span> <span class="o">=</span> <span class="p">(</span><span class="n">valores_unicos</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">valores_unicos</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span>
+            <span class="n">ig</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__information_gain_numerico</span><span class="p">(</span><span class="n">atributo</span><span class="p">,</span> <span class="n">umbral</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">ig</span> <span class="o">&gt;</span> <span class="n">mejor_ig</span><span class="p">:</span>
+                <span class="n">mejor_ig</span> <span class="o">=</span> <span class="n">ig</span>
+                <span class="n">mejor_umbral</span> <span class="o">=</span> <span class="n">umbral</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+        
+        <span class="k">return</span> <span class="n">mejor_umbral</span>  
+    
+    <span class="k">def</span> <span class="nf">_mejor_umbral_split_ord</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atributo</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Calcula el mejor umbral para hacer el split en un atributo ordinal.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            atributo (str): nombre del atributo a calcular el mejor umbral.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: mejor umbral para hacer el split.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="n">atributo</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="c1"># porque cuando hacemos el split pedimos que sea &lt; al umbral, si estan de menor a mayor, el primer valor nunca es &lt; al umbral</span>
+        <span class="n">mejor_ig</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">valores_unicos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">atributo</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+        <span class="n">mejor_umbral</span> <span class="o">=</span> <span class="n">valores_unicos</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">valores_unicos</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">ig</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__information_gain_ordinal</span><span class="p">(</span><span class="n">atributo</span><span class="p">,</span> <span class="n">valores_unicos</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">ig</span> <span class="o">&gt;</span> <span class="n">mejor_ig</span><span class="p">:</span>
+                <span class="n">mejor_ig</span> <span class="o">=</span> <span class="n">ig</span>
+                <span class="n">mejor_umbral</span> <span class="o">=</span> <span class="n">valores_unicos</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+        
+        <span class="k">return</span> <span class="n">mejor_umbral</span>
+    
+    <span class="k">def</span> <span class="nf">_rellenar_missing_values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Rellena los valores faltantes de las columnas numéricas con la media y de las columnas categóricas con la moda.&#39;&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">columna</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">es_atributo_numerico</span><span class="p">(</span><span class="n">columna</span><span class="p">):</span>
+                <span class="n">medias</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">)[</span><span class="n">columna</span><span class="p">]</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="s1">&#39;mean&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">fillna</span><span class="p">({</span><span class="n">columna</span><span class="p">:</span> <span class="n">medias</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">modas</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">)[</span><span class="n">columna</span><span class="p">]</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">mode</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span><span class="o">.</span><span class="n">mode</span><span class="p">()</span><span class="o">.</span><span class="n">empty</span> <span class="k">else</span> <span class="n">x</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">fillna</span><span class="p">({</span><span class="n">columna</span><span class="p">:</span> <span class="n">modas</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">_puede_splitearse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prof_acum</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">mejor_atributo</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>  
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Verifica si el arbol puede splitearse en base a los hiperparametros y a la ganancia de información del mejor atributo.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            prof_acum (int): profundidad acumulada del arbol.</span>
+<span class="sd">            mejor_atributo (str): mejor atributo para hacer el split.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: True si el arbol puede splitearse, False en caso contrario.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">copia</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">information_gain</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_information_gain</span><span class="p">(</span><span class="n">mejor_atributo</span><span class="p">)</span>
+        <span class="n">copia</span><span class="o">.</span><span class="n">_split</span><span class="p">(</span><span class="n">mejor_atributo</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">subarbol</span> <span class="ow">in</span> <span class="n">copia</span><span class="o">.</span><span class="n">subs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_obs_hoja</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">subarbol</span><span class="o">.</span><span class="n">_total_samples</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_obs_hoja</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+            
+        <span class="k">return</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+                    <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_prof</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_prof</span> <span class="o">&lt;=</span> <span class="n">prof_acum</span><span class="p">)</span>
+                    <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_obs_nodo</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_obs_nodo</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_samples</span><span class="p">())</span>
+                    <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_infor_gain</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_infor_gain</span> <span class="o">&gt;</span> <span class="n">information_gain</span><span class="p">))</span>
+
+<div class="viewcode-block" id="ArbolClasificadorC45.fit">
+<a class="viewcode-back" href="../../../ArbolDecision.html#src.ArbolDecision.arbol_clasificador_C45.ArbolClasificadorC45.fit">[documentos]</a>
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Entrena el arbol de decisión con los datos de entrada.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            X (pd.DataFrame): datos de entrenamiento.</span>
+<span class="sd">            y (pd.Series): vector con el atributo a predecir.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="c1"># TODO: check no fitteado</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rellenar_missing_values</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_clase</span><span class="p">()</span>
+        
+        <span class="k">def</span> <span class="nf">_interna</span><span class="p">(</span><span class="n">arbol</span><span class="p">,</span> <span class="n">prof_acum</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">arbol</span><span class="o">.</span><span class="n">set_target_categorias</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+            <span class="n">mejor_atributo</span> <span class="o">=</span> <span class="n">arbol</span><span class="o">.</span><span class="n">_mejor_atributo_split</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">mejor_atributo</span> <span class="ow">and</span> <span class="n">arbol</span><span class="o">.</span><span class="n">_puede_splitearse</span><span class="p">(</span><span class="n">prof_acum</span><span class="p">,</span> <span class="n">mejor_atributo</span><span class="p">):</span>
+                <span class="n">arbol</span><span class="o">.</span><span class="n">_split</span><span class="p">(</span><span class="n">mejor_atributo</span><span class="p">)</span>
+                
+                <span class="k">for</span> <span class="n">sub_arbol</span> <span class="ow">in</span> <span class="n">arbol</span><span class="o">.</span><span class="n">subs</span><span class="p">:</span>
+                    <span class="n">_interna</span><span class="p">(</span><span class="n">sub_arbol</span><span class="p">,</span> <span class="n">prof_acum</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        
+        <span class="n">_interna</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>   </div>
+
+        
+<div class="viewcode-block" id="ArbolClasificadorC45.predict">
+<a class="viewcode-back" href="../../../ArbolDecision.html#src.ArbolDecision.arbol_clasificador_C45.ArbolClasificadorC45.predict">[documentos]</a>
+    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Predice la clase de las instancias de entrada. </span>
+<span class="sd">        En caso de que haya valores faltantes en las instancias, se predice con la probabilidad de las clases de los subarboles.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            X (pd.DataFrame): instancias a predecir.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            predicciones (list): lista con las predicciones.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">predicciones</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="k">def</span> <span class="nf">_recorrer</span><span class="p">(</span><span class="n">arbol</span><span class="p">,</span> <span class="n">fila</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">arbol</span><span class="o">.</span><span class="n">es_hoja</span><span class="p">():</span>
+                <span class="k">return</span> <span class="n">arbol</span><span class="o">.</span><span class="n">clase</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">valor</span> <span class="o">=</span> <span class="n">fila</span><span class="p">[</span><span class="n">arbol</span><span class="o">.</span><span class="n">atributo_split</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">valor</span><span class="p">):</span>  <span class="c1"># Manejar valores faltantes en la predicción</span>
+                    <span class="n">dist_probabilidades</span> <span class="o">=</span> <span class="n">_predict_valor_faltante</span><span class="p">(</span><span class="n">arbol</span><span class="p">,</span> <span class="n">fila</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">_obtener_clase_aleatoria</span><span class="p">(</span><span class="n">dist_probabilidades</span><span class="p">)</span>          
+                <span class="k">if</span> <span class="n">arbol</span><span class="o">.</span><span class="n">es_atributo_numerico</span><span class="p">(</span><span class="n">arbol</span><span class="o">.</span><span class="n">atributo_split</span><span class="p">):</span>  <span class="c1"># es split numerico, TODO: lo podes ver con el signo</span>
+                    <span class="k">if</span> <span class="n">valor</span> <span class="o">&lt;</span> <span class="n">arbol</span><span class="o">.</span><span class="n">umbral_split</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">_recorrer</span><span class="p">(</span><span class="n">arbol</span><span class="o">.</span><span class="n">subs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">fila</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">_recorrer</span><span class="p">(</span><span class="n">arbol</span><span class="o">.</span><span class="n">subs</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">fila</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">arbol</span><span class="o">.</span><span class="n">es_atributo_ordinal</span><span class="p">(</span><span class="n">arbol</span><span class="o">.</span><span class="n">atributo_split</span><span class="p">):</span>
+                    <span class="n">niveles_ordenados</span> <span class="o">=</span> <span class="n">arbol</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">arbol</span><span class="o">.</span><span class="n">atributo_split</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span>
+                    <span class="n">posicion_valor</span> <span class="o">=</span> <span class="n">niveles_ordenados</span><span class="o">.</span><span class="n">get_loc</span><span class="p">(</span><span class="n">valor</span><span class="p">)</span>
+                    <span class="n">posicion_umbral</span> <span class="o">=</span> <span class="n">niveles_ordenados</span><span class="o">.</span><span class="n">get_loc</span><span class="p">(</span><span class="n">arbol</span><span class="o">.</span><span class="n">umbral_split</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">posicion_valor</span> <span class="o">&lt;</span> <span class="n">posicion_umbral</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">_recorrer</span><span class="p">(</span><span class="n">arbol</span><span class="o">.</span><span class="n">subs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">fila</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">_recorrer</span><span class="p">(</span><span class="n">arbol</span><span class="o">.</span><span class="n">subs</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">fila</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">subarbol</span> <span class="ow">in</span> <span class="n">arbol</span><span class="o">.</span><span class="n">subs</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">valor</span> <span class="o">==</span> <span class="n">subarbol</span><span class="o">.</span><span class="n">valor_split_anterior</span><span class="p">:</span>
+                            <span class="k">return</span> <span class="n">_recorrer</span><span class="p">(</span><span class="n">subarbol</span><span class="p">,</span> <span class="n">fila</span><span class="p">)</span>
+                    <span class="c1">#raise ValueError(f&quot;No se encontró un subárbol para el valor {valor} del atributo {arbol.atributo_split}&quot;)</span>
+
+        <span class="k">def</span> <span class="nf">_predict_valor_faltante</span><span class="p">(</span><span class="n">arbol</span><span class="p">,</span> <span class="n">fila</span><span class="p">):</span>
+            <span class="n">total_samples</span> <span class="o">=</span> <span class="n">arbol</span><span class="o">.</span><span class="n">_total_samples</span><span class="p">()</span>
+            <span class="n">probabilidades</span> <span class="o">=</span> <span class="p">{</span><span class="n">clase</span><span class="p">:</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">clase</span> <span class="ow">in</span> <span class="n">arbol</span><span class="o">.</span><span class="n">target_categorias</span><span class="p">}</span>
+            <span class="k">for</span> <span class="n">subarbol</span> <span class="ow">in</span> <span class="n">arbol</span><span class="o">.</span><span class="n">subs</span><span class="p">:</span>
+                <span class="n">sub_samples</span> <span class="o">=</span> <span class="n">subarbol</span><span class="o">.</span><span class="n">_total_samples</span><span class="p">()</span>
+                <span class="n">sub_prob</span> <span class="o">=</span> <span class="n">sub_samples</span> <span class="o">/</span> <span class="n">total_samples</span>
+                <span class="k">if</span> <span class="n">subarbol</span><span class="o">.</span><span class="n">es_hoja</span><span class="p">():</span>
+                    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">clase</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">arbol</span><span class="o">.</span><span class="n">target_categorias</span><span class="p">):</span>
+                        <span class="n">probabilidades</span><span class="p">[</span><span class="n">clase</span><span class="p">]</span> <span class="o">+=</span> <span class="n">subarbol</span><span class="o">.</span><span class="n">_values</span><span class="p">()[</span><span class="n">i</span><span class="p">]</span> 
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">sub_probs</span> <span class="o">=</span> <span class="n">_predict_valor_faltante</span><span class="p">(</span><span class="n">subarbol</span><span class="p">,</span> <span class="n">fila</span><span class="p">)</span> 
+                    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">clase</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">arbol</span><span class="o">.</span><span class="n">target_categorias</span><span class="p">):</span>
+                        <span class="n">probabilidades</span><span class="p">[</span><span class="n">clase</span><span class="p">]</span> <span class="o">+=</span> <span class="n">sub_probs</span><span class="p">[</span><span class="n">clase</span><span class="p">]</span> 
+            <span class="k">return</span> <span class="n">probabilidades</span>
+        
+        <span class="k">def</span> <span class="nf">_obtener_clase_aleatoria</span><span class="p">(</span><span class="n">diccionario_probabilidades</span><span class="p">):</span>
+                <span class="n">cantidad_total</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">diccionario_probabilidades</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+                <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">diccionario_probabilidades</span><span class="p">:</span>
+                    <span class="n">diccionario_probabilidades</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">diccionario_probabilidades</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">/</span> <span class="n">cantidad_total</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="c1">#Redondeado para que se entienda mas</span>
+                <span class="n">total_valores</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">diccionario_probabilidades</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+                <span class="n">probabilidades</span> <span class="o">=</span> <span class="p">[</span><span class="n">valor</span> <span class="o">/</span> <span class="n">total_valores</span> <span class="k">for</span> <span class="n">valor</span> <span class="ow">in</span> <span class="n">diccionario_probabilidades</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+                <span class="n">clases</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">diccionario_probabilidades</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+                
+                <span class="n">clase_aleatoria</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choices</span><span class="p">(</span><span class="n">clases</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">probabilidades</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">diccionario_probabilidades</span><span class="p">,</span><span class="n">clase_aleatoria</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">clase_aleatoria</span>
+
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">fila</span> <span class="ow">in</span> <span class="n">X</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+            <span class="n">prediccion</span> <span class="o">=</span> <span class="n">_recorrer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fila</span><span class="p">)</span>
+            <span class="c1">#print(prediccion)</span>
+            <span class="n">predicciones</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prediccion</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">predicciones</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">def</span> <span class="nf">_interna</span><span class="p">(</span><span class="n">arbol</span><span class="p">,</span> <span class="n">prefijo</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;  &#39;</span><span class="p">,</span> <span class="n">es_ultimo</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">arbol</span><span class="o">.</span><span class="n">signo_split_anterior</span> <span class="o">!=</span> <span class="s2">&quot;=&quot;</span><span class="p">:</span>
+                <span class="n">simbolo_rama</span> <span class="o">=</span> <span class="s1">&#39;└─ NO ── &#39;</span> <span class="k">if</span> <span class="n">es_ultimo</span> <span class="k">else</span> <span class="s1">&#39;├─ SI ── &#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">simbolo_rama</span> <span class="o">=</span> <span class="s1">&#39;└─── &#39;</span> <span class="k">if</span> <span class="n">es_ultimo</span> <span class="k">else</span> <span class="s1">&#39;├─── &#39;</span>
+            
+            <span class="k">if</span> <span class="n">arbol</span><span class="o">.</span><span class="n">atributo_split</span> <span class="ow">and</span> <span class="n">arbol</span><span class="o">.</span><span class="n">es_atributo_numerico</span><span class="p">(</span><span class="n">arbol</span><span class="o">.</span><span class="n">atributo_split</span><span class="p">):</span>
+                <span class="n">split</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">arbol</span><span class="o">.</span><span class="n">atributo_split</span><span class="si">}</span><span class="s2"> &lt; </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">arbol</span><span class="o">.</span><span class="n">umbral_split</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2"> ?&quot;</span> <span class="k">if</span> <span class="n">arbol</span><span class="o">.</span><span class="n">umbral_split</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+            <span class="k">elif</span> <span class="n">arbol</span><span class="o">.</span><span class="n">atributo_split</span> <span class="ow">and</span> <span class="n">arbol</span><span class="o">.</span><span class="n">es_atributo_ordinal</span><span class="p">(</span><span class="n">arbol</span><span class="o">.</span><span class="n">atributo_split</span><span class="p">):</span>
+                <span class="n">split</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">arbol</span><span class="o">.</span><span class="n">atributo_split</span><span class="si">}</span><span class="s2"> &lt; </span><span class="si">{</span><span class="n">arbol</span><span class="o">.</span><span class="n">umbral_split</span><span class="si">}</span><span class="s2"> ?&quot;</span> <span class="k">if</span> <span class="n">arbol</span><span class="o">.</span><span class="n">umbral_split</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">split</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">arbol</span><span class="o">.</span><span class="n">atributo_split</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; ?&quot;</span>
+
+            
+            <span class="n">impureza</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">arbol</span><span class="o">.</span><span class="n">impureza</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">arbol</span><span class="o">.</span><span class="n">impureza</span><span class="o">.</span><span class="n">calcular</span><span class="p">(</span><span class="n">arbol</span><span class="o">.</span><span class="n">target</span><span class="p">),</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">samples</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Muestras: </span><span class="si">{</span><span class="n">arbol</span><span class="o">.</span><span class="n">_total_samples</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Conteo: </span><span class="si">{</span><span class="n">arbol</span><span class="o">.</span><span class="n">_values</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">clase</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Clase: </span><span class="si">{</span><span class="n">arbol</span><span class="o">.</span><span class="n">clase</span><span class="si">}</span><span class="s2">&quot;</span>
+
+            <span class="k">if</span> <span class="n">arbol</span><span class="o">.</span><span class="n">es_raiz</span><span class="p">():</span>
+                <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">impureza</span><span class="p">)</span>
+                <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
+                <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+                <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">clase</span><span class="p">)</span>
+                <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">split</span><span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">sub_arbol</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">arbol</span><span class="o">.</span><span class="n">subs</span><span class="p">):</span>
+                    <span class="n">ultimo</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">i</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">arbol</span><span class="o">.</span><span class="n">subs</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+                    <span class="n">_interna</span><span class="p">(</span><span class="n">sub_arbol</span><span class="p">,</span> <span class="n">prefijo</span><span class="p">,</span> <span class="n">ultimo</span><span class="p">)</span>
+
+            <span class="k">elif</span> <span class="n">arbol</span><span class="o">.</span><span class="n">es_hoja</span><span class="p">():</span>
+                <span class="n">prefijo_hoja</span> <span class="o">=</span> <span class="n">prefijo</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">simbolo_rama</span><span class="p">)</span> <span class="k">if</span> <span class="n">es_ultimo</span> <span class="k">else</span> <span class="n">prefijo</span> <span class="o">+</span> <span class="s2">&quot;│&quot;</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">simbolo_rama</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefijo</span> <span class="o">+</span> <span class="s2">&quot;│&quot;</span><span class="p">)</span>
+                            
+                <span class="k">if</span> <span class="n">arbol</span><span class="o">.</span><span class="n">signo_split_anterior</span> <span class="o">!=</span> <span class="s2">&quot;=&quot;</span><span class="p">:</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefijo</span> <span class="o">+</span> <span class="n">simbolo_rama</span> <span class="o">+</span> <span class="n">impureza</span><span class="p">)</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefijo_hoja</span> <span class="o">+</span> <span class="n">samples</span><span class="p">)</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefijo_hoja</span> <span class="o">+</span> <span class="n">values</span><span class="p">)</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefijo_hoja</span> <span class="o">+</span> <span class="n">clase</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">rta</span> <span class="o">=</span>  <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">arbol</span><span class="o">.</span><span class="n">atributo_split_anterior</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">arbol</span><span class="o">.</span><span class="n">valor_split_anterior</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefijo</span> <span class="o">+</span> <span class="n">simbolo_rama</span> <span class="o">+</span> <span class="n">rta</span><span class="p">)</span>            
+                    <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefijo_hoja</span> <span class="o">+</span> <span class="n">impureza</span><span class="p">)</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefijo_hoja</span> <span class="o">+</span> <span class="n">samples</span><span class="p">)</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefijo_hoja</span> <span class="o">+</span> <span class="n">values</span><span class="p">)</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefijo_hoja</span> <span class="o">+</span> <span class="n">clase</span><span class="p">)</span>
+            
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefijo</span> <span class="o">+</span> <span class="s2">&quot;│&quot;</span><span class="p">)</span>
+                
+                <span class="c1">#if arbol.atributo_split and (arbol.es_atributo_numerico(arbol.atributo_split) or arbol.es_atributo_ordinal(arbol.atributo_split)):</span>
+                <span class="k">if</span> <span class="n">arbol</span><span class="o">.</span><span class="n">signo_split_anterior</span> <span class="o">!=</span> <span class="s2">&quot;=&quot;</span><span class="p">:</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefijo</span> <span class="o">+</span> <span class="n">simbolo_rama</span> <span class="o">+</span> <span class="n">impureza</span><span class="p">)</span>
+                    <span class="n">prefijo2</span> <span class="o">=</span> <span class="n">prefijo</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">simbolo_rama</span><span class="p">))</span> <span class="k">if</span> <span class="n">es_ultimo</span> <span class="k">else</span> <span class="n">prefijo</span> <span class="o">+</span> <span class="s2">&quot;│&quot;</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">simbolo_rama</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefijo2</span> <span class="o">+</span> <span class="n">samples</span><span class="p">)</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefijo2</span> <span class="o">+</span> <span class="n">values</span><span class="p">)</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefijo2</span> <span class="o">+</span> <span class="n">clase</span><span class="p">)</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefijo2</span> <span class="o">+</span> <span class="n">split</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">rta</span> <span class="o">=</span>  <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">arbol</span><span class="o">.</span><span class="n">atributo_split_anterior</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">arbol</span><span class="o">.</span><span class="n">valor_split_anterior</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefijo</span> <span class="o">+</span> <span class="n">simbolo_rama</span> <span class="o">+</span> <span class="n">rta</span><span class="p">)</span>            
+                    <span class="n">prefijo2</span> <span class="o">=</span> <span class="n">prefijo</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">simbolo_rama</span><span class="p">))</span> <span class="k">if</span> <span class="n">es_ultimo</span> <span class="k">else</span> <span class="n">prefijo</span> <span class="o">+</span> <span class="s2">&quot;│&quot;</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">simbolo_rama</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefijo2</span> <span class="o">+</span> <span class="n">impureza</span><span class="p">)</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefijo2</span> <span class="o">+</span> <span class="n">samples</span><span class="p">)</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefijo2</span> <span class="o">+</span> <span class="n">values</span><span class="p">)</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefijo2</span> <span class="o">+</span> <span class="n">clase</span><span class="p">)</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefijo2</span> <span class="o">+</span> <span class="n">split</span><span class="p">)</span>
+
+                <span class="n">prefijo</span> <span class="o">+=</span> <span class="s1">&#39; &#39;</span> <span class="o">*</span> <span class="mi">10</span> <span class="k">if</span> <span class="n">es_ultimo</span> <span class="k">else</span> <span class="s1">&#39;│&#39;</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">*</span> <span class="mi">9</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">sub_arbol</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">arbol</span><span class="o">.</span><span class="n">subs</span><span class="p">):</span>
+                    <span class="n">ultimo</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">i</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">arbol</span><span class="o">.</span><span class="n">subs</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+                    <span class="n">_interna</span><span class="p">(</span><span class="n">sub_arbol</span><span class="p">,</span> <span class="n">prefijo</span><span class="p">,</span> <span class="n">ultimo</span><span class="p">)</span>
+        <span class="n">_interna</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out</span><span class="p">)</span></div>
+
+    
+<div class="viewcode-block" id="probar">
+<a class="viewcode-back" href="../../../ArbolDecision.html#src.ArbolDecision.arbol_clasificador_C45.probar">[documentos]</a>
+<span class="k">def</span> <span class="nf">probar</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">target</span><span class="p">]</span>
+
+    <span class="c1"># x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.15)</span>
+    <span class="c1"># x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=0.2)</span>
+    <span class="c1"># x_train, x_val, x_test, y_train, y_val, y_test = Herramientas.dividir_set(X, y, test_size=0.15, val_size=0.15, val=True, random_state=42)</span>
+    <span class="n">arbol</span> <span class="o">=</span> <span class="n">ArbolClasificadorC45</span><span class="p">()</span>
+
+    <span class="n">arbol</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">arbol</span><span class="p">)</span>
+    <span class="n">arbol</span><span class="o">.</span><span class="n">graficar</span><span class="p">()</span></div>
+
+    <span class="c1"># y_pred_train = arbol.predict(x_train)</span>
+    
+    <span class="c1"># print(f&quot;accuracy en set de entrenamiento: {Metricas.accuracy_score(y_train, y_pred_train)}&quot;)</span>
+    <span class="c1"># print(f&quot;f1-score en set de entrenamiento: {Metricas.f1_score(y_train, y_pred_train, promedio=&#39;ponderado&#39;)}\n&quot;)</span>
+
+<div class="viewcode-block" id="probar_cv">
+<a class="viewcode-back" href="../../../ArbolDecision.html#src.ArbolDecision.arbol_clasificador_C45.probar_cv">[documentos]</a>
+<span class="k">def</span> <span class="nf">probar_cv</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">target</span><span class="p">]</span>
+
+    <span class="n">x_train</span><span class="p">,</span> <span class="n">x_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">Herramientas</span><span class="o">.</span><span class="n">dividir_set</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.15</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+    <span class="n">arbol</span> <span class="o">=</span> <span class="n">ArbolClasificadorC45</span><span class="p">(</span><span class="n">max_prof</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">min_obs_hoja</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">min_obs_nodo</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">Herramientas</span><span class="o">.</span><span class="n">cross_validation</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">arbol</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="probar_grid_search">
+<a class="viewcode-back" href="../../../ArbolDecision.html#src.ArbolDecision.arbol_clasificador_C45.probar_grid_search">[documentos]</a>
+<span class="k">def</span> <span class="nf">probar_grid_search</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">target</span><span class="p">]</span>
+
+    <span class="n">x_train</span><span class="p">,</span> <span class="n">x_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">Herramientas</span><span class="o">.</span><span class="n">dividir_set</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.20</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+    <span class="n">arbol</span> <span class="o">=</span> <span class="n">ArbolClasificadorC45</span><span class="p">()</span>
+    <span class="n">grid_search</span> <span class="o">=</span> <span class="n">GridSearch</span><span class="p">(</span><span class="n">arbol</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;max_prof&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;min_obs_hoja&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;min_obs_nodo&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">]},</span> <span class="n">k_fold</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+    <span class="n">grid_search</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">grid_search</span><span class="o">.</span><span class="n">mejores_params</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">grid_search</span><span class="o">.</span><span class="n">mejor_score</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">grid_search</span><span class="o">.</span><span class="n">mostrar_resultados</span><span class="p">())</span>
+    <span class="n">mejor_arbol</span> <span class="o">=</span> <span class="n">ArbolClasificadorC45</span><span class="p">(</span><span class="o">**</span><span class="n">grid_search</span><span class="o">.</span><span class="n">mejores_params</span><span class="p">)</span>
+    <span class="n">mejor_arbol</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+    <span class="n">mejor_arbol</span><span class="o">.</span><span class="n">graficar</span><span class="p">()</span>
+
+    <span class="n">y_pred</span> <span class="o">=</span> <span class="n">mejor_arbol</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x_test</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;accuracy en set de prueba: </span><span class="si">{</span><span class="n">Metricas</span><span class="o">.</span><span class="n">accuracy_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span><span class="w"> </span><span class="n">y_pred</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;f1-score en set de prueba: </span><span class="si">{</span><span class="n">Metricas</span><span class="o">.</span><span class="n">f1_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span><span class="w"> </span><span class="n">y_pred</span><span class="p">,</span><span class="w"> </span><span class="n">promedio</span><span class="o">=</span><span class="s1">&#39;ponderado&#39;</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">sklearn.datasets</span>
+
+    <span class="c1"># iris = sklearn.datasets.load_iris()</span>
+    <span class="c1"># df = pd.DataFrame(data=iris.data, columns=iris.feature_names)</span>
+    <span class="c1"># df[&#39;target&#39;] = iris.target</span>
+
+    <span class="c1"># print(&quot;pruebo con iris&quot;)</span>
+    <span class="c1"># probar(df, &quot;target&quot;)</span>
+    <span class="c1"># probar_cv(df, &quot;target&quot;)</span>
+    <span class="c1"># probar_grid_search(df, &quot;target&quot;)</span>
+
+    <span class="c1"># print(&quot;pruebo con tennis&quot;)</span>
+    <span class="c1"># tennis = pd.read_csv(&quot;./datasets/PlayTennis.csv&quot;)</span>
+    <span class="c1"># temperature_order = [&#39;Cool&#39;, &#39;Mild&#39;, &#39;Hot&#39;]</span>
+    <span class="c1"># humidity_order = [&#39;Normal&#39;, &#39;High&#39;]</span>
+    <span class="c1"># wind_order = [&#39;Weak&#39;, &#39;Strong&#39;]</span>
+
+    <span class="c1"># # Convertir columnsas a ordinal</span>
+    <span class="c1"># tennis[&#39;Temperature&#39;] = tennis[&#39;Temperature&#39;].astype(CategoricalDtype(categories=temperature_order, ordered=True))</span>
+    <span class="c1"># tennis[&#39;Humidity&#39;] = tennis[&#39;Humidity&#39;].astype(CategoricalDtype(categories=humidity_order, ordered=True))</span>
+    <span class="c1"># tennis[&#39;Wind&#39;] = tennis[&#39;Wind&#39;].astype(CategoricalDtype(categories=wind_order, ordered=True))</span>
+    <span class="c1"># #probar_grid_search(tennis, &quot;Play Tennis&quot;)</span>
+    <span class="c1"># # probar_cv(df, &quot;Play Tennis&quot;)</span>
+    <span class="c1"># probar(tennis, &quot;Play Tennis&quot;)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;pruebo con patients&quot;</span><span class="p">)</span> 
+
+    <span class="n">patients</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;./datasets/cancer_patients.csv&quot;</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">patients</span> <span class="o">=</span> <span class="n">patients</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s2">&quot;Patient Id&quot;</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Convertir las columnas a categorías ordinales manteniendo NaN</span>
+    <span class="n">cols_to_convert</span> <span class="o">=</span> <span class="n">patients</span><span class="o">.</span><span class="n">columns</span><span class="p">[(</span><span class="n">patients</span><span class="o">.</span><span class="n">columns</span> <span class="o">!=</span> <span class="s1">&#39;Age&#39;</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">patients</span><span class="o">.</span><span class="n">columns</span> <span class="o">!=</span> <span class="s1">&#39;Level&#39;</span><span class="p">)]</span>
+    <span class="n">patients</span><span class="p">[</span><span class="n">cols_to_convert</span><span class="p">]</span> <span class="o">=</span> <span class="n">patients</span><span class="p">[</span><span class="n">cols_to_convert</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">col</span><span class="p">:</span> <span class="n">col</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">CategoricalDtype</span><span class="p">(</span><span class="n">categories</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span> <span class="n">ordered</span><span class="o">=</span><span class="kc">True</span><span class="p">)))</span>
+    <span class="n">probar</span><span class="p">(</span><span class="n">patients</span><span class="p">,</span> <span class="s2">&quot;Level&quot;</span><span class="p">)</span>
+    <span class="c1"># #probar_cv(patients, &quot;Level&quot;)</span>
+    <span class="c1"># probar_grid_search(patients, &quot;Level&quot;)</span>
+
+    <span class="c1"># print(&quot;pruebo con patientsna&quot;)</span>
+    <span class="c1"># patientsna = pd.read_csv(&quot;./datasets/cancer_patients_con_NA.csv&quot;, index_col=0)</span>
+    <span class="c1"># patientsna = patientsna.drop(&quot;Patient Id&quot;, axis = 1)</span>
+    <span class="c1"># patientsna.loc[:, patientsna.columns != &quot;Age&quot;] = patientsna.loc[:, patientsna.columns != &quot;Age&quot;].astype(str) # para que sean categorias</span>
+    <span class="c1"># probar_grid_search(patientsna, &quot;Level&quot;)</span>
+    
+    <span class="c1"># titanic = pd.read_csv(&quot;./datasets/titanic.csv&quot;)</span>
+    <span class="c1"># print(&quot;pruebo con titanic&quot;)</span>
+    <span class="c1"># probar_cv(titanic, &quot;Survived&quot;)</span>
+    <span class="c1">#probar(titanic, &quot;Survived&quot;)</span>
+    <span class="c1">#probar_grid_search(titanic, &quot;Survived&quot;)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Derechos de autor 2024, Hernan De Lorenzo, Nazareno Magallanes, Lautaro Terreno, Marcelo Valeiras.</p>
+  </div>
+
+  Compilado con <a href="https://www.sphinx-doc.org/">Sphinx</a> usando un
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">tema</a>
+    proporcionado por <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
