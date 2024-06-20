@@ -221,25 +221,31 @@ class ArbolClasificadorC45(ArbolClasificador):
         Args:
             atributo (str): nombre del atributo a calcular el mejor umbral.
             
-            Returns:
-                float: mejor umbral para hacer el split.
+        Returns:
+            float: mejor umbral para hacer el split.
         '''
         self.data = self.data.sort_values(by=atributo)
-        mejor_ig = -1
+        self.target = self.target.loc[self.data.index]
+
         valores_unicos = self.data[atributo].unique()
+        target_valores_unicos = []
+        for valor in valores_unicos:
+            target_valores_unicos.append(self.target[self.data[atributo] == valor].iloc[0])
+
         mejor_umbral = valores_unicos[0]
-        
+        mejor_ig = -1
         i = 0
         while i < len(valores_unicos) - 1:
-            umbral = (valores_unicos[i] + valores_unicos[i + 1]) / 2
-            ig = self.__information_gain_numerico(atributo, umbral)
-            if ig > mejor_ig:
-                mejor_ig = ig
-                mejor_umbral = umbral
+            if i == 0 or target_valores_unicos[i] != target_valores_unicos[i + 1]:
+                umbral = (valores_unicos[i] + valores_unicos[i + 1]) / 2
+                ig = self.__information_gain_numerico(atributo, umbral)
+                if ig > mejor_ig:
+                    mejor_ig = ig
+                    mejor_umbral = umbral
             i += 1
-        
-        return mejor_umbral  
-    
+
+        return mejor_umbral 
+            
     def _mejor_umbral_split_ord(self, atributo: str) -> str:
         '''Calcula el mejor umbral para hacer el split en un atributo ordinal.
 
@@ -470,98 +476,3 @@ class ArbolClasificadorC45(ArbolClasificador):
                     _interna(sub_arbol, prefijo, ultimo)
         _interna(self)
         return "\n".join(out)
-    
-def probar(df, target: str):
-    X = df.drop(target, axis=1)
-    y = df[target]
-
-    # x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.15)
-    # x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=0.2)
-    # x_train, x_val, x_test, y_train, y_val, y_test = Herramientas.dividir_set(X, y, test_size=0.15, val_size=0.15, val=True, random_state=42)
-    arbol = ArbolClasificadorC45()
-
-    arbol.fit(X, y)
-    print(arbol)
-    arbol.graficar()
-    # y_pred_train = arbol.predict(x_train)
-    
-    # print(f"accuracy en set de entrenamiento: {Metricas.accuracy_score(y_train, y_pred_train)}")
-    # print(f"f1-score en set de entrenamiento: {Metricas.f1_score(y_train, y_pred_train, promedio='ponderado')}\n")
-
-def probar_cv(df, target: str):
-    X = df.drop(target, axis=1)
-    y = df[target]
-
-    x_train, x_test, y_train, y_test = Herramientas.dividir_set(X, y, test_size=0.15, random_state=42)
-    arbol = ArbolClasificadorC45(max_prof = 5, min_obs_hoja=5, min_obs_nodo=5)
-    print(Herramientas.cross_validation(x_train, y_train, arbol, 5, verbose=True))
-
-def probar_grid_search(df, target: str):
-    X = df.drop(target, axis=1)
-    y = df[target]
-
-    x_train, x_test, y_train, y_test = Herramientas.dividir_set(X, y, test_size=0.20, random_state=42)
-    arbol = ArbolClasificadorC45()
-    grid_search = GridSearch(arbol, {"max_prof": [2, 3, -1], "min_obs_hoja": [3, 5,-1], "min_obs_nodo": [3, 5,-1]}, k_fold=3)
-
-    grid_search.fit(x_train, y_train)
-    print(grid_search.mejores_params)
-    print(grid_search.mejor_score)
-    print(grid_search.mostrar_resultados())
-    mejor_arbol = ArbolClasificadorC45(**grid_search.mejores_params)
-    mejor_arbol.fit(x_train, y_train)
-    mejor_arbol.graficar()
-
-    y_pred = mejor_arbol.predict(x_test)
-    print(f"accuracy en set de prueba: {Metricas.accuracy_score(y_test, y_pred)}")
-    print(f"f1-score en set de prueba: {Metricas.f1_score(y_test, y_pred, promedio='ponderado')}\n")
-
-if __name__ == "__main__":
-    import sklearn.datasets
-
-    # iris = sklearn.datasets.load_iris()
-    # df = pd.DataFrame(data=iris.data, columns=iris.feature_names)
-    # df['target'] = iris.target
-
-    # print("pruebo con iris")
-    # probar(df, "target")
-    # probar_cv(df, "target")
-    # probar_grid_search(df, "target")
-
-    # print("pruebo con tennis")
-    # tennis = pd.read_csv("./datasets/PlayTennis.csv")
-    # temperature_order = ['Cool', 'Mild', 'Hot']
-    # humidity_order = ['Normal', 'High']
-    # wind_order = ['Weak', 'Strong']
-
-    # # Convertir columnsas a ordinal
-    # tennis['Temperature'] = tennis['Temperature'].astype(CategoricalDtype(categories=temperature_order, ordered=True))
-    # tennis['Humidity'] = tennis['Humidity'].astype(CategoricalDtype(categories=humidity_order, ordered=True))
-    # tennis['Wind'] = tennis['Wind'].astype(CategoricalDtype(categories=wind_order, ordered=True))
-    # #probar_grid_search(tennis, "Play Tennis")
-    # # probar_cv(df, "Play Tennis")
-    # probar(tennis, "Play Tennis")
-
-    print("pruebo con patients") 
-
-    patients = pd.read_csv("./datasets/cancer_patients.csv", index_col=0)
-    patients = patients.drop("Patient Id", axis = 1)
-
-    # Convertir las columnas a categorías ordinales manteniendo NaN
-    cols_to_convert = patients.columns[(patients.columns != 'Age') & (patients.columns != 'Level')]
-    patients[cols_to_convert] = patients[cols_to_convert].apply(lambda col: col.astype('float').astype(CategoricalDtype(categories=[1, 2, 3, 4, 5, 6, 7], ordered=True)))
-    probar(patients, "Level")
-    # #probar_cv(patients, "Level")
-    # probar_grid_search(patients, "Level")
-
-    # print("pruebo con patientsna")
-    # patientsna = pd.read_csv("./datasets/cancer_patients_con_NA.csv", index_col=0)
-    # patientsna = patientsna.drop("Patient Id", axis = 1)
-    # patientsna.loc[:, patientsna.columns != "Age"] = patientsna.loc[:, patientsna.columns != "Age"].astype(str) # para que sean categorias
-    # probar_grid_search(patientsna, "Level")
-    
-    # titanic = pd.read_csv("./datasets/titanic.csv")
-    # print("pruebo con titanic")
-    # probar_cv(titanic, "Survived")
-    #probar(titanic, "Survived")
-    #probar_grid_search(titanic, "Survived")
