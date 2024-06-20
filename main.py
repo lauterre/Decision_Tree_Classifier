@@ -10,12 +10,9 @@ tennis = pd.read_csv('datasets/PlayTennis.csv')
 titanic = pd.read_csv("./datasets/titanic.csv")
 
 patientsna = pd.read_csv("./datasets/cancer_patients_con_NA.csv", index_col=0)
-patientsna = patientsna.drop("Patient Id", axis = 1)
-patientsna.loc[:, patientsna.columns != "Age"] = patientsna.loc[:, patientsna.columns != "Age"].astype(CategoricalDtype)
+
 
 patients = pd.read_csv("./datasets/cancer_patients.csv", index_col=0)
-patients = patients.drop("Patient Id", axis = 1)
-patients.loc[:, patients.columns != "Age"] = patients.loc[:, patients.columns != "Age"].astype(CategoricalDtype)
     
 
 def mostrar_id3():
@@ -156,11 +153,11 @@ def prueba():
     print(f'Bienvenidxs a la presentación del TPI de Algoritmos 2')
     input('Presione Enter para continuar...')
     print(f'Contruccion del Arbol clasificador ID3')
-    #mostrar_id3()
+    mostrar_id3()
     input('Presione Enter para continuar...')
     print(f'Contruccion del Arbol clasificador C4.5')
     input('Presione Enter para continuar...')
-    #mostrar_c45_tennis()
+    mostrar_c45_tennis()
     input('Presione Enter para continuar...')
     print(f'Contruccion del Arbol clasificador C4.5 con Dataset numerico')
     mostrar_c45_titanic()
