@@ -1,13 +1,12 @@
 import pandas as pd
-from pandas.api.types import CategoricalDtype
 import numpy as np
 import random
 from typing import Any, Optional
 
 from src.Impureza.impureza import Entropia
 from src.Superclases.superclases import ArbolClasificador
-from src.tools.herramientas import GridSearch, Herramientas
-from src.tools.metricas import Metricas
+from src.Excepciones.excepciones import ArbolEntrenadoException, ArbolNoEntrenadoException, LongitudInvalidaException
+
 '''Documentación para el módulo arbol_clasificador_c45.py'''
 
 class ArbolClasificadorC45(ArbolClasificador):
@@ -309,7 +308,10 @@ class ArbolClasificadorC45(ArbolClasificador):
             X (pd.DataFrame): datos de entrenamiento.
             y (pd.Series): vector con el atributo a predecir.
         '''
-        # TODO: check no fitteado
+        if self.data is not None and self.target is not None:
+            raise ArbolEntrenadoException()
+        if len(X) != len(y):
+            raise LongitudInvalidaException(f"Error: Longitud de X e y no coinciden")
         self.target = y.copy()
         self.data = X.copy()
         self._rellenar_missing_values()
@@ -338,7 +340,10 @@ class ArbolClasificadorC45(ArbolClasificador):
             predicciones (list): lista con las predicciones.
         '''
         predicciones = []
-        
+        if self.data is None or self.target is None:
+            raise ArbolNoEntrenadoException()
+        if len(X.columns) != len(self.data.columns):
+            raise LongitudInvalidaException(f"Error: Cantidad de columnas de X no coincide con la cantidad de columnas del arbol")
         def _recorrer(arbol, fila: pd.Series):
             if arbol.es_hoja():
                 return arbol.clase
@@ -401,6 +406,8 @@ class ArbolClasificadorC45(ArbolClasificador):
         return predicciones
 
     def __str__(self) -> str:
+        if self.data is None or self.target is None:
+            raise ArbolNoEntrenadoException()
         out = []
         def _interna(arbol, prefijo: str = '  ', es_ultimo: bool = True) -> None:
             if arbol.signo_split_anterior != "=":

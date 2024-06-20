@@ -24,13 +24,13 @@ class Impureza():
     
 class Entropia(Impureza):
     def calcular(self, target: pd.Series) -> float:
-        '''Esta funcion calcula la entropia de un target dado.
+        '''Esta funcion calcula la entropia de la data de un nodo.
 
         Args:
             target (pd.Series): target a calcular la entropia.
 
         Returns:
-            float: entropia del target        
+            float: entropia       
         '''
         entropia = 0
         proporciones = target.value_counts(normalize=True)

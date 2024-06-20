@@ -5,6 +5,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from src.Superclases.superclases import Clasificador
 from src.tools.metricas import Metricas
+from src.Excepciones.excepciones import LongitudInvalidaException, GridSearchNoEntrenadaException
 
 '''Este módulo contiene herramientas útiles para el manejo de modelos de clasificación.
 '''
@@ -14,12 +15,12 @@ class Herramientas:
     '''Clase que contiene métodos útiles para el manejo de modelos de clasificación.
     '''
     @staticmethod
-    def cross_validation(features: pd.DataFrame, target: pd.Series, classifier, k_fold: int = 5, metrica: str = "accuracy", promedio: str = "binario", verbose = False) -> float:
+    def cross_validation(X: pd.DataFrame, y: pd.Series, classifier, k_fold: int = 5, metrica: str = "accuracy", promedio: str = "binario", verbose = False) -> float:
         '''Realiza validación cruzada de un clasificador.
 
         Args:
-            features (pd.DataFrame): Conjunto de datos de entrenamiento.
-            target (pd.Series): Etiquetas de los datos de entrenamiento.
+            X (pd.DataFrame): Conjunto de datos de entrenamiento.
+            y (pd.Series): Conjunto a predecir (target).
             classifier (Clasificador): Clasificador a evaluar.
             k_fold (int): Cantidad de folds a utilizar.
             metrica (str): Métrica a utilizar para evaluar el clasificador. Puede ser 'accuracy' o 'f1'.
@@ -29,6 +30,8 @@ class Herramientas:
         Returns:
             float: Score promedio de la validación cruzada.
         '''
+        if X.shape[0] != y.shape[0]:
+            raise LongitudInvalidaException("Error: Longitud de X y target no coinciden")
         if metrica == "accuracy":
             score = Metricas.accuracy_score
         elif metrica == "f1":
@@ -36,7 +39,7 @@ class Herramientas:
         else:
             raise ValueError("Métrica no soportada")
         
-        lista_indices = features.index.to_list()
+        lista_indices = X.index.to_list()
         regist_grupos = len(lista_indices) // k_fold
         groups = []
 
@@ -50,10 +53,10 @@ class Herramientas:
         
         k_score_total = 0
         for j in range(k_fold):
-            X_test = features.loc[groups[j]]
-            y_test = target.loc[groups[j]]
-            X_train = features.loc[~features.index.isin(groups[j])]
-            y_train = target.loc[~target.index.isin(groups[j])]
+            X_test = X.loc[groups[j]]
+            y_test = y.loc[groups[j]]
+            X_train = X.loc[~X.index.isin(groups[j])]
+            y_train = y.loc[~y.index.isin(groups[j])]
             
             clasificador = classifier.__class__(**classifier.__dict__)
             clasificador.fit(X_train, y_train)
@@ -72,7 +75,7 @@ class Herramientas:
 
         Args:
             X (pd.DataFrame): Conjunto de datos de entrenamiento.
-            y (pd.Series): Etiquetas de los datos de entrenamiento.
+            y (pd.Series): Conjunto a predecir (target).
             test_size (float): Proporción de datos a utilizar como prueba.
             val_size (float): Proporción de datos a utilizar como validación.
             val (bool): Indica si se debe dividir en validación.
@@ -81,6 +84,8 @@ class Herramientas:
         Returns:
             tuple: Conjuntos de datos divididos.
         '''
+        if X.shape[0] != y.shape[0]:
+            raise LongitudInvalidaException("X e y deben tener la misma cantidad de filas")
         if random_state is not None:
             np.random.seed(random_state)
         
@@ -133,6 +138,8 @@ class GridSearch:
             X (pd.DataFrame): Conjunto de datos de entrenamiento.
             y (pd.Series): Etiquetas de los datos de entrenamiento.
         '''
+        if X.shape[0] != y.shape[0]:
+            raise LongitudInvalidaException("Error: Longitud de X e y no coinciden")
         params = list(self._params.keys())
         self.resutados = {p: [] for p in params}
         self.resutados['score'] = []
@@ -164,4 +171,6 @@ class GridSearch:
         Returns:
             pd.DataFrame: DataFrame con los resultados de la búsqueda en grilla.        
         '''
+        if not self.resutados:
+            raise GridSearchNoEntrenadaException()
         return pd.DataFrame(self.resutados).sort_values(by='score', ascending=False)         

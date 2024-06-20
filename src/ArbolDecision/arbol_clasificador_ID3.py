@@ -1,6 +1,5 @@
 import pandas as pd
-from src.tools.herramientas import Herramientas
-from src.tools.metricas import Metricas
+from src.Excepciones.excepciones import ArbolEntrenadoException, ArbolNoEntrenadoException
 from src.Impureza.impureza import Entropia
 from src.Superclases.superclases import ArbolClasificador
 
@@ -116,7 +115,8 @@ class ArbolClasificadorID3(ArbolClasificador):
             X (pd.DataFrame): datos de entrenamiento.
             y (pd.Series): vector con el atributo a predecir.
         '''
-        # TODO: Check no fiteado
+        if self.data is not None and self.target is not None:
+            raise ArbolEntrenadoException()
         self.target = y.copy()
         self.data = X.copy()
         self.set_clase()
@@ -142,6 +142,8 @@ class ArbolClasificadorID3(ArbolClasificador):
         Returns:
             predicciones (list): lista con las predicciones.
         '''
+        if self.data is None or self.target is None:
+            raise ArbolNoEntrenadoException()
         predicciones = []
         def _recorrer(arbol, fila: pd.Series) -> None:
             if arbol.es_hoja():
@@ -163,6 +165,8 @@ class ArbolClasificadorID3(ArbolClasificador):
         return predicciones
         
     def __str__(self) -> str:
+        if self.data is None or self.target is None:
+            raise ArbolNoEntrenadoException()
         out = []
         def _interna(self, prefijo: str = '  ', es_ultimo: bool = True) -> None:
             simbolo_rama = '└─── ' if es_ultimo else '├─── '

@@ -1,7 +1,7 @@
 import pandas as pd
 # TODO: investigar y agregar: recall_score, precision_score, roc_auc_score, log-loss, etc.  (no creo que sea necesario)
 from typing import Union, Dict
-
+from src.Excepciones.excepciones import LongitudInvalidaException, PromedioInvalidoException
 
 class Metricas:
     '''Clase que contiene métodos para calcular métricas de evaluación de clasificadores.
@@ -20,7 +20,7 @@ class Metricas:
         '''
 
         if len(y_true) != len(y_pred):
-            raise ValueError("y_true e y_pred debe tener la misma longitud")
+            raise LongitudInvalidaException("Error: Longitud de y_true y y_pred no coinciden")
         
         y_true = y_true.tolist()
 
@@ -64,7 +64,7 @@ class Metricas:
         
         if promedio == "binario":
             if len(clases) != 2:
-                raise ValueError("Promedio binario no es válido en problemas multiclase")
+                raise PromedioInvalidoException("Promedio binario no es válido en problemas multiclase")
             
             f1_score = f1_scores[0] # considero la primera clase que aparece como la positiva, podria ver como usar pos_label
 
@@ -105,7 +105,7 @@ class Metricas:
             float: Accuracy.
         '''
         if len(y_true) != len(y_pred):
-            raise ValueError("y_true e y_pred debe tener la misma longitud")
+            raise LongitudInvalidaException("Error: Longitud de y_true y y_pred no coinciden")
         
         combinada = list(zip(y_true, y_pred))
         verdaderos_p = sum(1 for y_t, y_p in combinada if y_t == y_p)
@@ -113,6 +113,15 @@ class Metricas:
     
     @staticmethod
     def error_score(y_true: pd.Series, y_pred: list) -> float:
+        '''Calcula el Error de un clasificador.
+
+        Args:
+            y_true (pd.Series): Valores del target reales.
+            y_pred (list): Valores del target predichos.
+
+        Returns:
+            float: Error.
+        '''
         return 1 - Metricas.accuracy_score(y_true, y_pred)
 
     
