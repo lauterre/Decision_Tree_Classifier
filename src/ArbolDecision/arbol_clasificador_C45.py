@@ -224,18 +224,21 @@ class ArbolClasificadorC45(ArbolClasificador):
             Returns:
                 float: mejor umbral para hacer el split.
         '''
-        self.data = self.data.sort_values(by=atributo)
+        self.data = self.data.copy().sort_values(by = atributo)
+        self.target = self.target.copy().loc[self.data.index]
         mejor_ig = -1
         valores_unicos = self.data[atributo].unique()
         mejor_umbral = valores_unicos[0]
-        
+
         i = 0
         while i < len(valores_unicos) - 1:
-            umbral = (valores_unicos[i] + valores_unicos[i + 1]) / 2
-            ig = self.__information_gain_numerico(atributo, umbral)
-            if ig > mejor_ig:
-                mejor_ig = ig
-                mejor_umbral = umbral
+            target_actual = self.target.iloc[i]
+            if target_actual != self.target.iloc[i + 1]:  
+                umbral = (valores_unicos[i] + valores_unicos[i + 1]) / 2
+                ig = self.__information_gain_numerico(atributo, umbral)
+                if ig > mejor_ig:
+                    mejor_ig = ig
+                    mejor_umbral = umbral
             i += 1
         
         return mejor_umbral  
@@ -311,14 +314,16 @@ class ArbolClasificadorC45(ArbolClasificador):
         
         def _interna(arbol, prof_acum: int = 1):
             arbol.set_target_categorias(y)
-
-            mejor_atributo = arbol._mejor_atributo_split()
-            if mejor_atributo and arbol._puede_splitearse(prof_acum, mejor_atributo):
-                arbol._split(mejor_atributo)
-                
-                for sub_arbol in arbol.subs:
-                    _interna(sub_arbol, prof_acum + 1)
-        
+            if arbol.es_hoja():
+                return
+            else:
+                mejor_atributo = arbol._mejor_atributo_split()
+                if mejor_atributo and arbol._puede_splitearse(prof_acum, mejor_atributo):
+                    arbol._split(mejor_atributo)
+                    
+                    for sub_arbol in arbol.subs:
+                        _interna(sub_arbol, prof_acum + 1)
+            
         _interna(self)   
         
     def predict(self, X: pd.DataFrame) -> list:
@@ -544,7 +549,7 @@ if __name__ == "__main__":
 
     print("pruebo con patients") 
 
-    patients = pd.read_csv("./datasets/cancer_patients.csv", index_col=0)
+    patients = pd.read_csv("../datasets/cancer_patients.csv", index_col=0)
     patients = patients.drop("Patient Id", axis = 1)
 
     # Convertir las columnas a categorías ordinales manteniendo NaN
