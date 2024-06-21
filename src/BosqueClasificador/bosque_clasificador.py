@@ -20,10 +20,6 @@ class BosqueClasificador(Bosque, Clasificador):
         '''
         super().__init__(cantidad_arboles)
 
-        for key in kwargs:
-            if key not in Hiperparametros.PARAMS_PERMITIDOS:
-                raise HiperparametroInvalidoException(key)
-        
         self.hiperparametros_arbol = Hiperparametros(**kwargs)
         for key, value in self.hiperparametros_arbol.__dict__.items():
             setattr(self, key, value)

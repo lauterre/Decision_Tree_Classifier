@@ -73,10 +73,9 @@
              
   <h1>Código fuente para src.ArbolDecision.arbol_clasificador_ID3</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">from</span> <span class="nn">src.tools.herramientas</span> <span class="kn">import</span> <span class="n">Herramientas</span>
-<span class="kn">from</span> <span class="nn">src.tools.metricas</span> <span class="kn">import</span> <span class="n">Metricas</span>
+<span class="kn">from</span> <span class="nn">src.Excepciones.excepciones</span> <span class="kn">import</span> <span class="n">ArbolNoEntrenadoException</span>
 <span class="kn">from</span> <span class="nn">src.Impureza.impureza</span> <span class="kn">import</span> <span class="n">Entropia</span>
-<span class="kn">from</span> <span class="nn">src.Superclases.superclases</span> <span class="kn">import</span> <span class="n">ArbolClasificador</span>
+<span class="kn">from</span> <span class="nn">src.Superclases.superclases</span> <span class="kn">import</span> <span class="n">ArbolClasificador</span><span class="p">,</span> <span class="n">Hiperparametros</span>
 
 <div class="viewcode-block" id="ArbolClasificadorID3">
 <a class="viewcode-back" href="../../../ArbolDecision.html#src.ArbolDecision.arbol_clasificador_ID3.ArbolClasificadorID3">[documentos]</a>
@@ -97,7 +96,8 @@
 <span class="sd">        </span>
 <span class="sd">        Returns:</span>
 <span class="sd">            ArbolClasificadorID3: copia del arbol&#39;&#39;&#39;</span>
-        <span class="n">nuevo</span> <span class="o">=</span> <span class="n">ArbolClasificadorID3</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span> 
+        <span class="n">hiperparametros_copiados</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">Hiperparametros</span><span class="o">.</span><span class="n">PARAMS_PERMITIDOS</span><span class="p">}</span>
+        <span class="n">nuevo</span> <span class="o">=</span> <span class="n">ArbolClasificadorID3</span><span class="p">(</span><span class="o">**</span><span class="n">hiperparametros_copiados</span><span class="p">)</span>
         <span class="n">nuevo</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">nuevo</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">nuevo</span><span class="o">.</span><span class="n">target_categorias</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_categorias</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
@@ -197,7 +197,6 @@
 <span class="sd">            X (pd.DataFrame): datos de entrenamiento.</span>
 <span class="sd">            y (pd.Series): vector con el atributo a predecir.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
-        <span class="c1"># TODO: Check no fiteado</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_clase</span><span class="p">()</span>
@@ -226,6 +225,8 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            predicciones (list): lista con las predicciones.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ArbolNoEntrenadoException</span><span class="p">()</span>
         <span class="n">predicciones</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">def</span> <span class="nf">_recorrer</span><span class="p">(</span><span class="n">arbol</span><span class="p">,</span> <span class="n">fila</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">arbol</span><span class="o">.</span><span class="n">es_hoja</span><span class="p">():</span>
@@ -238,7 +239,6 @@
                         <span class="n">existe</span> <span class="o">=</span> <span class="kc">True</span>
                         <span class="n">_recorrer</span><span class="p">(</span><span class="n">subarbol</span><span class="p">,</span> <span class="n">fila</span><span class="p">)</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">existe</span><span class="p">:</span>
-                    <span class="c1"># predicciones.append(predicciones[0])</span>
                     <span class="n">predicciones</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arbol</span><span class="o">.</span><span class="n">clase</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">fila</span> <span class="ow">in</span> <span class="n">X</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
@@ -248,6 +248,8 @@
 
         
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ArbolNoEntrenadoException</span><span class="p">()</span>
         <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">def</span> <span class="nf">_interna</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefijo</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;  &#39;</span><span class="p">,</span> <span class="n">es_ultimo</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">simbolo_rama</span> <span class="o">=</span> <span class="s1">&#39;└─── &#39;</span> <span class="k">if</span> <span class="n">es_ultimo</span> <span class="k">else</span> <span class="s1">&#39;├─── &#39;</span>
@@ -294,49 +296,6 @@
         <span class="n">_interna</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out</span><span class="p">)</span></div>
 
-
-<div class="viewcode-block" id="probar">
-<a class="viewcode-back" href="../../../ArbolDecision.html#src.ArbolDecision.arbol_clasificador_ID3.probar">[documentos]</a>
-<span class="k">def</span> <span class="nf">probar</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-    <span class="n">X</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-    <span class="n">y</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">target</span><span class="p">]</span>
-
-    <span class="n">x_train</span><span class="p">,</span> <span class="n">x_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">Herramientas</span><span class="o">.</span><span class="n">dividir_set</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
-    <span class="n">arbol</span> <span class="o">=</span> <span class="n">ArbolClasificadorID3</span><span class="p">()</span>
-    <span class="n">arbol</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">arbol</span><span class="p">)</span>
-    <span class="n">arbol</span><span class="o">.</span><span class="n">graficar</span><span class="p">()</span>
-    <span class="n">y_pred</span> <span class="o">=</span> <span class="n">arbol</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x_test</span><span class="p">)</span>
-    
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> accuracy: </span><span class="si">{</span><span class="n">Metricas</span><span class="o">.</span><span class="n">accuracy_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span><span class="w"> </span><span class="n">y_pred</span><span class="p">)</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;f1-score: </span><span class="si">{</span><span class="n">Metricas</span><span class="o">.</span><span class="n">f1_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span><span class="w"> </span><span class="n">y_pred</span><span class="p">,</span><span class="w"> </span><span class="n">promedio</span><span class="o">=</span><span class="s1">&#39;ponderado&#39;</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
-
-
-    <span class="c1"># print(&quot;Podo el arbol\n&quot;)</span>
-    <span class="c1"># podado = arbol.reduced_error_pruning2(x_test, y_test)</span>
-    <span class="c1"># print(podado)</span>
-    <span class="c1"># podado.graficar()</span>
-    <span class="c1"># y_pred = podado.predict(x_test)    </span>
-
-    <span class="c1"># print(f&quot;\n accuracy: {Metricas.accuracy_score(y_test, y_pred):.2f}&quot;)</span>
-    <span class="c1"># print(f&quot;f1-score: {Metricas.f1_score(y_test, y_pred, promedio=&#39;ponderado&#39;)}\n&quot;)</span>
-
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
-    <span class="c1"># patients = pd.read_csv(&quot;./datasets/cancer_patients.csv&quot;, index_col=0)</span>
-    <span class="c1"># patients = patients.drop(&quot;Patient Id&quot;, axis = 1)</span>
-    <span class="c1"># bins = [0, 15, 20, 30, 40, 50, 60, 70, float(&#39;inf&#39;)]</span>
-    <span class="c1"># labels = [&#39;0-15&#39;, &#39;15-20&#39;, &#39;20-30&#39;, &#39;30-40&#39;, &#39;40-50&#39;, &#39;50-60&#39;, &#39;60-70&#39;, &#39;70+&#39;]</span>
-    <span class="c1"># patients[&#39;Age&#39;] = pd.cut(patients[&#39;Age&#39;], bins=bins, labels=labels, right=False)</span>
-
-    <span class="c1"># tennis = pd.read_csv(&quot;./datasets/PlayTennis.csv&quot;)</span>
-
-    <span class="n">titanic</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;./datasets/titanic.csv&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Pruebo con Titanic&quot;</span><span class="p">)</span>
-    <span class="n">probar</span><span class="p">(</span><span class="n">titanic</span><span class="p">,</span> <span class="s2">&quot;Survived&quot;</span><span class="p">)</span>
-    <span class="c1"># print(&quot;Pruebo con patients&quot;)</span>
-    <span class="c1"># probar(patients, &quot;Level&quot;)</span>
-    <span class="c1"># print(&quot;Pruebo con Play Tennis&quot;)</span>
-    <span class="c1"># probar(tennis, &quot;Play Tennis&quot;)</span>
 </pre></div>
 
            </div>

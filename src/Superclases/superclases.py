@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from copy import deepcopy
 from typing import Optional
 import pandas as pd
 from src.Excepciones.excepciones import HiperparametroInvalidoException, ArbolNoEntrenadoException
@@ -267,7 +266,7 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
                                                            and self.clase == __value.clase)
 
     def _podar(self, nodo: "ArbolClasificador") -> "ArbolClasificador":
-        arbol_podado = deepcopy(self)
+        arbol_podado = self.copy()
         def _interna(arbol, nodo):
             if arbol == nodo:
                 arbol.subs = []
@@ -287,7 +286,7 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
         '''
         if self.data is None or self.target is None:
             raise ArbolNoEntrenadoException()
-        arbol_completo = deepcopy(self)
+        arbol_completo = self.copy()
         error_inicial = Metricas.error_score(y_val, arbol_completo.predict(x_val))
         nodos = arbol_completo.posorden()
         for nodo in nodos:

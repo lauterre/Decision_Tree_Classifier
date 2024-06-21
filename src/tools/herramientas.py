@@ -14,7 +14,7 @@ class Herramientas:
     '''Clase que contiene métodos útiles para el manejo de modelos de clasificación.
     '''
     @staticmethod
-    def cross_validation(X: pd.DataFrame, y: pd.Series, classifier, k_fold: int = 5, metrica: str = "accuracy", promedio: str = "binario", verbose = False) -> float:
+    def cross_validation(X: pd.DataFrame, y: pd.Series, classifier: Clasificador, k_fold: int = 5, metrica: str = "accuracy", promedio: str = "binario", verbose = False) -> float:
         '''Realiza validación cruzada de un clasificador.
 
         Args:
@@ -65,6 +65,9 @@ class Herramientas:
                 if attr not in hiperparams_filtrados:
                     setattr(clasificador, attr, value)
             
+            if hasattr(clasificador, 'subs'):
+                clasificador.subs = []
+
             clasificador.fit(X_train, y_train)
             predicciones = clasificador.predict(X_test)
             k_score = score(y_test, predicciones)
@@ -117,7 +120,7 @@ class Herramientas:
 class GridSearch:
     '''Clase que realiza una búsqueda en grilla de hiperparámetros para un clasificador.
     '''
-    def __init__(self, clasificador: Clasificador, params: dict[str, list], cv: bool = True, k_fold: int = 5, random_state: Optional[int] = None) -> None:
+    def __init__(self, classifier: Clasificador, params: dict[str, list], cv: bool = True, k_fold: int = 5, random_state: Optional[int] = None) -> None:
         '''Inicializa la clase GridSearch.
 
         Args:
@@ -127,7 +130,7 @@ class GridSearch:
             k_fold (int): Cantidad de folds a utilizar en la validación cruzada.
             random_state (int): Semilla para la generación de números aleatorios.
         '''
-        self._clasificador: Clasificador = clasificador
+        self._clasificador: Clasificador = classifier
         self._params: dict[str, list] = params
         self._cv: bool = cv
         self._k_fold: int = k_fold
@@ -150,26 +153,29 @@ class GridSearch:
         self.resutados = {p: [] for p in params}
         self.resutados['score'] = []
         valores = list(self._params.values())
-        
+
         for combinacion in itertools.product(*valores):
             parametros = dict(zip(params, combinacion))
-            
+
             print(f'Probando combinación: {parametros}')
-            clasificador = self._clasificador.__class__()
-            for p in parametros:
-                setattr(clasificador, p, parametros[p])
-                self.resutados[p].append(parametros[p])
+            clasificador = self._clasificador.__class__(**parametros)
+
             if self._cv:
                 score = Herramientas.cross_validation(X, y, clasificador, self._k_fold)
                 print(f'Score: {score}')
             else:
-                x_train, x_val = Herramientas.dividir_set(X, y, test_size=0.2, random_state=self.random_state)
+                x_train, x_val, y_train, y_val = Herramientas.dividir_set(X, y, test_size=0.2, random_state=self.random_state)
                 clasificador.fit(x_train, y_train)
                 score = Metricas.accuracy_score(y_val, clasificador.predict(x_val))
+                print(f"Score: {score}")
+
+            for p in parametros:
+                self.resutados[p].append(parametros[p])
+            self.resutados['score'].append(score)
+
             if score > self.mejor_score:
                 self.mejor_score = score
                 self.mejores_params = parametros
-            self.resutados['score'].append(score)
 
     def mostrar_resultados(self):
         '''Presenta los resultados de la búsqueda en grilla.

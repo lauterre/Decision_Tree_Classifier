@@ -98,8 +98,8 @@ def mostrar_bosque_id3():
     y = patients['Level']
 
     x_train, x_test, y_train, y_test = Herramientas.dividir_set(X, y, test_size=0.15, random_state=42)
-    rf = BosqueClasificador(clase_arbol="id3", cantidad_arboles = 10, cantidad_atributos='all', max_prof=2, min_obs_nodo=10, verbose=True)
-    print("Hiperparametros del Bosque: \n clase_arbol='id3', cantidad_arboles = 10, cantidad_atributos='all', max_prof=2, min_obs_nodo=10")
+    rf = BosqueClasificador(clase_arbol="id3", cantidad_arboles = 10, cantidad_atributos='sqrt', max_prof=2, min_obs_nodo=10, verbose=True)
+    print("Hiperparametros del Bosque: \n clase_arbol='id3', cantidad_arboles = 10, cantidad_atributos='sqrt', max_prof=2, min_obs_nodo=10")
     input('Probamos la validación cruzada con 5 folds: \n')
     print(f'CV Score: {Herramientas.cross_validation(x_train, y_train, rf, 5,verbose=True)}')
     print(f"Metrícas del modelo:")
@@ -116,8 +116,8 @@ def mostrar_grid_search():
     x_train, x_test, y_train, y_test = Herramientas.dividir_set(X, y, test_size=0.20, random_state=42)
     rf = BosqueClasificador()
     print('Probamos el Grid Search con 3 folds: \n')
-    input('Hiperparametros a testear: clase_arbol=["id3", "c45"], max_prof=[2, 3], min_obs_nodo=[10, 50]\n')
-    grid_search = GridSearch(rf, {'clase_arbol': ['id3', 'c45'],'max_prof': [2,3], 'min_obs_nodo': [10, 50]}, k_fold=3)
+    input('Hiperparametros a testear: clase_arbol=["id3", "c45"], max_prof=[1,2], min_obs_nodo=[10, 50]\n')
+    grid_search = GridSearch(rf, {'clase_arbol': ['id3', 'c45'],'max_prof': [1,2], 'min_obs_nodo': [10, 50]}, k_fold=3)
 
     grid_search.fit(x_train, y_train)
     input('Veamos los resultados del Grid Search...')
@@ -154,15 +154,6 @@ def mostrar_grid_search_numerico():
     print(f"accuracy en set de prueba: {Metricas.accuracy_score(y_test, y_pred)}")
     print(f"f1-score en set de prueba: {Metricas.f1_score(y_test, y_pred)}\n")
 
-def mostrar_cross_validation():
-    X = titanic.drop("Survived", axis=1)
-    y = titanic["Survived"]
-
-    x_train, x_test, y_train, y_test = Herramientas.dividir_set(X, y, test_size=0.20, random_state=42)
-    arbol = ArbolClasificadorC45(max_prof = 3)
-    print(f'CV Score: {Herramientas.cross_validation(x_train, y_train, arbol, 5,verbose=True)}')
-
-
 def prueba():
     print(f'Bienvenidxs a la presentación del TPI de Algoritmos 2')
     input('Presione Enter para continuar...')
@@ -191,5 +182,4 @@ def prueba():
 
 
 if __name__ == '__main__':
-    # prueba()
-    mostrar_cross_validation()
+    prueba()

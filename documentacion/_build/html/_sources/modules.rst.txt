@@ -6,6 +6,7 @@ src
 
    ArbolDecision
    BosqueClasificador
+   Excepciones
    Impureza
    Superclases
    tools
