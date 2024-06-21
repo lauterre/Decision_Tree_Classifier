@@ -3,7 +3,7 @@ import numpy as np
 from src.ArbolDecision.arbol_clasificador_C45 import ArbolClasificadorC45
 from src.Superclases.superclases import Clasificador, Bosque, Hiperparametros
 from src.ArbolDecision.arbol_clasificador_ID3 import ArbolClasificadorID3
-from src.Excepciones.excepciones import BosqueEntrenadoException, BosqueNoEntrenadoException, HiperparametroInvalidoException
+from src.Excepciones.excepciones import BosqueNoEntrenadoException, HiperparametroInvalidoException
 
 
 class BosqueClasificador(Bosque, Clasificador):
@@ -78,8 +78,7 @@ class BosqueClasificador(Bosque, Clasificador):
             X (pd.DataFrame): Conjunto de datos de entrenamiento.
             y (pd.Series): Etiquetas de los datos de entrenamiento.
         '''
-        if self.arboles:
-            raise BosqueEntrenadoException()
+
         for _ in range(self.cantidad_arboles):
             if self.verbose : print(f"Contruyendo arbol nro: {_ + 1}") 
             # Bootstrapping

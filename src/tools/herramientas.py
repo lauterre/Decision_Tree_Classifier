@@ -56,9 +56,14 @@ class Herramientas:
             y_test = y.loc[groups[j]]
             X_train = X.loc[~X.index.isin(groups[j])]
             y_train = y.loc[~y.index.isin(groups[j])]
+
+            hiperparams_filtrados = {k: v for k, v in classifier.__dict__.items() if k in Hiperparametros.PARAMS_PERMITIDOS}
             
-            hiperparams = {k: v for k, v in classifier.__dict__.items() if k in Hiperparametros.PARAMS_PERMITIDOS}
-            clasificador = classifier.__class__(**hiperparams)
+            clasificador = classifier.__class__(**hiperparams_filtrados)
+            
+            for attr, value in classifier.__dict__.items():
+                if attr not in hiperparams_filtrados:
+                    setattr(clasificador, attr, value)
             
             clasificador.fit(X_train, y_train)
             predicciones = clasificador.predict(X_test)

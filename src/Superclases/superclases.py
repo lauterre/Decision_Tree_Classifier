@@ -31,7 +31,7 @@ class Hiperparametros:
     def __init__(self, **kwargs):
         for key in kwargs:
             if key not in self.PARAMS_PERMITIDOS:
-                raise ValueError(f"Hiperparámetro no permitido: {key}")
+                raise HiperparametroInvalidoException(key)
         self.max_prof: int = kwargs.get('max_prof', -1)
         self.min_obs_nodo: int = kwargs.get('min_obs_nodo', -1)
         self.min_infor_gain: float = kwargs.get('min_infor_gain', -1.0)

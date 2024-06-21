@@ -5,7 +5,7 @@ from typing import Any, Optional
 
 from src.Impureza.impureza import Entropia
 from src.Superclases.superclases import ArbolClasificador, Hiperparametros
-from src.Excepciones.excepciones import ArbolEntrenadoException, ArbolNoEntrenadoException, LongitudInvalidaException
+from src.Excepciones.excepciones import ArbolNoEntrenadoException, LongitudInvalidaException
 
 '''Documentación para el módulo arbol_clasificador_c45.py'''
 
@@ -310,8 +310,6 @@ class ArbolClasificadorC45(ArbolClasificador):
             X (pd.DataFrame): datos de entrenamiento.
             y (pd.Series): vector con el atributo a predecir.
         '''
-        if self.data is not None and self.target is not None:
-            raise ArbolEntrenadoException()
         if len(X) != len(y):
             raise LongitudInvalidaException(f"Error: Longitud de X e y no coinciden")
         self.target = y.copy()

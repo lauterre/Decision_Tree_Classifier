@@ -1,5 +1,5 @@
 import pandas as pd
-from src.Excepciones.excepciones import ArbolEntrenadoException, ArbolNoEntrenadoException
+from src.Excepciones.excepciones import ArbolNoEntrenadoException
 from src.Impureza.impureza import Entropia
 from src.Superclases.superclases import ArbolClasificador, Hiperparametros
 
@@ -116,8 +116,6 @@ class ArbolClasificadorID3(ArbolClasificador):
             X (pd.DataFrame): datos de entrenamiento.
             y (pd.Series): vector con el atributo a predecir.
         '''
-        if self.data is not None and self.target is not None:
-            raise ArbolEntrenadoException()
         self.target = y.copy()
         self.data = X.copy()
         self.set_clase()
