@@ -102,6 +102,11 @@ def mostrar_bosque_id3():
     print("Hiperparametros del Bosque: \n clase_arbol='id3', cantidad_arboles = 10, cantidad_atributos='sqrt', max_prof=2, min_obs_nodo=10")
     input('Probamos la validación cruzada con 5 folds: \n')
     print(f'CV Score: {Herramientas.cross_validation(x_train, y_train, rf, 5,verbose=True)}')
+    print(f"Metrícas del modelo:")
+    rf.fit(x_train, y_train)
+    y_pred = rf.predict(x_test)
+    print(f'Accuracy Score: {Metricas.accuracy_score(y_test, y_pred)}')
+    print(f'F1 Score ponderado: {Metricas.f1_score(y_test, y_pred, promedio="ponderado")}')
 
 def mostrar_grid_search():
     input("Volvemos a usar cancer patients sin NA")
