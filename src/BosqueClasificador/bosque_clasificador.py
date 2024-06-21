@@ -19,7 +19,10 @@ class BosqueClasificador(Bosque, Clasificador):
             **kwargs: Hiperparámetros del árbol.
         '''
         super().__init__(cantidad_arboles)
-        self.hiperparametros_arbol = Hiperparametros(**kwargs)
+
+        hiperparametros = {k: v for k, v in kwargs.items() if k in Hiperparametros.PARAMS_PERMITIDOS}
+        self.hiperparametros_arbol = Hiperparametros(**hiperparametros)
+        
         for key, value in self.hiperparametros_arbol.__dict__.items():
             setattr(self, key, value)
         self.cantidad_atributos = cantidad_atributos
@@ -60,8 +63,7 @@ class BosqueClasificador(Bosque, Clasificador):
         elif self.cantidad_atributos == 'sqrt':
             size = int(np.sqrt(n_features))
         else:
-            pass
-            #TODO: agregar exception
+            raise ValueError("cantidad_atributos debe ser 'all', 'log2' o 'sqrt'")
 
         indices = np.random.choice(n_features, size, replace=False)
         return indices

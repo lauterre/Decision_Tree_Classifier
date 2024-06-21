@@ -1,7 +1,7 @@
 import pandas as pd
 from src.Excepciones.excepciones import ArbolEntrenadoException, ArbolNoEntrenadoException
 from src.Impureza.impureza import Entropia
-from src.Superclases.superclases import ArbolClasificador
+from src.Superclases.superclases import ArbolClasificador, Hiperparametros
 
 class ArbolClasificadorID3(ArbolClasificador):
     '''Clase que representa un árbol de decisión que utiliza el algoritmo ID3 para clasificar.'''
@@ -18,7 +18,8 @@ class ArbolClasificadorID3(ArbolClasificador):
         
         Returns:
             ArbolClasificadorID3: copia del arbol'''
-        nuevo = ArbolClasificadorID3(**self.__dict__) 
+        hiperparametros_copiados = {k: v for k, v in self.__dict__.items() if k in Hiperparametros.PARAMS_PERMITIDOS}
+        nuevo = ArbolClasificadorID3(**hiperparametros_copiados)
         nuevo.data = self.data.copy()
         nuevo.target = self.target.copy()
         nuevo.target_categorias = self.target_categorias.copy()
@@ -156,7 +157,6 @@ class ArbolClasificadorID3(ArbolClasificador):
                         existe = True
                         _recorrer(subarbol, fila)
                 if not existe:
-                    # predicciones.append(predicciones[0])
                     predicciones.append(arbol.clase)
 
         for _, fila in X.iterrows():

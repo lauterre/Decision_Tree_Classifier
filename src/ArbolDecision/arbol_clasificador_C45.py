@@ -4,7 +4,7 @@ import random
 from typing import Any, Optional
 
 from src.Impureza.impureza import Entropia
-from src.Superclases.superclases import ArbolClasificador
+from src.Superclases.superclases import ArbolClasificador, Hiperparametros
 from src.Excepciones.excepciones import ArbolEntrenadoException, ArbolNoEntrenadoException, LongitudInvalidaException
 
 '''Documentación para el módulo arbol_clasificador_c45.py'''
@@ -30,7 +30,8 @@ class ArbolClasificadorC45(ArbolClasificador):
         
         Returns:
             ArbolClasificadorC45: copia del arbol'''
-        nuevo = ArbolClasificadorC45(**self.__dict__) 
+        hiperparametros_copiados = {k: v for k, v in self.__dict__.items() if k in Hiperparametros.PARAMS_PERMITIDOS}
+        nuevo = ArbolClasificadorC45(**hiperparametros_copiados)
         nuevo.data = self.data.copy()
         nuevo.target = self.target.copy()
         nuevo.target_categorias = self.target_categorias.copy()
@@ -52,7 +53,8 @@ class ArbolClasificadorC45(ArbolClasificador):
             operacion (str): operacion que se va a realizar en el split.
             valor (Any): valor que se va a comparar en el split.
         '''
-        nuevo = ArbolClasificadorC45(**self.__dict__)
+        hiperparametros_copiados = {k: v for k, v in self.__dict__.items() if k in Hiperparametros.PARAMS_PERMITIDOS}
+        nuevo = ArbolClasificadorC45(**hiperparametros_copiados)
         if operacion == "menor":
             nuevo.data = self.data[self.data[atributo] < valor]
             nuevo.target = self.target[self.data[atributo] < valor]
@@ -342,8 +344,7 @@ class ArbolClasificadorC45(ArbolClasificador):
         predicciones = []
         if self.data is None or self.target is None:
             raise ArbolNoEntrenadoException()
-        if len(X.columns) != len(self.data.columns):
-            raise LongitudInvalidaException(f"Error: Cantidad de columnas de X no coincide con la cantidad de columnas del arbol")
+        
         def _recorrer(arbol, fila: pd.Series):
             if arbol.es_hoja():
                 return arbol.clase
@@ -352,7 +353,7 @@ class ArbolClasificadorC45(ArbolClasificador):
                 if pd.isna(valor):  # Manejar valores faltantes en la predicción
                     dist_probabilidades = _predict_valor_faltante(arbol, fila)
                     return _obtener_clase_aleatoria(dist_probabilidades)          
-                if arbol.es_atributo_numerico(arbol.atributo_split):  # es split numerico, TODO: lo podes ver con el signo
+                if arbol.es_atributo_numerico(arbol.atributo_split):
                     if valor < arbol.umbral_split:
                         return _recorrer(arbol.subs[0], fila)
                     else:
@@ -369,7 +370,6 @@ class ArbolClasificadorC45(ArbolClasificador):
                     for subarbol in arbol.subs:
                         if valor == subarbol.valor_split_anterior:
                             return _recorrer(subarbol, fila)
-                    #raise ValueError(f"No se encontró un subárbol para el valor {valor} del atributo {arbol.atributo_split}")
 
         def _predict_valor_faltante(arbol, fila):
             total_samples = arbol._total_samples()

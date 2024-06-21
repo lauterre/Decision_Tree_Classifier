@@ -112,7 +112,7 @@ def mostrar_grid_search():
     rf = BosqueClasificador()
     print('Probamos el Grid Search con 3 folds: \n')
     input('Hiperparametros a testear: clase_arbol=["id3", "c45"], max_prof=[2, 3], min_obs_nodo=[10, 50]\n')
-    grid_search = GridSearch(rf, {'clase_arbol': ['id3', 'c45'],'max_prof': [1,2], 'min_obs_nodo': [10, 50]}, k_fold=3)
+    grid_search = GridSearch(rf, {'clase_arbol': ['id3', 'c45'],'max_prof': [2,3], 'min_obs_nodo': [10, 50]}, k_fold=3)
 
     grid_search.fit(x_train, y_train)
     input('Veamos los resultados del Grid Search...')
@@ -178,3 +178,4 @@ def prueba():
 
 if __name__ == '__main__':
     prueba()
+    #mostrar_bosque_id3()

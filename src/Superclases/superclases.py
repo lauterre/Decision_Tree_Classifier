@@ -27,13 +27,15 @@ class Clasificador(ABC):
     
 class Hiperparametros:
     '''Clase que contiene los hiperparámetros de un árbol de decisión.'''
+    PARAMS_PERMITIDOS = {'max_prof', 'min_obs_nodo', 'min_infor_gain', 'min_obs_hoja'}
     def __init__(self, **kwargs):
+        for key in kwargs:
+            if key not in self.PARAMS_PERMITIDOS:
+                raise ValueError(f"Hiperparámetro no permitido: {key}")
         self.max_prof: int = kwargs.get('max_prof', -1)
         self.min_obs_nodo: int = kwargs.get('min_obs_nodo', -1)
         self.min_infor_gain: float = kwargs.get('min_infor_gain', -1.0)
         self.min_obs_hoja: int = kwargs.get('min_obs_hoja', -1)
-        for key, value in kwargs.items():
-            setattr(self, key, value)
 
 class Arbol(ABC): 
     '''Clase abstracta que define los métodos necesarios para un árbol de decisión.

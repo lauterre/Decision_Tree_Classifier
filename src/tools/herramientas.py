@@ -2,7 +2,6 @@ import itertools
 from typing import Optional
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split
 from src.Superclases.superclases import Clasificador
 from src.tools.metricas import Metricas
 from src.Excepciones.excepciones import LongitudInvalidaException, GridSearchNoEntrenadaException
@@ -157,7 +156,7 @@ class GridSearch:
                 score = Herramientas.cross_validation(X, y, clasificador, self._k_fold)
                 print(f'Score: {score}')
             else:
-                x_train, x_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=self.random_state) # usariamos el nuestro, pero este es mas eficiente xq no usa pandas supongo
+                x_train, x_val = Herramientas.dividir_set(X, y, test_size=0.2, random_state=self.random_state)
                 clasificador.fit(x_train, y_train)
                 score = Metricas.accuracy_score(y_val, clasificador.predict(x_val))
             if score > self.mejor_score:

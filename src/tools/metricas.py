@@ -1,5 +1,5 @@
 import pandas as pd
-# TODO: investigar y agregar: recall_score, precision_score, roc_auc_score, log-loss, etc.  (no creo que sea necesario)
+# TODO: investigar y agregar: recall_score, precision_score, roc_auc_score, log-loss, etc.
 from typing import Union, Dict
 from src.Excepciones.excepciones import LongitudInvalidaException, PromedioInvalidoException
 
@@ -7,7 +7,7 @@ class Metricas:
     '''Clase que contiene métodos para calcular métricas de evaluación de clasificadores.
     '''
     @staticmethod
-    def f1_score(y_true: pd.Series, y_pred: list, promedio = "binario") -> Union[float, Dict]:
+    def f1_score(y_true: pd.Series, y_pred: list, promedio = "binario") -> float | dict:
         '''Calcula el F1 Score de un clasificador.
 
         Args:
@@ -16,7 +16,7 @@ class Metricas:
             promedio (str): Tipo de promedio a utilizar. Puede ser 'binario', 'micro', 'macro', 'ponderado' o None.
 
         Returns:
-            float: F1 Score.
+            float | dict: F1 Score o diccionario con el F1 Score de cada clase.
         '''
 
         if len(y_true) != len(y_pred):
@@ -84,7 +84,7 @@ class Metricas:
             for i, f1 in enumerate(f1_scores):
                 f1_score += f1*(soportes[i]/soporte_total)
         
-        elif promedio is None: # devuelve el f1_score de cada clase
+        elif promedio is None:
             retorno = {}
             for i, clase in enumerate(clases):
                 retorno[clase] = f1_scores[i]
@@ -102,7 +102,7 @@ class Metricas:
             y_pred (list): Valores del target predichos.
 
         Returns:
-            float: Accuracy.
+            float: Accuracy Score.
         '''
         if len(y_true) != len(y_pred):
             raise LongitudInvalidaException("Error: Longitud de y_true y y_pred no coinciden")
@@ -120,7 +120,7 @@ class Metricas:
             y_pred (list): Valores del target predichos.
 
         Returns:
-            float: Error.
+            float: Error Score.
         '''
         return 1 - Metricas.accuracy_score(y_true, y_pred)
 
