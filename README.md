@@ -2,7 +2,7 @@
 Trabajo final integrador de la materia Algoritmos 2 de la carrera Licenciatura en Ciencia de Datos en la Universidad Nacional de San Martin.
 
 # Integrantes:
-[Hernan De Lorenzo](https://github.com/hdelorenzo), [Nazareno Magallanes](https://github.com/nazarenomm), [Lautaro Terreno], [Marcelo Valeiras](https://github.com/Chelo78)
+[Hernan De Lorenzo](https://github.com/hdelorenzo), [Nazareno Magallanes](https://github.com/nazarenomm), [Lautaro Terreno](https://github.com/lauterre), [Marcelo Valeiras](https://github.com/Chelo78)
 
 # Objetivo del trabajo: 
 
@@ -11,4 +11,4 @@ Nuestro objetivo es la creación de una libreria que permita construir modelos p
 # Documentación
 
 1. [Diagrama de Clases](./files/Diagrama_clases.pdf)
-2. [Documentación del proyecto](./documentacion/_build/html/index.html)
+2. **Documentación del proyecto**: Para acceder a la documentación del proyecto, debe abrir el archivo index.html en la carpeta documentacion/_build/html en un navegador web
