@@ -4,4 +4,3 @@ pandas==2.2.2
 Pillow==10.1.0
 Pillow==10.3.0
 pydot==2.0.0
-scikit_learn==1.4.0

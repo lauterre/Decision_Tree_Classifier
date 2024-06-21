@@ -1,8 +1,7 @@
 import pandas as pd
-from src.tools.herramientas import Herramientas
-from src.tools.metricas import Metricas
+from src.Excepciones.excepciones import ArbolNoEntrenadoException
 from src.Impureza.impureza import Entropia
-from src.Superclases.superclases import ArbolClasificador
+from src.Superclases.superclases import ArbolClasificador, Hiperparametros
 
 class ArbolClasificadorID3(ArbolClasificador):
     '''Clase que representa un árbol de decisión que utiliza el algoritmo ID3 para clasificar.'''
@@ -19,7 +18,8 @@ class ArbolClasificadorID3(ArbolClasificador):
         
         Returns:
             ArbolClasificadorID3: copia del arbol'''
-        nuevo = ArbolClasificadorID3(**self.__dict__) 
+        hiperparametros_copiados = {k: v for k, v in self.__dict__.items() if k in Hiperparametros.PARAMS_PERMITIDOS}
+        nuevo = ArbolClasificadorID3(**hiperparametros_copiados)
         nuevo.data = self.data.copy()
         nuevo.target = self.target.copy()
         nuevo.target_categorias = self.target_categorias.copy()
@@ -116,7 +116,6 @@ class ArbolClasificadorID3(ArbolClasificador):
             X (pd.DataFrame): datos de entrenamiento.
             y (pd.Series): vector con el atributo a predecir.
         '''
-        # TODO: Check no fiteado
         self.target = y.copy()
         self.data = X.copy()
         self.set_clase()
@@ -142,6 +141,8 @@ class ArbolClasificadorID3(ArbolClasificador):
         Returns:
             predicciones (list): lista con las predicciones.
         '''
+        if self.data is None or self.target is None:
+            raise ArbolNoEntrenadoException()
         predicciones = []
         def _recorrer(arbol, fila: pd.Series) -> None:
             if arbol.es_hoja():
@@ -154,7 +155,6 @@ class ArbolClasificadorID3(ArbolClasificador):
                         existe = True
                         _recorrer(subarbol, fila)
                 if not existe:
-                    # predicciones.append(predicciones[0])
                     predicciones.append(arbol.clase)
 
         for _, fila in X.iterrows():
@@ -163,6 +163,8 @@ class ArbolClasificadorID3(ArbolClasificador):
         return predicciones
         
     def __str__(self) -> str:
+        if self.data is None or self.target is None:
+            raise ArbolNoEntrenadoException()
         out = []
         def _interna(self, prefijo: str = '  ', es_ultimo: bool = True) -> None:
             simbolo_rama = '└─── ' if es_ultimo else '├─── '

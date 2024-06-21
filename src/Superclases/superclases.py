@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from copy import deepcopy
 from typing import Optional
 import pandas as pd
+from src.Excepciones.excepciones import HiperparametroInvalidoException, ArbolNoEntrenadoException
 from src.Impureza.impureza import Impureza
 from src.tools.graficador import GraficadorArbol, GraficadorArbolFeo
 from src.tools.metricas import Metricas
@@ -26,13 +26,17 @@ class Clasificador(ABC):
     
 class Hiperparametros:
     '''Clase que contiene los hiperparámetros de un árbol de decisión.'''
+    PARAMS_PERMITIDOS = {'max_prof', 'min_obs_nodo', 'min_infor_gain', 'min_obs_hoja'}
     def __init__(self, **kwargs):
+        for key in kwargs:
+            if key not in self.PARAMS_PERMITIDOS:
+                raise HiperparametroInvalidoException(key)
         self.max_prof: int = kwargs.get('max_prof', -1)
         self.min_obs_nodo: int = kwargs.get('min_obs_nodo', -1)
-        self.min_infor_gain: float = kwargs.get('min_infor_gain', -1.0) # me hace ruido que este aca, esta atado a la entropia CART no lo usaria
+        self.min_infor_gain: float = kwargs.get('min_infor_gain', -1.0)
         self.min_obs_hoja: int = kwargs.get('min_obs_hoja', -1)
 
-class Arbol(ABC): # seria ArbolNario
+class Arbol(ABC): 
     '''Clase abstracta que define los métodos necesarios para un árbol de decisión.
     Para este proyecto definimos un árbol de decisión como un árbol n-ario.
     '''
@@ -47,6 +51,12 @@ class Arbol(ABC): # seria ArbolNario
         return self.subs == []
         
     def __len__(self) -> int: 
+        '''Esta función devuelve la cantidad de nodos del árbol.
+
+        Returns:
+            int: cantidad de nodos del árbol.
+
+        '''
         if self.es_hoja():
             return 1
         else:
@@ -143,8 +153,8 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
         hiperparametros = Hiperparametros(**kwargs)  
         for key, value in hiperparametros.__dict__.items():
             setattr(self, key, value)
-        self.data: pd.DataFrame
-        self.target: pd.Series
+        self.data: Optional[pd.DataFrame ] = None
+        self.target: Optional[pd.Series] = None
         self.target_categorias: Optional[list[str]]= None
         self.atributo_split: Optional[str] = None
         self.atributo_split_anterior: Optional[str] = None
@@ -195,17 +205,21 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
             subarbol (ArbolClasificador): subarbol a agregar.
         '''
         for key, value in self.__dict__.items():
-            if key in Hiperparametros().__dict__:  # Solo copiar los atributos que están en Hiperparametros
+            if key in Hiperparametros().__dict__:  
                 setattr(subarbol, key, value)
         self.subs.append(subarbol)
     
     def graficar(self) -> None:
         '''Esta función grafica el árbol de decisión.'''
+        if self.data is None or self.target is None:
+            raise ArbolNoEntrenadoException()
         graficador = GraficadorArbol(self)
         graficador.graficar()
     
     def graficar_feo(self) -> None:
         '''Esta función grafica el árbol de decisión.'''
+        if self.data is None or self.target is None:
+            raise ArbolNoEntrenadoException()
         graficador = GraficadorArbolFeo(self)
         graficador.plot()
 
@@ -216,6 +230,8 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
             x_test (pd.DataFrame): datos de test.
             y_test (pd.Series): target de los datos de test.
         '''
+        if self.data is None or self.target is None:
+            raise ArbolNoEntrenadoException()
         def _interna_rep(arbol: ArbolClasificador, x_test, y_test):
             if not arbol.es_hoja():
                 for subarbol in arbol.subs:
@@ -227,7 +243,7 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
                 error_clasif_ramas = 0.0
 
                 for subarbol in arbol.subs:
-                    pred_podada = subarbol.predict(x_test) # type: ignore
+                    pred_podada = subarbol.predict(x_test) 
                     error_clasif_podada = Metricas.error_score(y_test, pred_podada)
                     error_clasif_ramas = error_clasif_ramas + error_clasif_podada
 
@@ -250,7 +266,7 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
                                                            and self.clase == __value.clase)
 
     def _podar(self, nodo: "ArbolClasificador") -> "ArbolClasificador":
-        arbol_podado = deepcopy(self)
+        arbol_podado = self.copy()
         def _interna(arbol, nodo):
             if arbol == nodo:
                 arbol.subs = []
@@ -268,8 +284,9 @@ class ArbolClasificador(Arbol, Clasificador, ABC):
             y_val (pd.Series): target de los datos de validación.
             margen (float): margen de error permitido para realizar la poda.
         '''
-        # TODO: check si esta entrenado
-        arbol_completo = deepcopy(self)
+        if self.data is None or self.target is None:
+            raise ArbolNoEntrenadoException()
+        arbol_completo = self.copy()
         error_inicial = Metricas.error_score(y_val, arbol_completo.predict(x_val))
         nodos = arbol_completo.posorden()
         for nodo in nodos:

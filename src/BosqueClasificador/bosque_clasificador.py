@@ -1,10 +1,9 @@
 import pandas as pd
 import numpy as np
 from src.ArbolDecision.arbol_clasificador_C45 import ArbolClasificadorC45
-from src.tools.metricas import Metricas
-from src.tools.herramientas import Herramientas, GridSearch
 from src.Superclases.superclases import Clasificador, Bosque, Hiperparametros
 from src.ArbolDecision.arbol_clasificador_ID3 import ArbolClasificadorID3
+from src.Excepciones.excepciones import BosqueNoEntrenadoException, HiperparametroInvalidoException
 
 
 class BosqueClasificador(Bosque, Clasificador):
@@ -20,9 +19,11 @@ class BosqueClasificador(Bosque, Clasificador):
             **kwargs: Hiperparámetros del árbol.
         '''
         super().__init__(cantidad_arboles)
+
         self.hiperparametros_arbol = Hiperparametros(**kwargs)
         for key, value in self.hiperparametros_arbol.__dict__.items():
             setattr(self, key, value)
+
         self.cantidad_atributos = cantidad_atributos
         self.clase_arbol = clase_arbol
         self.verbose = verbose
@@ -61,8 +62,7 @@ class BosqueClasificador(Bosque, Clasificador):
         elif self.cantidad_atributos == 'sqrt':
             size = int(np.sqrt(n_features))
         else:
-            pass
-            #TODO: agregar exception
+            raise ValueError("cantidad_atributos debe ser 'all', 'log2' o 'sqrt'")
 
         indices = np.random.choice(n_features, size, replace=False)
         return indices
@@ -74,6 +74,7 @@ class BosqueClasificador(Bosque, Clasificador):
             X (pd.DataFrame): Conjunto de datos de entrenamiento.
             y (pd.Series): Etiquetas de los datos de entrenamiento.
         '''
+
         for _ in range(self.cantidad_arboles):
             if self.verbose : print(f"Contruyendo arbol nro: {_ + 1}") 
             # Bootstrapping
@@ -105,6 +106,8 @@ class BosqueClasificador(Bosque, Clasificador):
         Returns:    
             predicciones_finales (list): Predicciones realizadas.
         '''
+        if not self.arboles:
+            raise BosqueNoEntrenadoException()
         todas_predicciones = pd.DataFrame(index=X.index, columns=range(len(self.arboles))) 
         
         for i, arbol in enumerate(self.arboles):

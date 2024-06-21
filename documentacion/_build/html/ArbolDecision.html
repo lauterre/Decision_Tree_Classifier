@@ -52,20 +52,17 @@
 <li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-src.ArbolDecision.arbol_clasificador_C45">Arbol Clasificador C45</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#src.ArbolDecision.arbol_clasificador_C45.ArbolClasificadorC45"><code class="docutils literal notranslate"><span class="pre">ArbolClasificadorC45</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#src.ArbolDecision.arbol_clasificador_C45.probar"><code class="docutils literal notranslate"><span class="pre">probar()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#src.ArbolDecision.arbol_clasificador_C45.probar_cv"><code class="docutils literal notranslate"><span class="pre">probar_cv()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#src.ArbolDecision.arbol_clasificador_C45.probar_grid_search"><code class="docutils literal notranslate"><span class="pre">probar_grid_search()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#module-src.ArbolDecision.arbol_clasificador_ID3">Arbol Clasificador ID3</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#src.ArbolDecision.arbol_clasificador_ID3.ArbolClasificadorID3"><code class="docutils literal notranslate"><span class="pre">ArbolClasificadorID3</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#src.ArbolDecision.arbol_clasificador_ID3.probar"><code class="docutils literal notranslate"><span class="pre">probar()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#module-src.ArbolDecision">Module contents</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="BosqueClasificador.html">BosqueClasificador package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Excepciones.html">Excepciones package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Impureza.html">Impureza package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Superclases.html">Superclases package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tools.html">tools package</a></li>
@@ -170,21 +167,6 @@ En caso de que haya valores faltantes en las instancias, se predice con la proba
 
 </dd></dl>
 
-<dl class="py function">
-<dt class="sig sig-object py" id="src.ArbolDecision.arbol_clasificador_C45.probar">
-<span class="sig-prename descclassname"><span class="pre">src.ArbolDecision.arbol_clasificador_C45.</span></span><span class="sig-name descname"><span class="pre">probar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/ArbolDecision/arbol_clasificador_C45.html#probar"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#src.ArbolDecision.arbol_clasificador_C45.probar" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="src.ArbolDecision.arbol_clasificador_C45.probar_cv">
-<span class="sig-prename descclassname"><span class="pre">src.ArbolDecision.arbol_clasificador_C45.</span></span><span class="sig-name descname"><span class="pre">probar_cv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/ArbolDecision/arbol_clasificador_C45.html#probar_cv"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#src.ArbolDecision.arbol_clasificador_C45.probar_cv" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="src.ArbolDecision.arbol_clasificador_C45.probar_grid_search">
-<span class="sig-prename descclassname"><span class="pre">src.ArbolDecision.arbol_clasificador_C45.</span></span><span class="sig-name descname"><span class="pre">probar_grid_search</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/ArbolDecision/arbol_clasificador_C45.html#probar_grid_search"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#src.ArbolDecision.arbol_clasificador_C45.probar_grid_search" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
 </section>
 <section id="module-src.ArbolDecision.arbol_clasificador_ID3">
 <span id="arbol-clasificador-id3"></span><h2>Arbol Clasificador ID3<a class="headerlink" href="#module-src.ArbolDecision.arbol_clasificador_ID3" title="Link to this heading"></a></h2>
@@ -227,11 +209,6 @@ y (pd.Series): vector con el atributo a predecir.</p>
 </dd></dl>
 
 </dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="src.ArbolDecision.arbol_clasificador_ID3.probar">
-<span class="sig-prename descclassname"><span class="pre">src.ArbolDecision.arbol_clasificador_ID3.</span></span><span class="sig-name descname"><span class="pre">probar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/ArbolDecision/arbol_clasificador_ID3.html#probar"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#src.ArbolDecision.arbol_clasificador_ID3.probar" title="Link to this definition"></a></dt>
-<dd></dd></dl>
 
 </section>
 <section id="module-src.ArbolDecision">

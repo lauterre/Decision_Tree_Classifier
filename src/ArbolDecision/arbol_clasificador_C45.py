@@ -1,13 +1,12 @@
 import pandas as pd
-from pandas.api.types import CategoricalDtype
 import numpy as np
 import random
 from typing import Any, Optional
 
 from src.Impureza.impureza import Entropia
-from src.Superclases.superclases import ArbolClasificador
-from src.tools.herramientas import GridSearch, Herramientas
-from src.tools.metricas import Metricas
+from src.Superclases.superclases import ArbolClasificador, Hiperparametros
+from src.Excepciones.excepciones import ArbolNoEntrenadoException, LongitudInvalidaException
+
 '''Documentación para el módulo arbol_clasificador_c45.py'''
 
 class ArbolClasificadorC45(ArbolClasificador):
@@ -31,7 +30,8 @@ class ArbolClasificadorC45(ArbolClasificador):
         
         Returns:
             ArbolClasificadorC45: copia del arbol'''
-        nuevo = ArbolClasificadorC45(**self.__dict__) 
+        hiperparametros_copiados = {k: v for k, v in self.__dict__.items() if k in Hiperparametros.PARAMS_PERMITIDOS}
+        nuevo = ArbolClasificadorC45(**hiperparametros_copiados)
         nuevo.data = self.data.copy()
         nuevo.target = self.target.copy()
         nuevo.target_categorias = self.target_categorias.copy()
@@ -53,7 +53,8 @@ class ArbolClasificadorC45(ArbolClasificador):
             operacion (str): operacion que se va a realizar en el split.
             valor (Any): valor que se va a comparar en el split.
         '''
-        nuevo = ArbolClasificadorC45(**self.__dict__)
+        hiperparametros_copiados = {k: v for k, v in self.__dict__.items() if k in Hiperparametros.PARAMS_PERMITIDOS}
+        nuevo = ArbolClasificadorC45(**hiperparametros_copiados)
         if operacion == "menor":
             nuevo.data = self.data[self.data[atributo] < valor]
             nuevo.target = self.target[self.data[atributo] < valor]
@@ -309,7 +310,8 @@ class ArbolClasificadorC45(ArbolClasificador):
             X (pd.DataFrame): datos de entrenamiento.
             y (pd.Series): vector con el atributo a predecir.
         '''
-        # TODO: check no fitteado
+        if len(X) != len(y):
+            raise LongitudInvalidaException(f"Error: Longitud de X e y no coinciden")
         self.target = y.copy()
         self.data = X.copy()
         self._rellenar_missing_values()
@@ -338,6 +340,8 @@ class ArbolClasificadorC45(ArbolClasificador):
             predicciones (list): lista con las predicciones.
         '''
         predicciones = []
+        if self.data is None or self.target is None:
+            raise ArbolNoEntrenadoException()
         
         def _recorrer(arbol, fila: pd.Series):
             if arbol.es_hoja():
@@ -347,7 +351,7 @@ class ArbolClasificadorC45(ArbolClasificador):
                 if pd.isna(valor):  # Manejar valores faltantes en la predicción
                     dist_probabilidades = _predict_valor_faltante(arbol, fila)
                     return _obtener_clase_aleatoria(dist_probabilidades)          
-                if arbol.es_atributo_numerico(arbol.atributo_split):  # es split numerico, TODO: lo podes ver con el signo
+                if arbol.es_atributo_numerico(arbol.atributo_split):
                     if valor < arbol.umbral_split:
                         return _recorrer(arbol.subs[0], fila)
                     else:
@@ -364,7 +368,6 @@ class ArbolClasificadorC45(ArbolClasificador):
                     for subarbol in arbol.subs:
                         if valor == subarbol.valor_split_anterior:
                             return _recorrer(subarbol, fila)
-                    #raise ValueError(f"No se encontró un subárbol para el valor {valor} del atributo {arbol.atributo_split}")
 
         def _predict_valor_faltante(arbol, fila):
             total_samples = arbol._total_samples()
@@ -401,6 +404,8 @@ class ArbolClasificadorC45(ArbolClasificador):
         return predicciones
 
     def __str__(self) -> str:
+        if self.data is None or self.target is None:
+            raise ArbolNoEntrenadoException()
         out = []
         def _interna(arbol, prefijo: str = '  ', es_ultimo: bool = True) -> None:
             if arbol.signo_split_anterior != "=":

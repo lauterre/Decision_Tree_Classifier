@@ -111,13 +111,13 @@
 <div class="viewcode-block" id="Entropia.calcular">
 <a class="viewcode-back" href="../../../Impureza.html#src.Impureza.impureza.Entropia.calcular">[documentos]</a>
     <span class="k">def</span> <span class="nf">calcular</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&#39;&#39;&#39;Esta funcion calcula la entropia de un target dado.</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Esta funcion calcula la entropia de la data de un nodo.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            target (pd.Series): target a calcular la entropia.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            float: entropia del target        </span>
+<span class="sd">            float: entropia       </span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="n">entropia</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">proporciones</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>

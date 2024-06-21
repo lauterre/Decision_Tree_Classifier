@@ -73,15 +73,14 @@
              
   <h1>Código fuente para src.ArbolDecision.arbol_clasificador_C45</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">from</span> <span class="nn">pandas.api.types</span> <span class="kn">import</span> <span class="n">CategoricalDtype</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">random</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span>
 
 <span class="kn">from</span> <span class="nn">src.Impureza.impureza</span> <span class="kn">import</span> <span class="n">Entropia</span>
-<span class="kn">from</span> <span class="nn">src.Superclases.superclases</span> <span class="kn">import</span> <span class="n">ArbolClasificador</span>
-<span class="kn">from</span> <span class="nn">src.tools.herramientas</span> <span class="kn">import</span> <span class="n">GridSearch</span><span class="p">,</span> <span class="n">Herramientas</span>
-<span class="kn">from</span> <span class="nn">src.tools.metricas</span> <span class="kn">import</span> <span class="n">Metricas</span>
+<span class="kn">from</span> <span class="nn">src.Superclases.superclases</span> <span class="kn">import</span> <span class="n">ArbolClasificador</span><span class="p">,</span> <span class="n">Hiperparametros</span>
+<span class="kn">from</span> <span class="nn">src.Excepciones.excepciones</span> <span class="kn">import</span> <span class="n">ArbolNoEntrenadoException</span><span class="p">,</span> <span class="n">LongitudInvalidaException</span>
+
 <span class="sd">&#39;&#39;&#39;Documentación para el módulo arbol_clasificador_c45.py&#39;&#39;&#39;</span>
 
 <div class="viewcode-block" id="ArbolClasificadorC45">
@@ -109,7 +108,8 @@
 <span class="sd">        </span>
 <span class="sd">        Returns:</span>
 <span class="sd">            ArbolClasificadorC45: copia del arbol&#39;&#39;&#39;</span>
-        <span class="n">nuevo</span> <span class="o">=</span> <span class="n">ArbolClasificadorC45</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span> 
+        <span class="n">hiperparametros_copiados</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">Hiperparametros</span><span class="o">.</span><span class="n">PARAMS_PERMITIDOS</span><span class="p">}</span>
+        <span class="n">nuevo</span> <span class="o">=</span> <span class="n">ArbolClasificadorC45</span><span class="p">(</span><span class="o">**</span><span class="n">hiperparametros_copiados</span><span class="p">)</span>
         <span class="n">nuevo</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">nuevo</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">nuevo</span><span class="o">.</span><span class="n">target_categorias</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_categorias</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
@@ -132,7 +132,8 @@
 <span class="sd">            operacion (str): operacion que se va a realizar en el split.</span>
 <span class="sd">            valor (Any): valor que se va a comparar en el split.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
-        <span class="n">nuevo</span> <span class="o">=</span> <span class="n">ArbolClasificadorC45</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
+        <span class="n">hiperparametros_copiados</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">Hiperparametros</span><span class="o">.</span><span class="n">PARAMS_PERMITIDOS</span><span class="p">}</span>
+        <span class="n">nuevo</span> <span class="o">=</span> <span class="n">ArbolClasificadorC45</span><span class="p">(</span><span class="o">**</span><span class="n">hiperparametros_copiados</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">operacion</span> <span class="o">==</span> <span class="s2">&quot;menor&quot;</span><span class="p">:</span>
             <span class="n">nuevo</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">atributo</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">valor</span><span class="p">]</span>
             <span class="n">nuevo</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">atributo</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">valor</span><span class="p">]</span>
@@ -270,12 +271,13 @@
 
         <span class="k">return</span> <span class="n">information_gain</span> <span class="o">/</span> <span class="n">split_info</span>
     
-    <span class="k">def</span> <span class="nf">_mejor_atributo_split</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_mejor_atributo_split</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;Calcula el mejor atributo para hacer el split. El mejor atributo es aquel que maximiza el gain ratio.</span>
 <span class="sd">        </span>
 <span class="sd">        Returns:</span>
 <span class="sd">            str: nombre del mejor atributo para hacer el split.&#39;&#39;&#39;</span>
         <span class="n">mejor_gain_ratio</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">mejor_atributo</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">atributos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span>
 
         <span class="k">for</span> <span class="n">atributo</span> <span class="ow">in</span> <span class="n">atributos</span><span class="p">:</span>
@@ -305,25 +307,31 @@
 <span class="sd">        Args:</span>
 <span class="sd">            atributo (str): nombre del atributo a calcular el mejor umbral.</span>
 <span class="sd">            </span>
-<span class="sd">            Returns:</span>
-<span class="sd">                float: mejor umbral para hacer el split.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            float: mejor umbral para hacer el split.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="n">atributo</span><span class="p">)</span>
-        <span class="n">mejor_ig</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
+
         <span class="n">valores_unicos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">atributo</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+        <span class="n">target_valores_unicos</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">valor</span> <span class="ow">in</span> <span class="n">valores_unicos</span><span class="p">:</span>
+            <span class="n">target_valores_unicos</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">atributo</span><span class="p">]</span> <span class="o">==</span> <span class="n">valor</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
         <span class="n">mejor_umbral</span> <span class="o">=</span> <span class="n">valores_unicos</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        
+        <span class="n">mejor_ig</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
         <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">valores_unicos</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">umbral</span> <span class="o">=</span> <span class="p">(</span><span class="n">valores_unicos</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">valores_unicos</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span>
-            <span class="n">ig</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__information_gain_numerico</span><span class="p">(</span><span class="n">atributo</span><span class="p">,</span> <span class="n">umbral</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">ig</span> <span class="o">&gt;</span> <span class="n">mejor_ig</span><span class="p">:</span>
-                <span class="n">mejor_ig</span> <span class="o">=</span> <span class="n">ig</span>
-                <span class="n">mejor_umbral</span> <span class="o">=</span> <span class="n">umbral</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">target_valores_unicos</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="n">target_valores_unicos</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]:</span>
+                <span class="n">umbral</span> <span class="o">=</span> <span class="p">(</span><span class="n">valores_unicos</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">valores_unicos</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span>
+                <span class="n">ig</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__information_gain_numerico</span><span class="p">(</span><span class="n">atributo</span><span class="p">,</span> <span class="n">umbral</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">ig</span> <span class="o">&gt;</span> <span class="n">mejor_ig</span><span class="p">:</span>
+                    <span class="n">mejor_ig</span> <span class="o">=</span> <span class="n">ig</span>
+                    <span class="n">mejor_umbral</span> <span class="o">=</span> <span class="n">umbral</span>
             <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
-        
-        <span class="k">return</span> <span class="n">mejor_umbral</span>  
-    
+
+        <span class="k">return</span> <span class="n">mejor_umbral</span> 
+            
     <span class="k">def</span> <span class="nf">_mejor_umbral_split_ord</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atributo</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;Calcula el mejor umbral para hacer el split en un atributo ordinal.</span>
 
@@ -389,7 +397,8 @@
 <span class="sd">            X (pd.DataFrame): datos de entrenamiento.</span>
 <span class="sd">            y (pd.Series): vector con el atributo a predecir.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
-        <span class="c1"># TODO: check no fitteado</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">LongitudInvalidaException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error: Longitud de X e y no coinciden&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_rellenar_missing_values</span><span class="p">()</span>
@@ -421,6 +430,8 @@
 <span class="sd">            predicciones (list): lista con las predicciones.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="n">predicciones</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ArbolNoEntrenadoException</span><span class="p">()</span>
         
         <span class="k">def</span> <span class="nf">_recorrer</span><span class="p">(</span><span class="n">arbol</span><span class="p">,</span> <span class="n">fila</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">arbol</span><span class="o">.</span><span class="n">es_hoja</span><span class="p">():</span>
@@ -430,7 +441,7 @@
                 <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">valor</span><span class="p">):</span>  <span class="c1"># Manejar valores faltantes en la predicción</span>
                     <span class="n">dist_probabilidades</span> <span class="o">=</span> <span class="n">_predict_valor_faltante</span><span class="p">(</span><span class="n">arbol</span><span class="p">,</span> <span class="n">fila</span><span class="p">)</span>
                     <span class="k">return</span> <span class="n">_obtener_clase_aleatoria</span><span class="p">(</span><span class="n">dist_probabilidades</span><span class="p">)</span>          
-                <span class="k">if</span> <span class="n">arbol</span><span class="o">.</span><span class="n">es_atributo_numerico</span><span class="p">(</span><span class="n">arbol</span><span class="o">.</span><span class="n">atributo_split</span><span class="p">):</span>  <span class="c1"># es split numerico, TODO: lo podes ver con el signo</span>
+                <span class="k">if</span> <span class="n">arbol</span><span class="o">.</span><span class="n">es_atributo_numerico</span><span class="p">(</span><span class="n">arbol</span><span class="o">.</span><span class="n">atributo_split</span><span class="p">):</span>
                     <span class="k">if</span> <span class="n">valor</span> <span class="o">&lt;</span> <span class="n">arbol</span><span class="o">.</span><span class="n">umbral_split</span><span class="p">:</span>
                         <span class="k">return</span> <span class="n">_recorrer</span><span class="p">(</span><span class="n">arbol</span><span class="o">.</span><span class="n">subs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">fila</span><span class="p">)</span>
                     <span class="k">else</span><span class="p">:</span>
@@ -447,7 +458,6 @@
                     <span class="k">for</span> <span class="n">subarbol</span> <span class="ow">in</span> <span class="n">arbol</span><span class="o">.</span><span class="n">subs</span><span class="p">:</span>
                         <span class="k">if</span> <span class="n">valor</span> <span class="o">==</span> <span class="n">subarbol</span><span class="o">.</span><span class="n">valor_split_anterior</span><span class="p">:</span>
                             <span class="k">return</span> <span class="n">_recorrer</span><span class="p">(</span><span class="n">subarbol</span><span class="p">,</span> <span class="n">fila</span><span class="p">)</span>
-                    <span class="c1">#raise ValueError(f&quot;No se encontró un subárbol para el valor {valor} del atributo {arbol.atributo_split}&quot;)</span>
 
         <span class="k">def</span> <span class="nf">_predict_valor_faltante</span><span class="p">(</span><span class="n">arbol</span><span class="p">,</span> <span class="n">fila</span><span class="p">):</span>
             <span class="n">total_samples</span> <span class="o">=</span> <span class="n">arbol</span><span class="o">.</span><span class="n">_total_samples</span><span class="p">()</span>
@@ -485,6 +495,8 @@
 
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ArbolNoEntrenadoException</span><span class="p">()</span>
         <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">def</span> <span class="nf">_interna</span><span class="p">(</span><span class="n">arbol</span><span class="p">,</span> <span class="n">prefijo</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;  &#39;</span><span class="p">,</span> <span class="n">es_ultimo</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">arbol</span><span class="o">.</span><span class="n">signo_split_anterior</span> <span class="o">!=</span> <span class="s2">&quot;=&quot;</span><span class="p">:</span>
@@ -561,110 +573,6 @@
         <span class="n">_interna</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out</span><span class="p">)</span></div>
 
-    
-<div class="viewcode-block" id="probar">
-<a class="viewcode-back" href="../../../ArbolDecision.html#src.ArbolDecision.arbol_clasificador_C45.probar">[documentos]</a>
-<span class="k">def</span> <span class="nf">probar</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-    <span class="n">X</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-    <span class="n">y</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">target</span><span class="p">]</span>
-
-    <span class="c1"># x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.15)</span>
-    <span class="c1"># x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=0.2)</span>
-    <span class="c1"># x_train, x_val, x_test, y_train, y_val, y_test = Herramientas.dividir_set(X, y, test_size=0.15, val_size=0.15, val=True, random_state=42)</span>
-    <span class="n">arbol</span> <span class="o">=</span> <span class="n">ArbolClasificadorC45</span><span class="p">()</span>
-
-    <span class="n">arbol</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">arbol</span><span class="p">)</span>
-    <span class="n">arbol</span><span class="o">.</span><span class="n">graficar</span><span class="p">()</span></div>
-
-    <span class="c1"># y_pred_train = arbol.predict(x_train)</span>
-    
-    <span class="c1"># print(f&quot;accuracy en set de entrenamiento: {Metricas.accuracy_score(y_train, y_pred_train)}&quot;)</span>
-    <span class="c1"># print(f&quot;f1-score en set de entrenamiento: {Metricas.f1_score(y_train, y_pred_train, promedio=&#39;ponderado&#39;)}\n&quot;)</span>
-
-<div class="viewcode-block" id="probar_cv">
-<a class="viewcode-back" href="../../../ArbolDecision.html#src.ArbolDecision.arbol_clasificador_C45.probar_cv">[documentos]</a>
-<span class="k">def</span> <span class="nf">probar_cv</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-    <span class="n">X</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-    <span class="n">y</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">target</span><span class="p">]</span>
-
-    <span class="n">x_train</span><span class="p">,</span> <span class="n">x_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">Herramientas</span><span class="o">.</span><span class="n">dividir_set</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.15</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
-    <span class="n">arbol</span> <span class="o">=</span> <span class="n">ArbolClasificadorC45</span><span class="p">(</span><span class="n">max_prof</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">min_obs_hoja</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">min_obs_nodo</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">Herramientas</span><span class="o">.</span><span class="n">cross_validation</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">arbol</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span></div>
-
-
-<div class="viewcode-block" id="probar_grid_search">
-<a class="viewcode-back" href="../../../ArbolDecision.html#src.ArbolDecision.arbol_clasificador_C45.probar_grid_search">[documentos]</a>
-<span class="k">def</span> <span class="nf">probar_grid_search</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-    <span class="n">X</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-    <span class="n">y</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">target</span><span class="p">]</span>
-
-    <span class="n">x_train</span><span class="p">,</span> <span class="n">x_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">Herramientas</span><span class="o">.</span><span class="n">dividir_set</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.20</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
-    <span class="n">arbol</span> <span class="o">=</span> <span class="n">ArbolClasificadorC45</span><span class="p">()</span>
-    <span class="n">grid_search</span> <span class="o">=</span> <span class="n">GridSearch</span><span class="p">(</span><span class="n">arbol</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;max_prof&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;min_obs_hoja&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;min_obs_nodo&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">]},</span> <span class="n">k_fold</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
-
-    <span class="n">grid_search</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">grid_search</span><span class="o">.</span><span class="n">mejores_params</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">grid_search</span><span class="o">.</span><span class="n">mejor_score</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">grid_search</span><span class="o">.</span><span class="n">mostrar_resultados</span><span class="p">())</span>
-    <span class="n">mejor_arbol</span> <span class="o">=</span> <span class="n">ArbolClasificadorC45</span><span class="p">(</span><span class="o">**</span><span class="n">grid_search</span><span class="o">.</span><span class="n">mejores_params</span><span class="p">)</span>
-    <span class="n">mejor_arbol</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
-    <span class="n">mejor_arbol</span><span class="o">.</span><span class="n">graficar</span><span class="p">()</span>
-
-    <span class="n">y_pred</span> <span class="o">=</span> <span class="n">mejor_arbol</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x_test</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;accuracy en set de prueba: </span><span class="si">{</span><span class="n">Metricas</span><span class="o">.</span><span class="n">accuracy_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span><span class="w"> </span><span class="n">y_pred</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;f1-score en set de prueba: </span><span class="si">{</span><span class="n">Metricas</span><span class="o">.</span><span class="n">f1_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span><span class="w"> </span><span class="n">y_pred</span><span class="p">,</span><span class="w"> </span><span class="n">promedio</span><span class="o">=</span><span class="s1">&#39;ponderado&#39;</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
-
-
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">sklearn.datasets</span>
-
-    <span class="c1"># iris = sklearn.datasets.load_iris()</span>
-    <span class="c1"># df = pd.DataFrame(data=iris.data, columns=iris.feature_names)</span>
-    <span class="c1"># df[&#39;target&#39;] = iris.target</span>
-
-    <span class="c1"># print(&quot;pruebo con iris&quot;)</span>
-    <span class="c1"># probar(df, &quot;target&quot;)</span>
-    <span class="c1"># probar_cv(df, &quot;target&quot;)</span>
-    <span class="c1"># probar_grid_search(df, &quot;target&quot;)</span>
-
-    <span class="c1"># print(&quot;pruebo con tennis&quot;)</span>
-    <span class="c1"># tennis = pd.read_csv(&quot;./datasets/PlayTennis.csv&quot;)</span>
-    <span class="c1"># temperature_order = [&#39;Cool&#39;, &#39;Mild&#39;, &#39;Hot&#39;]</span>
-    <span class="c1"># humidity_order = [&#39;Normal&#39;, &#39;High&#39;]</span>
-    <span class="c1"># wind_order = [&#39;Weak&#39;, &#39;Strong&#39;]</span>
-
-    <span class="c1"># # Convertir columnsas a ordinal</span>
-    <span class="c1"># tennis[&#39;Temperature&#39;] = tennis[&#39;Temperature&#39;].astype(CategoricalDtype(categories=temperature_order, ordered=True))</span>
-    <span class="c1"># tennis[&#39;Humidity&#39;] = tennis[&#39;Humidity&#39;].astype(CategoricalDtype(categories=humidity_order, ordered=True))</span>
-    <span class="c1"># tennis[&#39;Wind&#39;] = tennis[&#39;Wind&#39;].astype(CategoricalDtype(categories=wind_order, ordered=True))</span>
-    <span class="c1"># #probar_grid_search(tennis, &quot;Play Tennis&quot;)</span>
-    <span class="c1"># # probar_cv(df, &quot;Play Tennis&quot;)</span>
-    <span class="c1"># probar(tennis, &quot;Play Tennis&quot;)</span>
-
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;pruebo con patients&quot;</span><span class="p">)</span> 
-
-    <span class="n">patients</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;./datasets/cancer_patients.csv&quot;</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-    <span class="n">patients</span> <span class="o">=</span> <span class="n">patients</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s2">&quot;Patient Id&quot;</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
-
-    <span class="c1"># Convertir las columnas a categorías ordinales manteniendo NaN</span>
-    <span class="n">cols_to_convert</span> <span class="o">=</span> <span class="n">patients</span><span class="o">.</span><span class="n">columns</span><span class="p">[(</span><span class="n">patients</span><span class="o">.</span><span class="n">columns</span> <span class="o">!=</span> <span class="s1">&#39;Age&#39;</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">patients</span><span class="o">.</span><span class="n">columns</span> <span class="o">!=</span> <span class="s1">&#39;Level&#39;</span><span class="p">)]</span>
-    <span class="n">patients</span><span class="p">[</span><span class="n">cols_to_convert</span><span class="p">]</span> <span class="o">=</span> <span class="n">patients</span><span class="p">[</span><span class="n">cols_to_convert</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">col</span><span class="p">:</span> <span class="n">col</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">CategoricalDtype</span><span class="p">(</span><span class="n">categories</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span> <span class="n">ordered</span><span class="o">=</span><span class="kc">True</span><span class="p">)))</span>
-    <span class="n">probar</span><span class="p">(</span><span class="n">patients</span><span class="p">,</span> <span class="s2">&quot;Level&quot;</span><span class="p">)</span>
-    <span class="c1"># #probar_cv(patients, &quot;Level&quot;)</span>
-    <span class="c1"># probar_grid_search(patients, &quot;Level&quot;)</span>
-
-    <span class="c1"># print(&quot;pruebo con patientsna&quot;)</span>
-    <span class="c1"># patientsna = pd.read_csv(&quot;./datasets/cancer_patients_con_NA.csv&quot;, index_col=0)</span>
-    <span class="c1"># patientsna = patientsna.drop(&quot;Patient Id&quot;, axis = 1)</span>
-    <span class="c1"># patientsna.loc[:, patientsna.columns != &quot;Age&quot;] = patientsna.loc[:, patientsna.columns != &quot;Age&quot;].astype(str) # para que sean categorias</span>
-    <span class="c1"># probar_grid_search(patientsna, &quot;Level&quot;)</span>
-    
-    <span class="c1"># titanic = pd.read_csv(&quot;./datasets/titanic.csv&quot;)</span>
-    <span class="c1"># print(&quot;pruebo con titanic&quot;)</span>
-    <span class="c1"># probar_cv(titanic, &quot;Survived&quot;)</span>
-    <span class="c1">#probar(titanic, &quot;Survived&quot;)</span>
-    <span class="c1">#probar_grid_search(titanic, &quot;Survived&quot;)</span>
 </pre></div>
 
            </div>

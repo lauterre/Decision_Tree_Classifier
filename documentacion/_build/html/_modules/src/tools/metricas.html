@@ -73,9 +73,9 @@
              
   <h1>Código fuente para src.tools.metricas</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="c1"># TODO: investigar y agregar: recall_score, precision_score, roc_auc_score, log-loss, etc.  (no creo que sea necesario)</span>
+<span class="c1"># TODO: investigar y agregar: recall_score, precision_score, roc_auc_score, log-loss, etc.</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Dict</span>
-
+<span class="kn">from</span> <span class="nn">src.Excepciones.excepciones</span> <span class="kn">import</span> <span class="n">LongitudInvalidaException</span><span class="p">,</span> <span class="n">PromedioInvalidoException</span>
 
 <div class="viewcode-block" id="Metricas">
 <a class="viewcode-back" href="../../../tools.html#src.tools.metricas.Metricas">[documentos]</a>
@@ -85,7 +85,7 @@
 <div class="viewcode-block" id="Metricas.f1_score">
 <a class="viewcode-back" href="../../../tools.html#src.tools.metricas.Metricas.f1_score">[documentos]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">f1_score</span><span class="p">(</span><span class="n">y_true</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">promedio</span> <span class="o">=</span> <span class="s2">&quot;binario&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Dict</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">f1_score</span><span class="p">(</span><span class="n">y_true</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">promedio</span> <span class="o">=</span> <span class="s2">&quot;binario&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;Calcula el F1 Score de un clasificador.</span>
 
 <span class="sd">        Args:</span>
@@ -94,11 +94,11 @@
 <span class="sd">            promedio (str): Tipo de promedio a utilizar. Puede ser &#39;binario&#39;, &#39;micro&#39;, &#39;macro&#39;, &#39;ponderado&#39; o None.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            float: F1 Score.</span>
+<span class="sd">            float | dict: F1 Score o diccionario con el F1 Score de cada clase.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_pred</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;y_true e y_pred debe tener la misma longitud&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">LongitudInvalidaException</span><span class="p">(</span><span class="s2">&quot;Error: Longitud de y_true y y_pred no coinciden&quot;</span><span class="p">)</span>
         
         <span class="n">y_true</span> <span class="o">=</span> <span class="n">y_true</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
 
@@ -142,7 +142,7 @@
         
         <span class="k">if</span> <span class="n">promedio</span> <span class="o">==</span> <span class="s2">&quot;binario&quot;</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">clases</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Promedio binario no es válido en problemas multiclase&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">PromedioInvalidoException</span><span class="p">(</span><span class="s2">&quot;Promedio binario no es válido en problemas multiclase&quot;</span><span class="p">)</span>
             
             <span class="n">f1_score</span> <span class="o">=</span> <span class="n">f1_scores</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># considero la primera clase que aparece como la positiva, podria ver como usar pos_label</span>
 
@@ -162,7 +162,7 @@
             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">f1</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">f1_scores</span><span class="p">):</span>
                 <span class="n">f1_score</span> <span class="o">+=</span> <span class="n">f1</span><span class="o">*</span><span class="p">(</span><span class="n">soportes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">/</span><span class="n">soporte_total</span><span class="p">)</span>
         
-        <span class="k">elif</span> <span class="n">promedio</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="c1"># devuelve el f1_score de cada clase</span>
+        <span class="k">elif</span> <span class="n">promedio</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">retorno</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">clase</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">clases</span><span class="p">):</span>
                 <span class="n">retorno</span><span class="p">[</span><span class="n">clase</span><span class="p">]</span> <span class="o">=</span> <span class="n">f1_scores</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
@@ -183,10 +183,10 @@
 <span class="sd">            y_pred (list): Valores del target predichos.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            float: Accuracy.</span>
+<span class="sd">            float: Accuracy Score.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_pred</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;y_true e y_pred debe tener la misma longitud&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">LongitudInvalidaException</span><span class="p">(</span><span class="s2">&quot;Error: Longitud de y_true y y_pred no coinciden&quot;</span><span class="p">)</span>
         
         <span class="n">combinada</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">))</span>
         <span class="n">verdaderos_p</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">y_t</span><span class="p">,</span> <span class="n">y_p</span> <span class="ow">in</span> <span class="n">combinada</span> <span class="k">if</span> <span class="n">y_t</span> <span class="o">==</span> <span class="n">y_p</span><span class="p">)</span>
@@ -197,6 +197,15 @@
 <a class="viewcode-back" href="../../../tools.html#src.tools.metricas.Metricas.error_score">[documentos]</a>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">error_score</span><span class="p">(</span><span class="n">y_true</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Calcula el Error de un clasificador.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            y_true (pd.Series): Valores del target reales.</span>
+<span class="sd">            y_pred (list): Valores del target predichos.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            float: Error Score.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">return</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">Metricas</span><span class="o">.</span><span class="n">accuracy_score</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span></div>
 </div>
 

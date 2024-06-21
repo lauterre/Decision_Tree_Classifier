@@ -137,20 +137,16 @@ class GraficadorArbolFeo:
         
     def _crear_caja(self, arbol):
         '''Crea el contenido que se muestra en cada nodo del arbol.
-        Args:
-            arbol (Arbol): Arbol de decision.
-        Returns:
-            str: Contenido del nodo.
         '''
         retorno = []
         if not arbol.es_raiz():
-            retorno.append(f"{arbol.atributo_split_anterior}{arbol.signo_split_anterior}{arbol.valor_split_anterior}")
+            retorno.append(f"{arbol.atributo_split_anterior}{arbol.signo_split_anterior}{round(arbol.valor_split_anterior, 2) if isinstance(arbol.valor_split_anterior, float) else arbol.valor_split_anterior}")
         retorno.append(f"Muestras: {arbol._total_samples()}")
         retorno.append(f"Conteo: {arbol._values()}")
-        retorno.append(f"{arbol.criterio_impureza}: {round(arbol._impureza(), 3)}")
+        retorno.append(f"{arbol.impureza}: {round(arbol.impureza.calcular(arbol.target), 3)}")
         retorno.append(f"Clase: {arbol.clase}")
         return "\n".join(retorno)
-        
+    
     def _annotate(self, text, xy, depth, bbox_args):
         '''Agrega el texto al grafico.
         Args:
