@@ -177,5 +177,5 @@ def prueba():
 
 
 if __name__ == '__main__':
-    prueba()
-    #mostrar_bosque_id3()
+    # prueba()
+    mostrar_bosque_id3()

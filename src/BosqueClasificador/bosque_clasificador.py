@@ -3,7 +3,7 @@ import numpy as np
 from src.ArbolDecision.arbol_clasificador_C45 import ArbolClasificadorC45
 from src.Superclases.superclases import Clasificador, Bosque, Hiperparametros
 from src.ArbolDecision.arbol_clasificador_ID3 import ArbolClasificadorID3
-from src.Excepciones.excepciones import BosqueEntrenadoException, BosqueNoEntrenadoException
+from src.Excepciones.excepciones import BosqueEntrenadoException, BosqueNoEntrenadoException, HiperparametroInvalidoException
 
 
 class BosqueClasificador(Bosque, Clasificador):
@@ -20,11 +20,14 @@ class BosqueClasificador(Bosque, Clasificador):
         '''
         super().__init__(cantidad_arboles)
 
-        hiperparametros = {k: v for k, v in kwargs.items() if k in Hiperparametros.PARAMS_PERMITIDOS}
-        self.hiperparametros_arbol = Hiperparametros(**hiperparametros)
+        for key in kwargs:
+            if key not in Hiperparametros.PARAMS_PERMITIDOS:
+                raise HiperparametroInvalidoException(key)
         
+        self.hiperparametros_arbol = Hiperparametros(**kwargs)
         for key, value in self.hiperparametros_arbol.__dict__.items():
             setattr(self, key, value)
+
         self.cantidad_atributos = cantidad_atributos
         self.clase_arbol = clase_arbol
         self.verbose = verbose

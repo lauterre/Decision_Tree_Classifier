@@ -2,7 +2,7 @@ import itertools
 from typing import Optional
 import pandas as pd
 import numpy as np
-from src.Superclases.superclases import Clasificador
+from src.Superclases.superclases import Clasificador, Hiperparametros
 from src.tools.metricas import Metricas
 from src.Excepciones.excepciones import LongitudInvalidaException, GridSearchNoEntrenadaException
 
@@ -57,7 +57,9 @@ class Herramientas:
             X_train = X.loc[~X.index.isin(groups[j])]
             y_train = y.loc[~y.index.isin(groups[j])]
             
-            clasificador = classifier.__class__(**classifier.__dict__)
+            hiperparams = {k: v for k, v in classifier.__dict__.items() if k in Hiperparametros.PARAMS_PERMITIDOS}
+            clasificador = classifier.__class__(**hiperparams)
+            
             clasificador.fit(X_train, y_train)
             predicciones = clasificador.predict(X_test)
             k_score = score(y_test, predicciones)
